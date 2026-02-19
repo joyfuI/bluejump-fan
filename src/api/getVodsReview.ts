@@ -87,7 +87,6 @@ export type GetVodsReviewResponse = {
   };
   auto_del_vods: [];
 };
-
 export type GetVodsReviewParams = { page?: number };
 
 // 5분

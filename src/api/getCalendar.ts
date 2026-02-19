@@ -14,7 +14,6 @@ export type GetCalendarResponse = {
     }[];
   }[];
 };
-
 export type GetCalendarParams = { year?: number; month?: number };
 
 // 30분

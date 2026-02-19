@@ -7,15 +7,18 @@ import { MEMBERS } from '@/data/constants';
 
 const useCafeQuery = () => {
   return useQueries({
-    queries: MEMBERS.flatMap(
-      (member) =>
-        member.cafeMenuIds?.map((cafeMenuId) => ({
-          queryKey: ['getCafeArticles', member.cafeId, cafeMenuId],
-          queryFn: () => getCafeArticles(member.cafeId, cafeMenuId),
-          staleTime: REVALIDATE * 1000,
-          refetchInterval: REVALIDATE * 1000,
-        })) ?? [],
-    ),
+    queries: MEMBERS.flatMap((member) => {
+      const { cafeId, cafeMenuIds } = member;
+      if (!cafeId || !cafeMenuIds) {
+        return [];
+      }
+      return cafeMenuIds.map((cafeMenuId) => ({
+        queryKey: ['getCafeArticles', cafeId, cafeMenuId],
+        queryFn: () => getCafeArticles(cafeId, cafeMenuId),
+        staleTime: REVALIDATE * 1000,
+        refetchInterval: REVALIDATE * 1000,
+      }));
+    }),
     combine: (results) => ({
       ...results[0],
       data: results

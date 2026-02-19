@@ -11,7 +11,7 @@ const items = [
   { key: 'live', label: <Link to="/live">라이브 모아보기</Link> },
   { key: 'calendar', label: <Link to="/calendar">캘린더 모아보기</Link> },
   { key: 'soop', label: <Link to="/soop">방송국글 모아보기</Link> },
-  // { key: 'cafe', label: <Link to="/cafe">카페글 모아보기</Link> },
+  { key: 'cafe', label: <Link to="/cafe">카페글 모아보기</Link> },
   { key: 'review', label: <Link to="/review">다시보기 모아보기</Link> },
   {
     key: 'bluejump',

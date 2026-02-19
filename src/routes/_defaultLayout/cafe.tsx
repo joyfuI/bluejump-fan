@@ -39,7 +39,7 @@ const RouteComponent = () => {
               description={`${item.item.writerInfo.nickName} / ${dayjs(item.item.writeDateTimestamp).format('LLL')}`}
               title={
                 <a
-                  href={`https://cafe.naver.com/bluejumpofficial/${item.item.articleId}`}
+                  href={`https://cafe.naver.com/ArticleRead.nhn?clubid=${item.item.cafeId}&articleid=${item.item.articleId}`}
                   rel="noreferrer"
                   target="_blank"
                 >

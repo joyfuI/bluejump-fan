@@ -1,3 +1,5 @@
+import { createServerFn } from '@tanstack/react-start';
+
 import fetchJson from '@/utils/fetchJson';
 
 export type GetCafeArticlesResponse = {
@@ -57,19 +59,28 @@ export type GetCafeArticlesResponse = {
     };
   };
 };
-
 export type GetCafeArticlesParams = { page?: number; pageSize?: number };
+type GetCafeArticlesInput = {
+  cafeId: number;
+  menuId: number;
+  params?: GetCafeArticlesParams;
+};
 
 // 10분
 export const REVALIDATE = 600;
 
-const getCafeArticles = (
-  cafeId: number = 31345283,
-  menuId: number = 43,
-  params?: GetCafeArticlesParams,
-) =>
-  fetchJson<GetCafeArticlesResponse>(
-    `https://apis.naver.com/cafe-web/cafe-boardlist-api/v1/cafes/${cafeId}/menus/${menuId}/articles?page=${params?.page ?? 1}&pageSize=${params?.pageSize ?? 100}&sortBy=TIME&viewType=C`,
+const getCafeArticlesServer = createServerFn({ method: 'GET' })
+  .inputValidator((input: GetCafeArticlesInput) => input)
+  .handler(async ({ data: { cafeId, menuId, params } }) =>
+    fetchJson<GetCafeArticlesResponse>(
+      `https://apis.naver.com/cafe-web/cafe-boardlist-api/v1/cafes/${cafeId}/menus/${menuId}/articles?page=${params?.page ?? 1}&pageSize=${params?.pageSize ?? 100}&sortBy=TIME&viewType=C`,
+    ),
   );
+
+const getCafeArticles = (
+  cafeId: GetCafeArticlesInput['cafeId'],
+  menuId: GetCafeArticlesInput['menuId'],
+  params?: GetCafeArticlesInput['params'],
+) => getCafeArticlesServer({ data: { cafeId, menuId, params } });
 
 export default getCafeArticles;

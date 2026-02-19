@@ -171,7 +171,6 @@ export type GetBoardResponse = {
     };
   }[];
 };
-
 export type GetBoardParams = { page?: number };
 
 // 10분
