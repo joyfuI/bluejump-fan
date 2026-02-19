@@ -26,6 +26,8 @@ const RouteComponent = () => {
                   alt={item.item.subject}
                   className="object-cover"
                   height={144}
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
                   src={item.item.representImage}
                   width={144}
                 />
