@@ -37,10 +37,11 @@ const LiveCard = ({ data }: LiveCardProps) => {
           >
             <Image
               alt={data.broad.broadTitle}
-              className="block w-full h-auto"
+              className="block aspect-video"
               loading="lazy"
               preview={false}
               src={imageSrc}
+              width={300}
             />
           </a>
         ) : (
