@@ -1,0 +1,46 @@
+{
+  "name": "bluejump-fan",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --port 3000",
+    "build": "vite build",
+    "preview": "vite preview",
+    "format": "biome format --write",
+    "lint": "biome lint --write",
+    "check": "biome check --write",
+    "reporter": "biome check --reporter=summary"
+  },
+  "dependencies": {
+    "@ant-design/cssinjs": "^2.1.0",
+    "@tailwindcss/vite": "^4.0.6",
+    "@tanstack/react-devtools": "^0.9.6",
+    "@tanstack/react-query": "^5.90.21",
+    "@tanstack/react-query-devtools": "^5.84.2",
+    "@tanstack/react-router": "^1.161.1",
+    "@tanstack/react-router-devtools": "^1.161.1",
+    "@tanstack/react-router-ssr-query": "^1.161.1",
+    "@tanstack/react-start": "^1.161.1",
+    "antd": "^6.3.0",
+    "dayjs": "^1.11.19",
+    "lucide-react": "^0.574.0",
+    "nitro": "npm:nitro-nightly@latest",
+    "nuqs": "^2.8.8",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tailwindcss": "^4.0.6"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.2",
+    "@tanstack/devtools-vite": "^0.5.1",
+    "@types/node": "^25.2.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.1.4",
+    "babel-plugin-react-compiler": "^1.0.0",
+    "typescript": "^5.7.2",
+    "vite": "^7.1.7",
+    "vite-tsconfig-paths": "^6.1.1"
+  },
+  "packageManager": "pnpm@10.30.0+sha512.2b5753de015d480eeb88f5b5b61e0051f05b4301808a82ec8b840c9d2adf7748eb352c83f5c1593ca703ff1017295bc3fdd3119abb9686efc96b9fcb18200937"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "블루점프 팬사이트",
+  "short_name": "블루점프",
+  "description": "버튜버 그룹 블루점프의 팬 사이트입니다.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#277ee8",
+  "theme_color": "#ffffff",
+  "icons": [
+    { "src": "logo192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "logo512.png", "type": "image/png", "sizes": "512x512" }
+  ]
+}
