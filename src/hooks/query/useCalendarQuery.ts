@@ -7,7 +7,7 @@ import { MEMBERS } from '@/data/constants';
 const useCalendarQuery = (params: GetCalendarParams) => {
   return useQueries({
     queries: MEMBERS.map((member) => ({
-      queryKey: ['getVodsReview', member.id, params],
+      queryKey: ['getCalendar', member.id, params],
       queryFn: () => getCalendar(member.id, params),
       staleTime: REVALIDATE * 1000,
       refetchInterval: REVALIDATE * 1000,
