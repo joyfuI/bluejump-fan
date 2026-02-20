@@ -72,7 +72,7 @@ export const REVALIDATE = 600;
 
 const getCafeArticlesServer = createServerFn({ method: 'GET' })
   .inputValidator((input: GetCafeArticlesInput) => input)
-  .handler(async ({ data: { cafeId, menuId, params } }) =>
+  .handler(({ data: { cafeId, menuId, params } }) =>
     fetchJson<GetCafeArticlesResponse>(
       `https://apis.naver.com/cafe-web/cafe-boardlist-api/v1/cafes/${cafeId}/menus/${menuId}/articles?page=${params?.page ?? 1}&pageSize=${params?.pageSize ?? 100}&sortBy=TIME&viewType=C`,
     ),

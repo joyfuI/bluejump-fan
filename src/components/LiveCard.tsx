@@ -16,13 +16,19 @@ const LiveCard = ({ data }: LiveCardProps) => {
   const [imageSrc, setImageSrc] = useState('');
 
   useEffect(() => {
-    setImageSrc(`https://liveimg.sooplive.co.kr/h/${data.broad?.broadNo}.webp`);
+    if (data.broad?.broadNo) {
+      setImageSrc(
+        `https://liveimg.sooplive.co.kr/h/${data.broad.broadNo}.webp`,
+      );
+    }
   }, [data.broad?.broadNo]);
 
   useInterval(() => {
-    setImageSrc(
-      `https://liveimg.sooplive.co.kr/h/${data.broad?.broadNo}.webp?t=${Date.now()}`,
-    );
+    if (data.broad?.broadNo) {
+      setImageSrc(
+        `https://liveimg.sooplive.co.kr/h/${data.broad.broadNo}.webp?t=${Date.now()}`,
+      );
+    }
   }, 10000);
 
   return (
