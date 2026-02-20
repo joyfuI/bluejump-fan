@@ -49,6 +49,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      { name: 'referrer', content: 'no-referrer' }, // 파이어폭스 네이버 카페 이미지 로딩 이슈
       { title: '블루점프 팬사이트' },
     ],
     links: [
