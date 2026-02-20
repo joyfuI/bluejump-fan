@@ -22,6 +22,7 @@ export type GetCafeArticlesResponse = {
           secedeMember: boolean; // false
         };
         menuId: number; // 43
+        menuName?: string;
         readLevel: number; // 1
         restrictMenu: boolean; // false
         subject: string; // "두구둥 안녕하십니까! 인사 올립니다!!!"

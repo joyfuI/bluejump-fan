@@ -75,7 +75,13 @@ const RouteComponent = () => {
             key={item.title_no}
           >
             <List.Item.Meta
-              description={`${item.user_nick} / ${item.display.bbs_name} / ${dayjs(item.reg_date, 'YYYY-MM-DD HH:mm:ss').format('LLL')}`}
+              description={[
+                item.user_nick,
+                item.display.bbs_name,
+                dayjs(item.reg_date, 'YYYY-MM-DD HH:mm:ss').format('LLL'),
+              ]
+                .filter(Boolean)
+                .join(' / ')}
               title={
                 <a
                   href={
