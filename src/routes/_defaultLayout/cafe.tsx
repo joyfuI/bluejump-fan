@@ -1,12 +1,31 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Alert, Image, List } from 'antd';
 import dayjs from 'dayjs';
+import { parseAsArrayOf, parseAsString, useQueryState } from 'nuqs';
 
-import Accordion from '@/components/Accordion.tsx';
-import { MEMBERS } from '@/data/constants.ts';
+import Accordion from '@/components/Accordion';
+import FilterButton from '@/components/FilterButton';
+import { MEMBERS } from '@/data/constants';
 import useCafeQuery from '@/hooks/query/useCafeQuery';
 
+const cafeIdMap = MEMBERS.reduce<Record<number, (typeof MEMBERS)[0]>>(
+  (acc, member) => {
+    if (member.cafe) {
+      acc[member.cafe.id] = member;
+    }
+    return acc;
+  },
+  {},
+);
+
 const RouteComponent = () => {
+  const [userId] = useQueryState(
+    'userId',
+    parseAsArrayOf(parseAsString).withDefault(
+      MEMBERS.map((member) => member.id),
+    ),
+  );
+
   const { data } = useCafeQuery();
 
   return (
@@ -43,7 +62,9 @@ const RouteComponent = () => {
       />
       <List
         className="max-w-7xl my-0 mx-auto"
-        dataSource={data}
+        dataSource={data.filter((item) =>
+          userId.includes(cafeIdMap[item.item.cafeId].id),
+        )}
         itemLayout="vertical"
         renderItem={(item) => (
           <List.Item
@@ -66,6 +87,7 @@ const RouteComponent = () => {
           >
             <List.Item.Meta
               description={[
+                item.item.writerInfo.nickName,
                 item.item.menuName,
                 dayjs(item.item.writeDateTimestamp).format('LLL'),
               ]
@@ -77,7 +99,7 @@ const RouteComponent = () => {
                   rel="noreferrer"
                   target="_blank"
                 >
-                  [{item.item.writerInfo.nickName}] {item.item.subject}
+                  [{cafeIdMap[item.item.cafeId].nick}] {item.item.subject}
                 </a>
               }
             />
@@ -86,6 +108,7 @@ const RouteComponent = () => {
         )}
         size="large"
       />
+      <FilterButton />
     </>
   );
 };
