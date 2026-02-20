@@ -1,11 +1,25 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { Alert, Image, List } from 'antd';
+import type { SwitchProps } from 'antd';
+import { Alert, Image, List, Switch } from 'antd';
 import dayjs from 'dayjs';
-import { parseAsArrayOf, parseAsString, useQueryState } from 'nuqs';
+import {
+  parseAsArrayOf,
+  parseAsBoolean,
+  parseAsString,
+  useQueryState,
+} from 'nuqs';
 
 import FilterButton from '@/components/FilterButton';
 import { MEMBERS } from '@/data/constants';
 import useSoopQuery from '@/hooks/query/useSoopQuery';
+
+const stationNoMap = MEMBERS.reduce<Record<number, (typeof MEMBERS)[0]>>(
+  (acc, member) => {
+    acc[member.stationNo] = member;
+    return acc;
+  },
+  {},
+);
 
 const RouteComponent = () => {
   const [userId] = useQueryState(
@@ -14,8 +28,16 @@ const RouteComponent = () => {
       MEMBERS.map((member) => member.id),
     ),
   );
+  const [onlyMember, setOnlyMember] = useQueryState(
+    'onlyMember',
+    parseAsBoolean.withDefault(true),
+  );
 
-  const { data } = useSoopQuery({ onlyMember: true });
+  const { data } = useSoopQuery({ onlyMember });
+
+  const handleChange: SwitchProps['onChange'] = (checked) => {
+    setOnlyMember(checked);
+  };
 
   return (
     <>
@@ -26,7 +48,9 @@ const RouteComponent = () => {
       />
       <List
         className="max-w-7xl my-0 mx-auto"
-        dataSource={data.filter((item) => userId.includes(item.user_id))}
+        dataSource={data.filter((item) =>
+          userId.includes(stationNoMap[item.station_no].id),
+        )}
         itemLayout="vertical"
         renderItem={(item) => (
           <List.Item
@@ -62,7 +86,7 @@ const RouteComponent = () => {
                   rel="noreferrer"
                   target="_blank"
                 >
-                  {item.title_name}
+                  [{stationNoMap[item.station_no].nick}] {item.title_name}
                 </a>
               }
             />
@@ -71,7 +95,15 @@ const RouteComponent = () => {
         )}
         size="large"
       />
-      <FilterButton />
+      <FilterButton>
+        <Switch
+          checked={onlyMember}
+          checkedChildren="스트리머 글만 보기"
+          className="self-start"
+          onChange={handleChange}
+          unCheckedChildren="모든 글 보기"
+        />
+      </FilterButton>
     </>
   );
 };

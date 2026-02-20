@@ -1,12 +1,15 @@
 import type { CheckboxOptionType } from 'antd';
-import { Checkbox, Drawer, FloatButton } from 'antd';
+import { Checkbox, Divider, Drawer, Flex, FloatButton } from 'antd';
 import { ListFilter } from 'lucide-react';
 import { parseAsArrayOf, parseAsString, useQueryState } from 'nuqs';
+import type { ReactNode } from 'react';
 import { useId, useState } from 'react';
 
 import { MEMBERS } from '@/data/constants';
 
-const FilterButton = () => {
+export type FilterButtonProps = { children?: ReactNode };
+
+const FilterButton = ({ children }: FilterButtonProps) => {
   const [open, setOpen] = useState(false);
   const [userId, setUserId] = useQueryState(
     'userId',
@@ -28,13 +31,21 @@ const FilterButton = () => {
   return (
     <>
       <Drawer onClose={handleClose} open={open} title="필터">
-        <Checkbox.Group
-          className="flex-col gap-2"
-          name={checkboxName}
-          onChange={setUserId}
-          options={options}
-          value={userId}
-        />
+        <Flex vertical>
+          <Checkbox.Group
+            className="flex-col gap-2"
+            name={checkboxName}
+            onChange={setUserId}
+            options={options}
+            value={userId}
+          />
+          {children ? (
+            <>
+              <Divider />
+              {children}
+            </>
+          ) : null}
+        </Flex>
       </Drawer>
       <FloatButton
         icon={<ListFilter />}
