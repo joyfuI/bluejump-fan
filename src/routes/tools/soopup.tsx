@@ -883,10 +883,15 @@ const RouteComponent = () => {
                               {comment.userNick}
                             </p>
                           </div>
-                          <div className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1 text-xs font-semibold text-sky-300 sm:text-sm">
+                          <a
+                            className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1 text-xs font-semibold text-sky-300 transition hover:bg-slate-700 hover:text-sky-200 sm:text-sm"
+                            href={`https://www.sooplive.co.kr/station/${parsedTarget.userId}/post/${parsedTarget.postId}#comment_noti${comment.key}`}
+                            rel="noreferrer"
+                            target="_blank"
+                          >
                             <ThumbsUp className="h-3.5 w-3.5" />
                             <AnimatedLikeCount value={comment.likeCnt} />
-                          </div>
+                          </a>
                         </li>
                       </Fragment>
                     );
