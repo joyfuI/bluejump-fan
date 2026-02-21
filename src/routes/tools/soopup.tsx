@@ -28,6 +28,7 @@
  *   - Highlight scroll follows target during FLIP to keep center alignment.
  *   - On scroll/resize, FLIP baseline rects are refreshed to avoid full-list drift.
  *   - DEV only: bottom-left floating button simulates rank changes.
+ *   - Cutline input uses text+numeric keyboard so it can be fully cleared.
  * - Refresh interval: 10s (react-query refetchInterval/staleTime).
  */
 
@@ -361,12 +362,6 @@ const RouteComponent = () => {
   }, [inputUrl, submittedUrl]);
 
   useEffect(() => {
-    if (!parsedTarget && cutlineInput === '' && effectiveCutline) {
-      setCutlineInput(String(effectiveCutline));
-    }
-  }, [cutlineInput, effectiveCutline, parsedTarget]);
-
-  useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
@@ -627,7 +622,12 @@ const RouteComponent = () => {
     if (submittedUrl) {
       setInputUrl(submittedUrl);
     }
-    await Promise.all([setQueryUserId(null), setQueryPostId(null)]);
+    setCutlineInput(effectiveCutline ? String(effectiveCutline) : '');
+    await Promise.all([
+      setQueryUserId(null),
+      setQueryPostId(null),
+      setQueryCutline(null),
+    ]);
   };
 
   const handleSimulateRankChange = () => {
@@ -694,11 +694,11 @@ const RouteComponent = () => {
                 <input
                   className="h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-500"
                   id={cutlineInputId}
-                  min={1}
+                  inputMode="numeric"
                   onChange={(event) => setCutlineInput(event.target.value)}
+                  pattern="[0-9]*"
                   placeholder="커트라인 (선택)"
-                  step={1}
-                  type="number"
+                  type="text"
                   value={cutlineInput}
                 />
               </div>
