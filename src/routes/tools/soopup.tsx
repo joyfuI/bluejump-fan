@@ -12,6 +12,8 @@
  * - UI flow:
  *   - If no querystring: show URL input screen only.
  *   - If querystring exists: show ranking list only.
+ *   - Optional highlight userId is stored in URL hash (#userId) and is used
+ *     to center-scroll the matching row.
  *   - Floating settings button (top-right) clears querystring and returns to input.
  * - Current UX rules:
  *   - Header info is 2 lines:
@@ -57,6 +59,7 @@ type SoopTarget = { userId: string; postId: number };
 
 type RankedComment = {
   key: number;
+  userId: string;
   userNick: string;
   likeCnt: number;
   profileImage: string;
@@ -99,6 +102,18 @@ const parseSoopPostUrl = (raw: string): SoopTarget | null => {
 
 const buildSoopPostUrl = (target: SoopTarget) =>
   `https://www.sooplive.co.kr/station/${target.userId}/post/${target.postId}`;
+
+const parseHighlightFromHash = (hash: string) => {
+  const raw = hash.startsWith('#') ? hash.slice(1) : hash;
+  if (!raw) {
+    return '';
+  }
+
+  return decodeURIComponent(raw).trim();
+};
+
+const buildHighlightHash = (userId: string) =>
+  `#${encodeURIComponent(userId.trim())}`;
 
 const normalizeProfileImage = (profileImage: string) => {
   if (!profileImage) {
@@ -165,6 +180,7 @@ const fetchAllComments = async (target: SoopTarget) => {
       if (!existing || existing.likeCnt !== comment.likeCnt) {
         uniqueMap.set(comment.pCommentNo, {
           key: comment.pCommentNo,
+          userId: comment.userId,
           userNick: comment.userNick,
           likeCnt: comment.likeCnt,
           profileImage: normalizeProfileImage(comment.profileImage),
@@ -242,9 +258,13 @@ const AnimatedLikeCount = ({ value }: { value: number }) => {
 
 const RouteComponent = () => {
   const inputId = useId();
+  const highlightInputId = useId();
   const itemRefs = useRef(new Map<number, HTMLLIElement>());
   const prevRectsRef = useRef(new Map<number, DOMRect>());
+  const prevHighlightIndexRef = useRef<number | null>(null);
   const [inputUrl, setInputUrl] = useState('');
+  const [highlightInput, setHighlightInput] = useState('');
+  const [highlightUserId, setHighlightUserId] = useState('');
   const [queryUserId, setQueryUserId] = useQueryState(
     'userId',
     searchParams.userId,
@@ -279,6 +299,26 @@ const RouteComponent = () => {
       setInputUrl(submittedUrl);
     }
   }, [inputUrl, submittedUrl]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const syncFromHash = () => {
+      const parsed = parseHighlightFromHash(window.location.hash);
+      setHighlightUserId(parsed);
+      if (!parsedTarget) {
+        setHighlightInput(parsed);
+      }
+    };
+
+    syncFromHash();
+    window.addEventListener('hashchange', syncFromHash);
+    return () => {
+      window.removeEventListener('hashchange', syncFromHash);
+    };
+  }, [parsedTarget]);
 
   const query = useQuery({
     queryKey: ['soop-up-comments', parsedTarget?.userId, parsedTarget?.postId],
@@ -329,6 +369,42 @@ const RouteComponent = () => {
     prevRectsRef.current = nextRects;
   }, [query.data?.comments]);
 
+  useEffect(() => {
+    const highlight = highlightUserId.trim().toLowerCase();
+    if (!highlight) {
+      prevHighlightIndexRef.current = null;
+      return;
+    }
+
+    const comments = query.data?.comments;
+    if (!comments?.length) {
+      return;
+    }
+
+    const targetIndex = comments.findIndex(
+      (comment) => comment.userId.toLowerCase() === highlight,
+    );
+    if (targetIndex < 0) {
+      prevHighlightIndexRef.current = null;
+      return;
+    }
+
+    const target = comments[targetIndex];
+
+    const element = itemRefs.current.get(target.key);
+    if (!element) {
+      return;
+    }
+
+    const prevIndex = prevHighlightIndexRef.current;
+    prevHighlightIndexRef.current = targetIndex;
+    if (prevIndex !== null && prevIndex === targetIndex) {
+      return;
+    }
+
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [highlightUserId, query.data?.comments]);
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -342,6 +418,19 @@ const RouteComponent = () => {
       setQueryUserId(parsed.userId),
       setQueryPostId(parsed.postId),
     ]);
+    if (typeof window !== 'undefined') {
+      const nextHighlight = highlightInput.trim();
+      if (nextHighlight) {
+        window.location.hash = buildHighlightHash(nextHighlight);
+      } else {
+        window.history.replaceState(
+          null,
+          '',
+          `${window.location.pathname}${window.location.search}`,
+        );
+      }
+      setHighlightUserId(nextHighlight);
+    }
     setInputUrl(buildSoopPostUrl(parsed));
   };
 
@@ -383,6 +472,19 @@ const RouteComponent = () => {
                   placeholder="https://www.sooplive.co.kr/station/*****/post/*****"
                   type="url"
                   value={inputUrl}
+                />
+              </div>
+              <label className="sr-only" htmlFor={highlightInputId}>
+                하이라이트 아이디 (옵션)
+              </label>
+              <div className="relative sm:w-56">
+                <input
+                  className="h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-500"
+                  id={highlightInputId}
+                  onChange={(event) => setHighlightInput(event.target.value)}
+                  placeholder="하이라이트 ID (옵션)"
+                  type="text"
+                  value={highlightInput}
                 />
               </div>
 
@@ -454,7 +556,12 @@ const RouteComponent = () => {
                 <ul className="flex flex-col gap-2">
                   {query.data.comments.map((comment, index) => (
                     <li
-                      className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/80 p-2.5 sm:gap-3 sm:p-3"
+                      className={`flex items-center gap-2 rounded-xl border bg-slate-950/80 p-2.5 sm:gap-3 sm:p-3 ${
+                        highlightUserId.trim().toLowerCase() ===
+                        comment.userId.toLowerCase()
+                          ? 'border-sky-500/80 ring-1 ring-sky-500/40'
+                          : 'border-slate-800'
+                      }`}
                       key={comment.key}
                       ref={(element) => {
                         if (element) {
