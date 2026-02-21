@@ -4,7 +4,7 @@
  * - Purpose: show SOOP post comments ranked by like count in near real-time.
  * - Data flow:
  *   1) Validate search params at route level via createStandardSchemaV1(searchParams)
- *      and read querystring userId/postId (nuqs).
+ *      and read querystring userId/postId/cutline (nuqs).
  *   2) If query exists, fetch all paginated comments (parallel) via getPostComment.
  *   3) Mitigate timing issues by re-fetching page 1, checking latest lastPage,
  *      fetching newly appeared pages, and deduplicating by pCommentNo.
@@ -14,6 +14,7 @@
  *   - If querystring exists: show ranking list only.
  *   - Optional highlight userId is stored in URL hash (#userId) and is used
  *     to center-scroll the matching row.
+ *   - Optional cutline (>=1) draws a separator at the pass/fail rank boundary.
  *   - Floating settings button (top-right) clears querystring and returns to input.
  * - Current UX rules:
  *   - Header info is 2 lines:
@@ -48,6 +49,7 @@ import {
   useQueryState,
 } from 'nuqs';
 import {
+  Fragment,
   useEffect,
   useId,
   useLayoutEffect,
@@ -69,11 +71,21 @@ type RankedComment = {
   profileImage: string;
 };
 
+type SoopupQueryData = {
+  comments: RankedComment[];
+  count: number;
+  sourceLastPage: number;
+};
+
 const REFRESH_INTERVAL_MS = 10_000;
 const FLIP_DURATION_MS = 700;
 const DEFAULT_PROFILE_IMAGE =
   'https://profile.img.sooplive.co.kr/LOGO/default_avatar.jpg';
-const searchParams = { userId: parseAsString, postId: parseAsInteger };
+const searchParams = {
+  userId: parseAsString,
+  postId: parseAsInteger,
+  cutline: parseAsInteger,
+};
 
 const parseSoopPostUrl = (raw: string): SoopTarget | null => {
   const trimmed = raw.trim();
@@ -120,6 +132,20 @@ const parseHighlightFromHash = (hash: string) => {
 const buildHighlightHash = (userId: string) =>
   `#${encodeURIComponent(userId.trim())}`;
 
+const parseCutlineInput = (raw: string) => {
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  const numeric = Number(trimmed);
+  if (!Number.isSafeInteger(numeric) || numeric < 1) {
+    return null;
+  }
+
+  return numeric;
+};
+
 const compareRankedComments = (a: RankedComment, b: RankedComment) => {
   if (b.likeCnt !== a.likeCnt) {
     return b.likeCnt - a.likeCnt;
@@ -142,7 +168,9 @@ const normalizeProfileImage = (profileImage: string) => {
   return profileImage;
 };
 
-const fetchAllComments = async (target: SoopTarget) => {
+const fetchAllComments = async (
+  target: SoopTarget,
+): Promise<SoopupQueryData> => {
   const firstPage = await getPostComment(target.userId, target.postId, {
     page: 1,
   });
@@ -271,6 +299,8 @@ const RouteComponent = () => {
   const queryClient = useQueryClient();
   const inputId = useId();
   const highlightInputId = useId();
+  const cutlineInputId = `${highlightInputId}-cutline`;
+
   const itemRefs = useRef(new Map<number, HTMLLIElement>());
   const prevRectsRef = useRef(new Map<number, DOMRect>());
   const prevHighlightRef = useRef<{
@@ -278,9 +308,12 @@ const RouteComponent = () => {
     offsetTop: number | null;
   }>({ key: null, offsetTop: null });
   const highlightFollowRafRef = useRef<number | null>(null);
+
   const [inputUrl, setInputUrl] = useState('');
   const [highlightInput, setHighlightInput] = useState('');
+  const [cutlineInput, setCutlineInput] = useState('');
   const [highlightUserId, setHighlightUserId] = useState('');
+
   const [queryUserId, setQueryUserId] = useQueryState(
     'userId',
     searchParams.userId,
@@ -289,18 +322,21 @@ const RouteComponent = () => {
     'postId',
     searchParams.postId,
   );
+  const [queryCutline, setQueryCutline] = useQueryState(
+    'cutline',
+    searchParams.cutline,
+  );
 
   const parsedTarget = useMemo(() => {
     if (!queryUserId || !queryPostId) {
       return null;
     }
-
     if (!Number.isSafeInteger(queryPostId)) {
       return null;
     }
-
     return { userId: queryUserId, postId: queryPostId };
   }, [queryPostId, queryUserId]);
+
   const parsedInputTarget = useMemo(
     () => parseSoopPostUrl(inputUrl),
     [inputUrl],
@@ -309,12 +345,24 @@ const RouteComponent = () => {
     () => (parsedTarget ? buildSoopPostUrl(parsedTarget) : ''),
     [parsedTarget],
   );
+  const parsedCutlineInput = useMemo(
+    () => parseCutlineInput(cutlineInput),
+    [cutlineInput],
+  );
+  const effectiveCutline =
+    queryCutline && queryCutline >= 1 ? queryCutline : undefined;
 
   useEffect(() => {
     if (submittedUrl && !inputUrl) {
       setInputUrl(submittedUrl);
     }
   }, [inputUrl, submittedUrl]);
+
+  useEffect(() => {
+    if (!parsedTarget && cutlineInput === '' && effectiveCutline) {
+      setCutlineInput(String(effectiveCutline));
+    }
+  }, [cutlineInput, effectiveCutline, parsedTarget]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -344,6 +392,7 @@ const RouteComponent = () => {
     staleTime: REFRESH_INTERVAL_MS,
     retry: 1,
   });
+
   const displayedRanks = useMemo(() => {
     const comments = query.data?.comments;
     if (!comments?.length) {
@@ -353,12 +402,14 @@ const RouteComponent = () => {
     const ranks = new Array<number>(comments.length);
     let currentRank = 1;
     ranks[0] = currentRank;
+
     for (let i = 1; i < comments.length; i += 1) {
       if (comments[i].likeCnt !== comments[i - 1].likeCnt) {
         currentRank = i + 1;
       }
       ranks[i] = currentRank;
     }
+
     return ranks;
   }, [query.data?.comments]);
 
@@ -413,16 +464,15 @@ const RouteComponent = () => {
       return;
     }
 
-    const flipCandidates = comments;
     const nextRects = new Map<number, DOMRect>();
-    for (const comment of flipCandidates) {
+    for (const comment of comments) {
       const element = itemRefs.current.get(comment.key);
       if (element) {
         nextRects.set(comment.key, element.getBoundingClientRect());
       }
     }
 
-    for (const comment of flipCandidates) {
+    for (const comment of comments) {
       const element = itemRefs.current.get(comment.key);
       const prevRect = prevRectsRef.current.get(comment.key);
       const nextRect = nextRects.get(comment.key);
@@ -496,6 +546,7 @@ const RouteComponent = () => {
       const elapsed = now - followStart;
       const followDuration =
         isSameTarget && !hasMoved ? 420 : FLIP_DURATION_MS + 80;
+
       if (elapsed > followDuration) {
         highlightFollowRafRef.current = null;
         return;
@@ -512,6 +563,7 @@ const RouteComponent = () => {
 
       highlightFollowRafRef.current = requestAnimationFrame(follow);
     };
+
     highlightFollowRafRef.current = requestAnimationFrame(follow);
 
     return () => {
@@ -525,8 +577,7 @@ const RouteComponent = () => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const trimmed = inputUrl.trim();
-    const parsed = parseSoopPostUrl(trimmed);
+    const parsed = parseSoopPostUrl(inputUrl.trim());
     if (!parsed) {
       return;
     }
@@ -534,7 +585,9 @@ const RouteComponent = () => {
     await Promise.all([
       setQueryUserId(parsed.userId),
       setQueryPostId(parsed.postId),
+      setQueryCutline(parsedCutlineInput ?? null),
     ]);
+
     if (typeof window !== 'undefined') {
       const nextHighlight = highlightInput.trim();
       if (nextHighlight) {
@@ -548,6 +601,7 @@ const RouteComponent = () => {
       }
       setHighlightUserId(nextHighlight);
     }
+
     setInputUrl(buildSoopPostUrl(parsed));
   };
 
@@ -555,7 +609,6 @@ const RouteComponent = () => {
     if (submittedUrl) {
       setInputUrl(submittedUrl);
     }
-
     await Promise.all([setQueryUserId(null), setQueryPostId(null)]);
   };
 
@@ -566,11 +619,7 @@ const RouteComponent = () => {
 
     queryClient.setQueryData(
       ['soop-up-comments', parsedTarget.userId, parsedTarget.postId],
-      (
-        oldData:
-          | { comments: RankedComment[]; count: number; sourceLastPage: number }
-          | undefined,
-      ) => {
+      (oldData: SoopupQueryData | undefined) => {
         if (!oldData) {
           return oldData;
         }
@@ -581,13 +630,13 @@ const RouteComponent = () => {
         });
 
         randomized.sort(compareRankedComments);
-
         return { ...oldData, comments: randomized };
       },
     );
   };
 
   const hasValidInput = Boolean(parsedInputTarget);
+  const hasValidCutline = parsedCutlineInput !== null;
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
@@ -619,15 +668,32 @@ const RouteComponent = () => {
                   value={inputUrl}
                 />
               </div>
+
+              <label className="sr-only" htmlFor={cutlineInputId}>
+                커트라인 (선택)
+              </label>
+              <div className="relative sm:w-44">
+                <input
+                  className="h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-500"
+                  id={cutlineInputId}
+                  min={1}
+                  onChange={(event) => setCutlineInput(event.target.value)}
+                  placeholder="커트라인 (선택)"
+                  step={1}
+                  type="number"
+                  value={cutlineInput}
+                />
+              </div>
+
               <label className="sr-only" htmlFor={highlightInputId}>
-                하이라이트 아이디 (옵션)
+                하이라이트 아이디 (선택)
               </label>
               <div className="relative sm:w-56">
                 <input
                   className="h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-500"
                   id={highlightInputId}
                   onChange={(event) => setHighlightInput(event.target.value)}
-                  placeholder="하이라이트 ID (옵션)"
+                  placeholder="하이라이트 ID (선택)"
                   type="text"
                   value={highlightInput}
                 />
@@ -635,7 +701,7 @@ const RouteComponent = () => {
 
               <button
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 text-sm font-semibold text-slate-950 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
-                disabled={!hasValidInput}
+                disabled={!hasValidInput || !hasValidCutline}
                 type="submit"
               >
                 <Search className="h-4 w-4" />
@@ -647,6 +713,12 @@ const RouteComponent = () => {
               <p className="mt-2 flex items-center gap-1 text-xs text-rose-300 sm:text-sm">
                 <AlertCircle className="h-4 w-4" />
                 URL 형식이 올바르지 않습니다.
+              </p>
+            ) : null}
+            {!hasValidCutline && cutlineInput.trim().length > 0 ? (
+              <p className="mt-2 flex items-center gap-1 text-xs text-rose-300 sm:text-sm">
+                <AlertCircle className="h-4 w-4" />
+                커트라인은 1 이상의 정수만 입력할 수 있습니다.
               </p>
             ) : null}
           </section>
@@ -701,54 +773,78 @@ const RouteComponent = () => {
                 <ul className="flex flex-col gap-2 [overflow-anchor:none]">
                   {query.data.comments.map((comment, index) => {
                     const rank = displayedRanks[index] ?? index + 1;
+                    const cutline = effectiveCutline;
+                    const prevRank =
+                      index > 0
+                        ? (displayedRanks[index - 1] ?? index)
+                        : undefined;
+                    const showCutline =
+                      cutline !== undefined &&
+                      prevRank !== undefined &&
+                      prevRank <= cutline &&
+                      rank > cutline;
+
                     return (
-                      <li
-                        className={`flex items-center gap-2 rounded-xl border bg-slate-950/80 p-2.5 sm:gap-3 sm:p-3 ${
-                          highlightUserId.trim().toLowerCase() ===
-                          comment.userId.toLowerCase()
-                            ? 'border-sky-500/80 ring-1 ring-sky-500/40'
-                            : 'border-slate-800'
-                        }`}
-                        key={comment.key}
-                        ref={(element) => {
-                          if (element) {
-                            itemRefs.current.set(comment.key, element);
-                          } else {
-                            itemRefs.current.delete(comment.key);
-                          }
-                        }}
-                      >
-                        <div className="flex w-11 shrink-0 justify-center sm:w-12">
-                          <span
-                            className={`inline-flex min-w-8 items-center justify-center rounded-md px-2 py-1 text-xs font-extrabold leading-none sm:min-w-9 sm:text-sm ${
-                              rank === 1
-                                ? 'bg-yellow-400 text-slate-950'
-                                : rank === 2
-                                  ? 'bg-slate-300 text-slate-950'
-                                  : rank === 3
-                                    ? 'bg-amber-700 text-amber-100'
-                                    : 'bg-slate-800 text-slate-100'
-                            }`}
+                      <Fragment key={comment.key}>
+                        {showCutline ? (
+                          <li
+                            aria-hidden
+                            className="my-1 flex items-center gap-2"
                           >
-                            #{rank}
-                          </span>
-                        </div>
-                        <img
-                          alt={comment.userNick}
-                          className="h-9 w-9 shrink-0 rounded-full border border-slate-700 object-cover sm:h-10 sm:w-10"
-                          loading="lazy"
-                          src={comment.profileImage}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-slate-100 sm:text-base">
-                            {comment.userNick}
-                          </p>
-                        </div>
-                        <div className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1 text-xs font-semibold text-sky-300 sm:text-sm">
-                          <ThumbsUp className="h-3.5 w-3.5" />
-                          <AnimatedLikeCount value={comment.likeCnt} />
-                        </div>
-                      </li>
+                            <div className="h-px flex-1 border-t border-dashed border-slate-600" />
+                            <span className="shrink-0 rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-[10px] font-semibold text-slate-300">
+                              탈락
+                            </span>
+                            <div className="h-px flex-1 border-t border-dashed border-slate-600" />
+                          </li>
+                        ) : null}
+                        <li
+                          className={`flex items-center gap-2 rounded-xl border bg-slate-950/80 p-2.5 sm:gap-3 sm:p-3 ${
+                            highlightUserId.trim().toLowerCase() ===
+                            comment.userId.toLowerCase()
+                              ? 'border-sky-500/80 ring-1 ring-sky-500/40'
+                              : 'border-slate-800'
+                          }`}
+                          ref={(element) => {
+                            if (element) {
+                              itemRefs.current.set(comment.key, element);
+                            } else {
+                              itemRefs.current.delete(comment.key);
+                            }
+                          }}
+                        >
+                          <div className="flex w-11 shrink-0 justify-center sm:w-12">
+                            <span
+                              className={`inline-flex min-w-8 items-center justify-center rounded-md px-2 py-1 text-xs font-extrabold leading-none sm:min-w-9 sm:text-sm ${
+                                rank === 1
+                                  ? 'bg-yellow-400 text-slate-950'
+                                  : rank === 2
+                                    ? 'bg-slate-300 text-slate-950'
+                                    : rank === 3
+                                      ? 'bg-amber-700 text-amber-100'
+                                      : 'bg-slate-800 text-slate-100'
+                              }`}
+                            >
+                              #{rank}
+                            </span>
+                          </div>
+                          <img
+                            alt={comment.userNick}
+                            className="h-9 w-9 shrink-0 rounded-full border border-slate-700 object-cover sm:h-10 sm:w-10"
+                            loading="lazy"
+                            src={comment.profileImage}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-slate-100 sm:text-base">
+                              {comment.userNick}
+                            </p>
+                          </div>
+                          <div className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1 text-xs font-semibold text-sky-300 sm:text-sm">
+                            <ThumbsUp className="h-3.5 w-3.5" />
+                            <AnimatedLikeCount value={comment.likeCnt} />
+                          </div>
+                        </li>
+                      </Fragment>
                     );
                   })}
                 </ul>
