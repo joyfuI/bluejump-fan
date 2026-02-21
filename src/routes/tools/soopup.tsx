@@ -18,6 +18,8 @@
  *     line1: auto-refresh + "게시물 보기"
  *     line2: comment aggregate + page count
  *   - Rank emphasis: 1st/2nd/3rd use gold/silver/bronze badges.
+ *   - Like count changes animate smoothly (count up/down).
+ *   - Rank position changes animate smoothly (FLIP-style move).
  * - Refresh interval: 10s (react-query refetchInterval/staleTime).
  */
 
@@ -40,7 +42,14 @@ import {
   parseAsString,
   useQueryState,
 } from 'nuqs';
-import { useEffect, useId, useMemo, useState } from 'react';
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import getPostComment from '@/api/getPostComment';
 
@@ -175,8 +184,66 @@ const fetchAllComments = async (target: SoopTarget) => {
   return { comments, count: comments.length, sourceLastPage: latestLastPage };
 };
 
+const useAnimatedNumber = (value: number, durationMs = 800) => {
+  const [display, setDisplay] = useState(value);
+  const frameIdRef = useRef<number | null>(null);
+  const displayRef = useRef(value);
+
+  useEffect(() => {
+    displayRef.current = display;
+  }, [display]);
+
+  useEffect(() => {
+    if (frameIdRef.current !== null) {
+      cancelAnimationFrame(frameIdRef.current);
+    }
+
+    const from = displayRef.current;
+    const to = value;
+    if (from === to) {
+      setDisplay(to);
+      return;
+    }
+
+    const start = performance.now();
+    const delta = to - from;
+
+    const animate = (now: number) => {
+      const progress = Math.min((now - start) / durationMs, 1);
+      const eased = 1 - (1 - progress) ** 3;
+      const nextValue = Math.round(from + delta * eased);
+      setDisplay(nextValue);
+
+      if (progress < 1) {
+        frameIdRef.current = requestAnimationFrame(animate);
+      } else {
+        frameIdRef.current = null;
+        setDisplay(to);
+      }
+    };
+
+    frameIdRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (frameIdRef.current !== null) {
+        cancelAnimationFrame(frameIdRef.current);
+        frameIdRef.current = null;
+      }
+    };
+  }, [durationMs, value]);
+
+  return display;
+};
+
+const AnimatedLikeCount = ({ value }: { value: number }) => {
+  const animatedValue = useAnimatedNumber(value);
+  return <>{animatedValue.toLocaleString()}</>;
+};
+
 const RouteComponent = () => {
   const inputId = useId();
+  const itemRefs = useRef(new Map<number, HTMLLIElement>());
+  const prevRectsRef = useRef(new Map<number, DOMRect>());
   const [inputUrl, setInputUrl] = useState('');
   const [queryUserId, setQueryUserId] = useQueryState(
     'userId',
@@ -221,6 +288,46 @@ const RouteComponent = () => {
     staleTime: REFRESH_INTERVAL_MS,
     retry: 1,
   });
+  useLayoutEffect(() => {
+    const comments = query.data?.comments;
+    if (!comments?.length) {
+      prevRectsRef.current.clear();
+      return;
+    }
+
+    const nextRects = new Map<number, DOMRect>();
+    for (const comment of comments) {
+      const element = itemRefs.current.get(comment.key);
+      if (element) {
+        nextRects.set(comment.key, element.getBoundingClientRect());
+      }
+    }
+
+    for (const comment of comments) {
+      const element = itemRefs.current.get(comment.key);
+      const prevRect = prevRectsRef.current.get(comment.key);
+      const nextRect = nextRects.get(comment.key);
+      if (!element || !prevRect || !nextRect) {
+        continue;
+      }
+
+      const deltaY = prevRect.top - nextRect.top;
+      if (Math.abs(deltaY) < 1) {
+        continue;
+      }
+
+      element.style.transition = 'none';
+      element.style.transform = `translateY(${deltaY}px)`;
+
+      requestAnimationFrame(() => {
+        element.style.transition =
+          'transform 700ms cubic-bezier(0.22, 1, 0.36, 1)';
+        element.style.transform = 'translateY(0)';
+      });
+    }
+
+    prevRectsRef.current = nextRects;
+  }, [query.data?.comments]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -349,6 +456,13 @@ const RouteComponent = () => {
                     <li
                       className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/80 p-2.5 sm:gap-3 sm:p-3"
                       key={comment.key}
+                      ref={(element) => {
+                        if (element) {
+                          itemRefs.current.set(comment.key, element);
+                        } else {
+                          itemRefs.current.delete(comment.key);
+                        }
+                      }}
                     >
                       <div className="flex w-11 shrink-0 justify-center sm:w-12">
                         <span
@@ -378,7 +492,7 @@ const RouteComponent = () => {
                       </div>
                       <div className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1 text-xs font-semibold text-sky-300 sm:text-sm">
                         <ThumbsUp className="h-3.5 w-3.5" />
-                        {comment.likeCnt.toLocaleString()}
+                        <AnimatedLikeCount value={comment.likeCnt} />
                       </div>
                     </li>
                   ))}
