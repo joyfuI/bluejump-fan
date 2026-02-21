@@ -12,12 +12,13 @@ const items = [
     key: 'bluejump',
     label: (
       <a
+        className="inline-flex items-center"
         href="https://cafe.naver.com/bluejumpofficial"
         rel="noreferrer"
         target="_blank"
       >
         블루점프 팬카페
-        <ExternalLink className="inline ml-1" size={16} />
+        <ExternalLink className="ml-1" size={16} />
       </a>
     ),
   },
