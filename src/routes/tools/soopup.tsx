@@ -8,7 +8,7 @@
  *   2) If query exists, fetch all paginated comments (parallel) via getPostComment.
  *   3) Mitigate timing issues by re-fetching page 1, checking latest lastPage,
  *      fetching newly appeared pages, and deduplicating by pCommentNo.
- *   4) Sort by likeCnt desc, then pCommentNo asc.
+ *   4) Sort by likeCnt desc, then regDate asc, then pCommentNo asc.
  * - UI flow:
  *   - If no querystring: show URL input screen only.
  *   - If querystring exists: show ranking list only.
@@ -65,6 +65,7 @@ type RankedComment = {
   userId: string;
   userNick: string;
   likeCnt: number;
+  regDate: string;
   profileImage: string;
 };
 
@@ -118,6 +119,16 @@ const parseHighlightFromHash = (hash: string) => {
 
 const buildHighlightHash = (userId: string) =>
   `#${encodeURIComponent(userId.trim())}`;
+
+const compareRankedComments = (a: RankedComment, b: RankedComment) => {
+  if (b.likeCnt !== a.likeCnt) {
+    return b.likeCnt - a.likeCnt;
+  }
+  if (a.regDate !== b.regDate) {
+    return a.regDate.localeCompare(b.regDate);
+  }
+  return a.key - b.key;
+};
 
 const normalizeProfileImage = (profileImage: string) => {
   if (!profileImage) {
@@ -187,19 +198,16 @@ const fetchAllComments = async (target: SoopTarget) => {
           userId: comment.userId,
           userNick: comment.userNick,
           likeCnt: comment.likeCnt,
+          regDate: comment.regDate,
           profileImage: normalizeProfileImage(comment.profileImage),
         });
       }
     }
   }
 
-  const comments = Array.from(uniqueMap.values()).toSorted((a, b) => {
-    if (b.likeCnt !== a.likeCnt) {
-      return b.likeCnt - a.likeCnt;
-    }
-
-    return a.key - b.key;
-  });
+  const comments = Array.from(uniqueMap.values()).toSorted(
+    compareRankedComments,
+  );
 
   return { comments, count: comments.length, sourceLastPage: latestLastPage };
 };
@@ -336,6 +344,23 @@ const RouteComponent = () => {
     staleTime: REFRESH_INTERVAL_MS,
     retry: 1,
   });
+  const displayedRanks = useMemo(() => {
+    const comments = query.data?.comments;
+    if (!comments?.length) {
+      return [];
+    }
+
+    const ranks = new Array<number>(comments.length);
+    let currentRank = 1;
+    ranks[0] = currentRank;
+    for (let i = 1; i < comments.length; i += 1) {
+      if (comments[i].likeCnt !== comments[i - 1].likeCnt) {
+        currentRank = i + 1;
+      }
+      ranks[i] = currentRank;
+    }
+    return ranks;
+  }, [query.data?.comments]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -555,12 +580,7 @@ const RouteComponent = () => {
           return { ...comment, likeCnt: Math.max(0, comment.likeCnt + delta) };
         });
 
-        randomized.sort((a, b) => {
-          if (b.likeCnt !== a.likeCnt) {
-            return b.likeCnt - a.likeCnt;
-          }
-          return a.key - b.key;
-        });
+        randomized.sort(compareRankedComments);
 
         return { ...oldData, comments: randomized };
       },
@@ -679,55 +699,58 @@ const RouteComponent = () => {
 
               {query.data ? (
                 <ul className="flex flex-col gap-2 [overflow-anchor:none]">
-                  {query.data.comments.map((comment, index) => (
-                    <li
-                      className={`flex items-center gap-2 rounded-xl border bg-slate-950/80 p-2.5 sm:gap-3 sm:p-3 ${
-                        highlightUserId.trim().toLowerCase() ===
-                        comment.userId.toLowerCase()
-                          ? 'border-sky-500/80 ring-1 ring-sky-500/40'
-                          : 'border-slate-800'
-                      }`}
-                      key={comment.key}
-                      ref={(element) => {
-                        if (element) {
-                          itemRefs.current.set(comment.key, element);
-                        } else {
-                          itemRefs.current.delete(comment.key);
-                        }
-                      }}
-                    >
-                      <div className="flex w-11 shrink-0 justify-center sm:w-12">
-                        <span
-                          className={`inline-flex min-w-8 items-center justify-center rounded-md px-2 py-1 text-xs font-extrabold leading-none sm:min-w-9 sm:text-sm ${
-                            index === 0
-                              ? 'bg-yellow-400 text-slate-950'
-                              : index === 1
-                                ? 'bg-slate-300 text-slate-950'
-                                : index === 2
-                                  ? 'bg-amber-700 text-amber-100'
-                                  : 'bg-slate-800 text-slate-100'
-                          }`}
-                        >
-                          #{index + 1}
-                        </span>
-                      </div>
-                      <img
-                        alt={comment.userNick}
-                        className="h-9 w-9 shrink-0 rounded-full border border-slate-700 object-cover sm:h-10 sm:w-10"
-                        loading="lazy"
-                        src={comment.profileImage}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-slate-100 sm:text-base">
-                          {comment.userNick}
-                        </p>
-                      </div>
-                      <div className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1 text-xs font-semibold text-sky-300 sm:text-sm">
-                        <ThumbsUp className="h-3.5 w-3.5" />
-                        <AnimatedLikeCount value={comment.likeCnt} />
-                      </div>
-                    </li>
-                  ))}
+                  {query.data.comments.map((comment, index) => {
+                    const rank = displayedRanks[index] ?? index + 1;
+                    return (
+                      <li
+                        className={`flex items-center gap-2 rounded-xl border bg-slate-950/80 p-2.5 sm:gap-3 sm:p-3 ${
+                          highlightUserId.trim().toLowerCase() ===
+                          comment.userId.toLowerCase()
+                            ? 'border-sky-500/80 ring-1 ring-sky-500/40'
+                            : 'border-slate-800'
+                        }`}
+                        key={comment.key}
+                        ref={(element) => {
+                          if (element) {
+                            itemRefs.current.set(comment.key, element);
+                          } else {
+                            itemRefs.current.delete(comment.key);
+                          }
+                        }}
+                      >
+                        <div className="flex w-11 shrink-0 justify-center sm:w-12">
+                          <span
+                            className={`inline-flex min-w-8 items-center justify-center rounded-md px-2 py-1 text-xs font-extrabold leading-none sm:min-w-9 sm:text-sm ${
+                              rank === 1
+                                ? 'bg-yellow-400 text-slate-950'
+                                : rank === 2
+                                  ? 'bg-slate-300 text-slate-950'
+                                  : rank === 3
+                                    ? 'bg-amber-700 text-amber-100'
+                                    : 'bg-slate-800 text-slate-100'
+                            }`}
+                          >
+                            #{rank}
+                          </span>
+                        </div>
+                        <img
+                          alt={comment.userNick}
+                          className="h-9 w-9 shrink-0 rounded-full border border-slate-700 object-cover sm:h-10 sm:w-10"
+                          loading="lazy"
+                          src={comment.profileImage}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-slate-100 sm:text-base">
+                            {comment.userNick}
+                          </p>
+                        </div>
+                        <div className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1 text-xs font-semibold text-sky-300 sm:text-sm">
+                          <ThumbsUp className="h-3.5 w-3.5" />
+                          <AnimatedLikeCount value={comment.likeCnt} />
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : null}
             </section>
