@@ -22,10 +22,11 @@
  *   - Rank emphasis: 1st/2nd/3rd use gold/silver/bronze badges.
  *   - Like count changes animate smoothly (count up/down).
  *   - Rank position changes animate smoothly (FLIP-style move).
+ *   - DEV only: bottom-left floating button simulates rank changes.
  * - Refresh interval: 10s (react-query refetchInterval/staleTime).
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import {
   AlertCircle,
@@ -257,11 +258,15 @@ const AnimatedLikeCount = ({ value }: { value: number }) => {
 };
 
 const RouteComponent = () => {
+  const queryClient = useQueryClient();
   const inputId = useId();
   const highlightInputId = useId();
   const itemRefs = useRef(new Map<number, HTMLLIElement>());
   const prevRectsRef = useRef(new Map<number, DOMRect>());
-  const prevHighlightIndexRef = useRef<number | null>(null);
+  const prevHighlightRef = useRef<{
+    key: number | null;
+    offsetTop: number | null;
+  }>({ key: null, offsetTop: null });
   const [inputUrl, setInputUrl] = useState('');
   const [highlightInput, setHighlightInput] = useState('');
   const [highlightUserId, setHighlightUserId] = useState('');
@@ -372,7 +377,7 @@ const RouteComponent = () => {
   useEffect(() => {
     const highlight = highlightUserId.trim().toLowerCase();
     if (!highlight) {
-      prevHighlightIndexRef.current = null;
+      prevHighlightRef.current = { key: null, offsetTop: null };
       return;
     }
 
@@ -381,24 +386,28 @@ const RouteComponent = () => {
       return;
     }
 
-    const targetIndex = comments.findIndex(
+    const target = comments.find(
       (comment) => comment.userId.toLowerCase() === highlight,
     );
-    if (targetIndex < 0) {
-      prevHighlightIndexRef.current = null;
+    if (!target) {
+      prevHighlightRef.current = { key: null, offsetTop: null };
       return;
     }
-
-    const target = comments[targetIndex];
 
     const element = itemRefs.current.get(target.key);
     if (!element) {
       return;
     }
 
-    const prevIndex = prevHighlightIndexRef.current;
-    prevHighlightIndexRef.current = targetIndex;
-    if (prevIndex !== null && prevIndex === targetIndex) {
+    const currentOffsetTop = element.offsetTop;
+    const prev = prevHighlightRef.current;
+    prevHighlightRef.current = { key: target.key, offsetTop: currentOffsetTop };
+
+    const isSameTarget = prev.key === target.key;
+    const hasMoved =
+      prev.offsetTop === null ||
+      Math.abs(currentOffsetTop - prev.offsetTop) > 1;
+    if (isSameTarget && !hasMoved) {
       return;
     }
 
@@ -440,6 +449,39 @@ const RouteComponent = () => {
     }
 
     await Promise.all([setQueryUserId(null), setQueryPostId(null)]);
+  };
+
+  const handleSimulateRankChange = () => {
+    if (!parsedTarget) {
+      return;
+    }
+
+    queryClient.setQueryData(
+      ['soop-up-comments', parsedTarget.userId, parsedTarget.postId],
+      (
+        oldData:
+          | { comments: RankedComment[]; count: number; sourceLastPage: number }
+          | undefined,
+      ) => {
+        if (!oldData) {
+          return oldData;
+        }
+
+        const randomized = oldData.comments.map((comment) => {
+          const delta = Math.floor(Math.random() * 121) - 60;
+          return { ...comment, likeCnt: Math.max(0, comment.likeCnt + delta) };
+        });
+
+        randomized.sort((a, b) => {
+          if (b.likeCnt !== a.likeCnt) {
+            return b.likeCnt - a.likeCnt;
+          }
+          return a.key - b.key;
+        });
+
+        return { ...oldData, comments: randomized };
+      },
+    );
   };
 
   const hasValidInput = Boolean(parsedInputTarget);
@@ -616,6 +658,15 @@ const RouteComponent = () => {
           >
             <Cog className="h-5 w-5" />
           </button>
+          {import.meta.env.DEV ? (
+            <button
+              className="fixed bottom-4 left-4 z-20 inline-flex h-11 items-center justify-center rounded-full border border-slate-700 bg-slate-900/90 px-4 text-xs font-semibold text-slate-100 shadow-lg shadow-slate-950/40 transition hover:border-sky-500 hover:text-sky-300"
+              onClick={handleSimulateRankChange}
+              type="button"
+            >
+              순위 변동 테스트
+            </button>
+          ) : null}
         </>
       )}
     </main>
