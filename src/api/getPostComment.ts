@@ -85,7 +85,7 @@ const getPostComment = (
   params?: GetPostCommentParams,
 ) =>
   fetchJson<GetPostCommentResponse>(
-    `http://api-channel-origin.sooplive.co.kr/v1.1/channel/${userId}/post/${postId}/comment?page=${params?.page ?? 1}&perPage=30`,
+    `https://api-channel-origin.sooplive.co.kr/v1.1/channel/${userId}/post/${postId}/comment?page=${params?.page ?? 1}&perPage=30`,
   );
 
 export default getPostComment;
