@@ -21,6 +21,8 @@
  *     line1: auto-refresh + "게시물 보기"
  *     line2: comment aggregate + page count
  *   - Rank emphasis: 1st/2nd/3rd use gold/silver/bronze badges.
+ *   - Tied scores are visually grouped with tight spacing.
+ *   - Cutline rank badge is highlighted in red.
  *   - Like count changes animate smoothly (count up/down).
  *   - Rank position changes animate smoothly (FLIP-style move).
  *   - Highlight scroll follows target during FLIP to keep center alignment.
@@ -412,6 +414,22 @@ const RouteComponent = () => {
 
     return ranks;
   }, [query.data?.comments]);
+  const cutoffRank = useMemo(() => {
+    if (!effectiveCutline || displayedRanks.length === 0) {
+      return undefined;
+    }
+
+    let lastPassingRank: number | undefined;
+    for (const rank of displayedRanks) {
+      if (rank <= effectiveCutline) {
+        lastPassingRank = rank;
+      } else {
+        break;
+      }
+    }
+
+    return lastPassingRank;
+  }, [displayedRanks, effectiveCutline]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -770,10 +788,18 @@ const RouteComponent = () => {
               ) : null}
 
               {query.data ? (
-                <ul className="flex flex-col gap-2 [overflow-anchor:none]">
+                <ul className="flex flex-col [overflow-anchor:none]">
                   {query.data.comments.map((comment, index) => {
                     const rank = displayedRanks[index] ?? index + 1;
                     const cutline = effectiveCutline;
+                    const prevLikeCnt =
+                      index > 0
+                        ? query.data.comments[index - 1].likeCnt
+                        : undefined;
+                    const nextLikeCnt =
+                      index < query.data.comments.length - 1
+                        ? query.data.comments[index + 1].likeCnt
+                        : undefined;
                     const prevRank =
                       index > 0
                         ? (displayedRanks[index - 1] ?? index)
@@ -783,6 +809,8 @@ const RouteComponent = () => {
                       prevRank !== undefined &&
                       prevRank <= cutline &&
                       rank > cutline;
+                    const isTieWithPrev = prevLikeCnt === comment.likeCnt;
+                    const isTieWithNext = nextLikeCnt === comment.likeCnt;
 
                     return (
                       <Fragment key={comment.key}>
@@ -799,7 +827,21 @@ const RouteComponent = () => {
                           </li>
                         ) : null}
                         <li
-                          className={`flex items-center gap-2 rounded-xl border bg-slate-950/80 p-2.5 sm:gap-3 sm:p-3 ${
+                          className={`flex items-center gap-2 border bg-slate-950/80 p-2.5 sm:gap-3 sm:p-3 ${
+                            showCutline ||
+                            index === 0 ||
+                            prevLikeCnt === comment.likeCnt
+                              ? 'mt-0'
+                              : 'mt-2'
+                          } ${
+                            isTieWithPrev
+                              ? '-mt-px rounded-t-none'
+                              : 'rounded-t-xl'
+                          } ${
+                            isTieWithNext ? 'rounded-b-none' : 'rounded-b-xl'
+                          } ${isTieWithPrev ? 'border-t-0' : ''} ${
+                            isTieWithNext ? 'border-b-0' : ''
+                          } ${
                             highlightUserId.trim().toLowerCase() ===
                             comment.userId.toLowerCase()
                               ? 'border-sky-500/80 ring-1 ring-sky-500/40'
@@ -816,13 +858,15 @@ const RouteComponent = () => {
                           <div className="flex w-11 shrink-0 justify-center sm:w-12">
                             <span
                               className={`inline-flex min-w-8 items-center justify-center rounded-md px-2 py-1 text-xs font-extrabold leading-none sm:min-w-9 sm:text-sm ${
-                                rank === 1
-                                  ? 'bg-yellow-400 text-slate-950'
-                                  : rank === 2
-                                    ? 'bg-slate-300 text-slate-950'
-                                    : rank === 3
-                                      ? 'bg-amber-700 text-amber-100'
-                                      : 'bg-slate-800 text-slate-100'
+                                cutoffRank !== undefined && rank === cutoffRank
+                                  ? 'bg-rose-600 text-rose-50 ring-1 ring-rose-400/70'
+                                  : rank === 1
+                                    ? 'bg-yellow-400 text-slate-950'
+                                    : rank === 2
+                                      ? 'bg-slate-300 text-slate-950'
+                                      : rank === 3
+                                        ? 'bg-amber-700 text-amber-100'
+                                        : 'bg-slate-800 text-slate-100'
                               }`}
                             >
                               #{rank}
