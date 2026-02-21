@@ -1,5 +1,3 @@
-import { createServerFn } from '@tanstack/react-start';
-
 import fetchJson from '@/utils/fetchJson';
 
 export type GetCafeArticlesResponse = {
@@ -70,18 +68,13 @@ type GetCafeArticlesInput = {
 // 10분
 export const REVALIDATE = 600;
 
-const getCafeArticlesServer = createServerFn({ method: 'GET' })
-  .inputValidator((input: GetCafeArticlesInput) => input)
-  .handler(({ data: { cafeId, menuId, params } }) =>
-    fetchJson<GetCafeArticlesResponse>(
-      `https://apis.naver.com/cafe-web/cafe-boardlist-api/v1/cafes/${cafeId}/menus/${menuId}/articles?page=${params?.page ?? 1}&pageSize=${params?.pageSize ?? 100}&sortBy=TIME&viewType=C`,
-    ),
-  );
-
 const getCafeArticles = (
   cafeId: GetCafeArticlesInput['cafeId'],
   menuId: GetCafeArticlesInput['menuId'],
   params?: GetCafeArticlesInput['params'],
-) => getCafeArticlesServer({ data: { cafeId, menuId, params } });
+) =>
+  fetchJson<GetCafeArticlesResponse>(
+    `/api/cafe-articles?cafeId=${cafeId}&menuId=${menuId}&page=${params?.page ?? 1}&pageSize=${params?.pageSize ?? 20}`,
+  );
 
 export default getCafeArticles;

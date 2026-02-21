@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as DefaultLayoutRouteImport } from './routes/_defaultLayout'
 import { Route as DefaultLayoutIndexRouteImport } from './routes/_defaultLayout/index'
 import { Route as ToolsSoopupRouteImport } from './routes/tools/soopup'
+import { Route as ApiCafeArticlesRouteImport } from './routes/api/cafe-articles'
 import { Route as DefaultLayoutSoopRouteImport } from './routes/_defaultLayout/soop'
 import { Route as DefaultLayoutReviewRouteImport } from './routes/_defaultLayout/review'
 import { Route as DefaultLayoutLiveRouteImport } from './routes/_defaultLayout/live'
@@ -30,6 +31,11 @@ const DefaultLayoutIndexRoute = DefaultLayoutIndexRouteImport.update({
 const ToolsSoopupRoute = ToolsSoopupRouteImport.update({
   id: '/tools/soopup',
   path: '/tools/soopup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCafeArticlesRoute = ApiCafeArticlesRouteImport.update({
+  id: '/api/cafe-articles',
+  path: '/api/cafe-articles',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DefaultLayoutSoopRoute = DefaultLayoutSoopRouteImport.update({
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/live': typeof DefaultLayoutLiveRoute
   '/review': typeof DefaultLayoutReviewRoute
   '/soop': typeof DefaultLayoutSoopRoute
+  '/api/cafe-articles': typeof ApiCafeArticlesRoute
   '/tools/soopup': typeof ToolsSoopupRoute
 }
 export interface FileRoutesByTo {
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/live': typeof DefaultLayoutLiveRoute
   '/review': typeof DefaultLayoutReviewRoute
   '/soop': typeof DefaultLayoutSoopRoute
+  '/api/cafe-articles': typeof ApiCafeArticlesRoute
   '/tools/soopup': typeof ToolsSoopupRoute
   '/': typeof DefaultLayoutIndexRoute
 }
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/_defaultLayout/live': typeof DefaultLayoutLiveRoute
   '/_defaultLayout/review': typeof DefaultLayoutReviewRoute
   '/_defaultLayout/soop': typeof DefaultLayoutSoopRoute
+  '/api/cafe-articles': typeof ApiCafeArticlesRoute
   '/tools/soopup': typeof ToolsSoopupRoute
   '/_defaultLayout/': typeof DefaultLayoutIndexRoute
 }
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/live'
     | '/review'
     | '/soop'
+    | '/api/cafe-articles'
     | '/tools/soopup'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
     | '/live'
     | '/review'
     | '/soop'
+    | '/api/cafe-articles'
     | '/tools/soopup'
     | '/'
   id:
@@ -114,12 +125,14 @@ export interface FileRouteTypes {
     | '/_defaultLayout/live'
     | '/_defaultLayout/review'
     | '/_defaultLayout/soop'
+    | '/api/cafe-articles'
     | '/tools/soopup'
     | '/_defaultLayout/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   DefaultLayoutRoute: typeof DefaultLayoutRouteWithChildren
+  ApiCafeArticlesRoute: typeof ApiCafeArticlesRoute
   ToolsSoopupRoute: typeof ToolsSoopupRoute
 }
 
@@ -144,6 +157,13 @@ declare module '@tanstack/react-router' {
       path: '/tools/soopup'
       fullPath: '/tools/soopup'
       preLoaderRoute: typeof ToolsSoopupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cafe-articles': {
+      id: '/api/cafe-articles'
+      path: '/api/cafe-articles'
+      fullPath: '/api/cafe-articles'
+      preLoaderRoute: typeof ApiCafeArticlesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_defaultLayout/soop': {
@@ -208,6 +228,7 @@ const DefaultLayoutRouteWithChildren = DefaultLayoutRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   DefaultLayoutRoute: DefaultLayoutRouteWithChildren,
+  ApiCafeArticlesRoute: ApiCafeArticlesRoute,
   ToolsSoopupRoute: ToolsSoopupRoute,
 }
 export const routeTree = rootRouteImport
