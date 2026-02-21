@@ -22,6 +22,8 @@
  *   - Rank emphasis: 1st/2nd/3rd use gold/silver/bronze badges.
  *   - Like count changes animate smoothly (count up/down).
  *   - Rank position changes animate smoothly (FLIP-style move).
+ *   - Highlight scroll follows target during FLIP to keep center alignment.
+ *   - On scroll/resize, FLIP baseline rects are refreshed to avoid full-list drift.
  *   - DEV only: bottom-left floating button simulates rank changes.
  * - Refresh interval: 10s (react-query refetchInterval/staleTime).
  */
@@ -67,6 +69,7 @@ type RankedComment = {
 };
 
 const REFRESH_INTERVAL_MS = 10_000;
+const FLIP_DURATION_MS = 700;
 const DEFAULT_PROFILE_IMAGE =
   'https://profile.img.sooplive.co.kr/LOGO/default_avatar.jpg';
 const searchParams = { userId: parseAsString, postId: parseAsInteger };
@@ -218,7 +221,6 @@ const useAnimatedNumber = (value: number, durationMs = 800) => {
     const from = displayRef.current;
     const to = value;
     if (from === to) {
-      setDisplay(to);
       return;
     }
 
@@ -267,6 +269,7 @@ const RouteComponent = () => {
     key: number | null;
     offsetTop: number | null;
   }>({ key: null, offsetTop: null });
+  const highlightFollowRafRef = useRef<number | null>(null);
   const [inputUrl, setInputUrl] = useState('');
   const [highlightInput, setHighlightInput] = useState('');
   const [highlightUserId, setHighlightUserId] = useState('');
@@ -333,6 +336,51 @@ const RouteComponent = () => {
     staleTime: REFRESH_INTERVAL_MS,
     retry: 1,
   });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    let frameId: number | null = null;
+    const snapshotRects = () => {
+      frameId = null;
+      if (!query.data?.comments?.length) {
+        return;
+      }
+
+      const nextRects = new Map<number, DOMRect>();
+      for (const comment of query.data.comments) {
+        const element = itemRefs.current.get(comment.key);
+        if (element) {
+          nextRects.set(comment.key, element.getBoundingClientRect());
+        }
+      }
+
+      if (nextRects.size > 0) {
+        prevRectsRef.current = nextRects;
+      }
+    };
+
+    const scheduleSnapshot = () => {
+      if (frameId !== null) {
+        return;
+      }
+      frameId = requestAnimationFrame(snapshotRects);
+    };
+
+    window.addEventListener('scroll', scheduleSnapshot, { passive: true });
+    window.addEventListener('resize', scheduleSnapshot);
+
+    return () => {
+      window.removeEventListener('scroll', scheduleSnapshot);
+      window.removeEventListener('resize', scheduleSnapshot);
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+      }
+    };
+  }, [query.data?.comments]);
+
   useLayoutEffect(() => {
     const comments = query.data?.comments;
     if (!comments?.length) {
@@ -340,15 +388,16 @@ const RouteComponent = () => {
       return;
     }
 
+    const flipCandidates = comments;
     const nextRects = new Map<number, DOMRect>();
-    for (const comment of comments) {
+    for (const comment of flipCandidates) {
       const element = itemRefs.current.get(comment.key);
       if (element) {
         nextRects.set(comment.key, element.getBoundingClientRect());
       }
     }
 
-    for (const comment of comments) {
+    for (const comment of flipCandidates) {
       const element = itemRefs.current.get(comment.key);
       const prevRect = prevRectsRef.current.get(comment.key);
       const nextRect = nextRects.get(comment.key);
@@ -365,8 +414,7 @@ const RouteComponent = () => {
       element.style.transform = `translateY(${deltaY}px)`;
 
       requestAnimationFrame(() => {
-        element.style.transition =
-          'transform 700ms cubic-bezier(0.22, 1, 0.36, 1)';
+        element.style.transition = `transform ${FLIP_DURATION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`;
         element.style.transform = 'translateY(0)';
       });
     }
@@ -375,6 +423,11 @@ const RouteComponent = () => {
   }, [query.data?.comments]);
 
   useEffect(() => {
+    if (highlightFollowRafRef.current !== null) {
+      cancelAnimationFrame(highlightFollowRafRef.current);
+      highlightFollowRafRef.current = null;
+    }
+
     const highlight = highlightUserId.trim().toLowerCase();
     if (!highlight) {
       prevHighlightRef.current = { key: null, offsetTop: null };
@@ -407,11 +460,41 @@ const RouteComponent = () => {
     const hasMoved =
       prev.offsetTop === null ||
       Math.abs(currentOffsetTop - prev.offsetTop) > 1;
-    if (isSameTarget && !hasMoved) {
-      return;
-    }
 
-    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const centerScroll = () => {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+
+    requestAnimationFrame(centerScroll);
+    const followStart = performance.now();
+    const follow = (now: number) => {
+      const elapsed = now - followStart;
+      const followDuration =
+        isSameTarget && !hasMoved ? 420 : FLIP_DURATION_MS + 80;
+      if (elapsed > followDuration) {
+        highlightFollowRafRef.current = null;
+        return;
+      }
+
+      const rect = element.getBoundingClientRect();
+      const viewportCenter = window.innerHeight / 2;
+      const targetCenter = rect.top + rect.height / 2;
+      const delta = targetCenter - viewportCenter;
+
+      if (Math.abs(delta) > 1) {
+        window.scrollBy({ top: delta * 0.22, behavior: 'auto' });
+      }
+
+      highlightFollowRafRef.current = requestAnimationFrame(follow);
+    };
+    highlightFollowRafRef.current = requestAnimationFrame(follow);
+
+    return () => {
+      if (highlightFollowRafRef.current !== null) {
+        cancelAnimationFrame(highlightFollowRafRef.current);
+        highlightFollowRafRef.current = null;
+      }
+    };
   }, [highlightUserId, query.data?.comments]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -595,7 +678,7 @@ const RouteComponent = () => {
               ) : null}
 
               {query.data ? (
-                <ul className="flex flex-col gap-2">
+                <ul className="flex flex-col gap-2 [overflow-anchor:none]">
                   {query.data.comments.map((comment, index) => (
                     <li
                       className={`flex items-center gap-2 rounded-xl border bg-slate-950/80 p-2.5 sm:gap-3 sm:p-3 ${
