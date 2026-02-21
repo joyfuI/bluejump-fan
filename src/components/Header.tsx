@@ -1,6 +1,6 @@
 import { Link, useMatches } from '@tanstack/react-router';
 import { Layout, Menu, Typography } from 'antd';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Wrench } from 'lucide-react';
 
 const items = [
   { key: 'live', label: <Link to="/live">라이브 모아보기</Link> },
@@ -21,6 +21,33 @@ const items = [
         <ExternalLink className="ml-1" size={16} />
       </a>
     ),
+  },
+  {
+    key: 'tools',
+    icon: <Wrench size={16} />,
+    label: '방송 도우미',
+    children: [
+      {
+        key: 'tools-soop',
+        label: '숲 관련',
+        type: 'group',
+        children: [
+          {
+            key: 'tools-soop-up',
+            label: (
+              <Link
+                className="inline-flex items-center"
+                target="_blank"
+                to="/tools/soopup"
+              >
+                댓글 업순 따잇쇼
+                <ExternalLink className="ml-1" size={16} />
+              </Link>
+            ),
+          },
+        ],
+      },
+    ],
   },
 ];
 
