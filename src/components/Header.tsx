@@ -40,7 +40,7 @@ const items = [
                 target="_blank"
                 to="/tools/soopup"
               >
-                댓글 업순 따잇쇼
+                댓글 실시간 업 랭킹
                 <ExternalLink className="ml-1" size={16} />
               </Link>
             ),
