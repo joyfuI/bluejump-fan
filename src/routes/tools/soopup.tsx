@@ -855,9 +855,9 @@ const RouteComponent = () => {
                             }
                           }}
                         >
-                          <div className="flex w-11 shrink-0 justify-center sm:w-12">
+                          <div className="flex w-12 shrink-0 justify-center sm:w-14">
                             <span
-                              className={`inline-flex min-w-8 items-center justify-center rounded-md px-2 py-1 text-xs font-extrabold leading-none sm:min-w-9 sm:text-sm ${
+                              className={`inline-flex min-w-9 items-center justify-center rounded-md px-2.5 py-1 text-sm font-extrabold leading-none sm:min-w-10 sm:text-base ${
                                 cutoffRank !== undefined && rank === cutoffRank
                                   ? 'bg-rose-600 text-rose-50 ring-1 ring-rose-400/70'
                                   : rank === 1
@@ -869,7 +869,7 @@ const RouteComponent = () => {
                                         : 'bg-slate-800 text-slate-100'
                               }`}
                             >
-                              #{rank}
+                              {rank}
                             </span>
                           </div>
                           <img
