@@ -25,7 +25,7 @@ const items = [
   {
     key: 'tools',
     icon: <Wrench size={16} />,
-    label: '방송 도우미',
+    label: '방송 도구',
     children: [
       {
         key: 'tools-soop',
