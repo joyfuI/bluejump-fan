@@ -668,10 +668,7 @@ const RouteComponent = () => {
               </h1>
             </div>
 
-            <form
-              className="flex flex-col gap-2 sm:flex-row"
-              onSubmit={handleSubmit}
-            >
+            <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
               <label className="sr-only" htmlFor={inputId}>
                 SOOP 게시글 URL
               </label>
@@ -681,7 +678,7 @@ const RouteComponent = () => {
                   className="h-11 w-full rounded-xl border border-slate-700 bg-slate-950 pl-10 pr-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-500"
                   id={inputId}
                   onChange={(event) => setInputUrl(event.target.value)}
-                  placeholder="https://www.sooplive.co.kr/station/*****/post/*****"
+                  placeholder="게시글 주소 (https://www.sooplive.co.kr/station/*****/post/*****)"
                   type="url"
                   value={inputUrl}
                 />
@@ -690,7 +687,7 @@ const RouteComponent = () => {
               <label className="sr-only" htmlFor={cutlineInputId}>
                 커트라인 (선택)
               </label>
-              <div className="relative sm:w-44">
+              <div className="relative">
                 <input
                   className="h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-500"
                   id={cutlineInputId}
@@ -706,7 +703,7 @@ const RouteComponent = () => {
               <label className="sr-only" htmlFor={highlightInputId}>
                 하이라이트 아이디 (선택)
               </label>
-              <div className="relative sm:w-56">
+              <div className="relative">
                 <input
                   className="h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-500"
                   id={highlightInputId}
