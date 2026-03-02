@@ -45,6 +45,19 @@ const items = [
               </Link>
             ),
           },
+          {
+            key: 'tools-soop-comment',
+            label: (
+              <Link
+                className="inline-flex items-center"
+                target="_blank"
+                to="/tools/soopcomment"
+              >
+                댓글 링크 생성기
+                <ExternalLink className="ml-1" size={16} />
+              </Link>
+            ),
+          },
         ],
       },
     ],
