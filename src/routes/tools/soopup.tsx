@@ -1,35 +1,35 @@
-/**
- * SOOPUP page context (keep this comment updated on every edit):
- * - Route: /tools/soopup
- * - Purpose: show SOOP post comments ranked by like count in near real-time.
- * - Data flow:
- *   1) Validate search params at route level via createStandardSchemaV1(searchParams)
- *      and read querystring userId/postId/cutline (nuqs).
- *   2) If query exists, fetch all paginated comments (parallel) via getPostComment.
- *   3) Mitigate timing issues by re-fetching page 1, checking latest lastPage,
- *      fetching newly appeared pages, and deduplicating by pCommentNo.
- *   4) Sort by likeCnt desc, then regDate asc, then pCommentNo asc.
- * - UI flow:
- *   - If no querystring: show URL input screen only.
- *   - If querystring exists: show ranking list only.
- *   - Optional highlight userId is stored in URL hash (#userId) and is used
- *     to center-scroll the matching row.
- *   - Optional cutline (>=1) draws a separator at the pass/fail rank boundary.
- *   - Floating settings button (top-right) clears querystring and returns to input.
- * - Current UX rules:
- *   - Header info is 2 lines:
- *     line1: auto-refresh + "게시물 보기"
- *     line2: comment aggregate + page count
- *   - Rank emphasis: 1st/2nd/3rd use gold/silver/bronze badges.
- *   - Tied scores are visually grouped with tight spacing.
- *   - Cutline rank badge is highlighted in red.
- *   - Like count changes animate smoothly (count up/down).
- *   - Rank position changes animate smoothly (FLIP-style move).
- *   - Highlight scroll follows target during FLIP to keep center alignment.
- *   - On scroll/resize, FLIP baseline rects are refreshed to avoid full-list drift.
- *   - DEV only: bottom-left floating button simulates rank changes.
- *   - Cutline input uses text+numeric keyboard so it can be fully cleared.
- * - Refresh interval: 10s (react-query refetchInterval/staleTime).
+﻿/**
+ * SOOPUP page context (update this block whenever behavior changes):
+ * - Route mode split:
+ *   - querystring has userId+postId => ranking screen
+ *   - otherwise => input screen
+ * - URL state policy:
+ *   - querystring: userId, postId, cutline (shareable state)
+ *   - hash: highlight target only (#<userId>) for scroll-target semantics
+ * - Pagination race mitigation:
+ *   - fetch page 1 -> fetch remaining pages in parallel -> re-fetch page 1
+ *   - if lastPage increased, fetch extra pages
+ *   - merge and dedupe by pCommentNo
+ * - Ranking policy:
+ *   - sort by likeCnt desc
+ *   - tie-break by regDate asc (earlier comment first), then pCommentNo asc
+ *   - display uses competition ranking (e.g. 1,2,2,4)
+ * - Cutline policy:
+ *   - cutline means rank threshold (not row index)
+ *   - separator appears at pass/fail boundary
+ *   - cutoff rank badge is highlighted in red
+ * - Motion/scroll policy:
+ *   - like count animates numerically
+ *   - rank movement animates with FLIP
+ *   - highlight follow-scroll keeps target near viewport center
+ * - Settings button behavior:
+ *   - top-right floating button clears querystring and returns to input view
+ *   - current URL/cutline are copied to local inputs for quick edit
+ * - Input form is intentionally vertical (URL, cutline, highlight).
+ * - Right-side like badge opens the source comment in a new tab:
+ *   https://www.sooplive.co.kr/station/{userId}/post/{postId}#comment_noti{pCommentNo}
+ * - Dev-only bottom-left button mutates cache for rank-change testing.
+ * - Refresh interval is fixed to 10s.
  */
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -668,10 +668,7 @@ const RouteComponent = () => {
               </h1>
             </div>
 
-            <form
-              className="flex flex-col gap-2 sm:flex-row"
-              onSubmit={handleSubmit}
-            >
+            <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
               <label className="sr-only" htmlFor={inputId}>
                 SOOP 게시글 URL
               </label>
@@ -681,7 +678,7 @@ const RouteComponent = () => {
                   className="h-11 w-full rounded-xl border border-slate-700 bg-slate-950 pl-10 pr-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-500"
                   id={inputId}
                   onChange={(event) => setInputUrl(event.target.value)}
-                  placeholder="https://www.sooplive.co.kr/station/*****/post/*****"
+                  placeholder="게시글 주소 (https://www.sooplive.co.kr/station/*****/post/*****)"
                   type="url"
                   value={inputUrl}
                 />
@@ -690,7 +687,7 @@ const RouteComponent = () => {
               <label className="sr-only" htmlFor={cutlineInputId}>
                 커트라인 (선택)
               </label>
-              <div className="relative sm:w-44">
+              <div className="relative">
                 <input
                   className="h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-500"
                   id={cutlineInputId}
@@ -706,7 +703,7 @@ const RouteComponent = () => {
               <label className="sr-only" htmlFor={highlightInputId}>
                 하이라이트 아이디 (선택)
               </label>
-              <div className="relative sm:w-56">
+              <div className="relative">
                 <input
                   className="h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-500"
                   id={highlightInputId}
