@@ -24,19 +24,28 @@ const RouteComponent = () => {
       <Alert
         className="mb-6"
         title={
-          <Accordion label="등재 조건 및 추가/삭제 요청">
-            <ul className="list-disc pl-5">
-              <li>블루점프만 다룰 것(+스콘까진 ok)</li>
-              <li>최근 6개월 내에 업로드한 영상이 있을 것</li>
-            </ul>
-            <p>
-              키리누키 추가 및 삭제 등 문의는{' '}
-              <a href=" " ref={emailRef}>
-                asdf
-              </a>
-              으로 해주세요.
-            </p>
-          </Accordion>
+          <>
+            <a
+              href="https://cafe.naver.com/bluejumpofficial/1769"
+              rel="noreferrer"
+              target="_blank"
+            >
+              블루점프 2차 창작 가이드라인
+            </a>
+            <Accordion className="ml-2" label="등재 조건 및 추가/삭제 요청">
+              <ul className="list-disc pl-5">
+                <li>블루점프만 다룰 것(+스콘까진 ok)</li>
+                <li>최근 6개월 내에 업로드한 영상이 있을 것</li>
+              </ul>
+              <p>
+                키리누키 추가 및 삭제 등 문의는{' '}
+                <a className="text-current" href=" " ref={emailRef}>
+                  #
+                </a>
+                으로 해주세요.
+              </p>
+            </Accordion>
+          </>
         }
         type="warning"
       />
