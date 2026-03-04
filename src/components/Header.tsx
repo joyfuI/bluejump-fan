@@ -8,6 +8,7 @@ const items = [
   { key: 'soop', label: <Link to="/soop">방송국글 모아보기</Link> },
   { key: 'cafe', label: <Link to="/cafe">카페글 모아보기</Link> },
   { key: 'review', label: <Link to="/review">다시보기 모아보기</Link> },
+  { key: 'clipper', label: <Link to="/clipper">키리누키 목록</Link> },
   {
     key: 'bluejump',
     label: (

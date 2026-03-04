@@ -17,6 +17,7 @@ import { Route as ApiCafeArticlesRouteImport } from './routes/api/cafe-articles'
 import { Route as DefaultLayoutSoopRouteImport } from './routes/_defaultLayout/soop'
 import { Route as DefaultLayoutReviewRouteImport } from './routes/_defaultLayout/review'
 import { Route as DefaultLayoutLiveRouteImport } from './routes/_defaultLayout/live'
+import { Route as DefaultLayoutClipperRouteImport } from './routes/_defaultLayout/clipper'
 import { Route as DefaultLayoutCalendarRouteImport } from './routes/_defaultLayout/calendar'
 import { Route as DefaultLayoutCafeRouteImport } from './routes/_defaultLayout/cafe'
 
@@ -59,6 +60,11 @@ const DefaultLayoutLiveRoute = DefaultLayoutLiveRouteImport.update({
   path: '/live',
   getParentRoute: () => DefaultLayoutRoute,
 } as any)
+const DefaultLayoutClipperRoute = DefaultLayoutClipperRouteImport.update({
+  id: '/clipper',
+  path: '/clipper',
+  getParentRoute: () => DefaultLayoutRoute,
+} as any)
 const DefaultLayoutCalendarRoute = DefaultLayoutCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/': typeof DefaultLayoutIndexRoute
   '/cafe': typeof DefaultLayoutCafeRoute
   '/calendar': typeof DefaultLayoutCalendarRoute
+  '/clipper': typeof DefaultLayoutClipperRoute
   '/live': typeof DefaultLayoutLiveRoute
   '/review': typeof DefaultLayoutReviewRoute
   '/soop': typeof DefaultLayoutSoopRoute
@@ -84,6 +91,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/cafe': typeof DefaultLayoutCafeRoute
   '/calendar': typeof DefaultLayoutCalendarRoute
+  '/clipper': typeof DefaultLayoutClipperRoute
   '/live': typeof DefaultLayoutLiveRoute
   '/review': typeof DefaultLayoutReviewRoute
   '/soop': typeof DefaultLayoutSoopRoute
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/_defaultLayout': typeof DefaultLayoutRouteWithChildren
   '/_defaultLayout/cafe': typeof DefaultLayoutCafeRoute
   '/_defaultLayout/calendar': typeof DefaultLayoutCalendarRoute
+  '/_defaultLayout/clipper': typeof DefaultLayoutClipperRoute
   '/_defaultLayout/live': typeof DefaultLayoutLiveRoute
   '/_defaultLayout/review': typeof DefaultLayoutReviewRoute
   '/_defaultLayout/soop': typeof DefaultLayoutSoopRoute
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cafe'
     | '/calendar'
+    | '/clipper'
     | '/live'
     | '/review'
     | '/soop'
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
   to:
     | '/cafe'
     | '/calendar'
+    | '/clipper'
     | '/live'
     | '/review'
     | '/soop'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '/_defaultLayout'
     | '/_defaultLayout/cafe'
     | '/_defaultLayout/calendar'
+    | '/_defaultLayout/clipper'
     | '/_defaultLayout/live'
     | '/_defaultLayout/review'
     | '/_defaultLayout/soop'
@@ -207,6 +219,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DefaultLayoutLiveRouteImport
       parentRoute: typeof DefaultLayoutRoute
     }
+    '/_defaultLayout/clipper': {
+      id: '/_defaultLayout/clipper'
+      path: '/clipper'
+      fullPath: '/clipper'
+      preLoaderRoute: typeof DefaultLayoutClipperRouteImport
+      parentRoute: typeof DefaultLayoutRoute
+    }
     '/_defaultLayout/calendar': {
       id: '/_defaultLayout/calendar'
       path: '/calendar'
@@ -227,6 +246,7 @@ declare module '@tanstack/react-router' {
 interface DefaultLayoutRouteChildren {
   DefaultLayoutCafeRoute: typeof DefaultLayoutCafeRoute
   DefaultLayoutCalendarRoute: typeof DefaultLayoutCalendarRoute
+  DefaultLayoutClipperRoute: typeof DefaultLayoutClipperRoute
   DefaultLayoutLiveRoute: typeof DefaultLayoutLiveRoute
   DefaultLayoutReviewRoute: typeof DefaultLayoutReviewRoute
   DefaultLayoutSoopRoute: typeof DefaultLayoutSoopRoute
@@ -236,6 +256,7 @@ interface DefaultLayoutRouteChildren {
 const DefaultLayoutRouteChildren: DefaultLayoutRouteChildren = {
   DefaultLayoutCafeRoute: DefaultLayoutCafeRoute,
   DefaultLayoutCalendarRoute: DefaultLayoutCalendarRoute,
+  DefaultLayoutClipperRoute: DefaultLayoutClipperRoute,
   DefaultLayoutLiveRoute: DefaultLayoutLiveRoute,
   DefaultLayoutReviewRoute: DefaultLayoutReviewRoute,
   DefaultLayoutSoopRoute: DefaultLayoutSoopRoute,

@@ -23,7 +23,7 @@ const Accordion = ({
       <button
         aria-controls={contentId}
         aria-expanded={open}
-        className="inline-flex items-baseline gap-1 align-baseline text-left leading-[inherit]"
+        className="inline-flex items-baseline gap-1 align-baseline text-left leading-[inherit] cursor-pointer"
         onClick={() => setOpen((prev) => !prev)}
         type="button"
       >
