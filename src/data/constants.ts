@@ -101,6 +101,7 @@ export const CLIPPERS: readonly string[] = [
   'UCuJTjPFNeixarR9mMPpabeQ', // 모구구의 68번째 낫
   'UCG0jWW7q0P1r5pm1UWyfOZA', // 작대기
   'UCvTa26HqfEaUksli40JojLw', // 불법점포
+  'UCjyayvu8VlUg3-fvvdG5lAQ', // 과자나라 주민
   'UCw186e1y2vw_JWlX8K50bcQ', // 버공소
   'UC87cvDeTygkdQZmeOaaefCA', // 츄블링
 ];
