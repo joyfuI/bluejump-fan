@@ -80,20 +80,6 @@ export const MEMBERS: readonly Member[] = [
       ],
     },
   },
-  {
-    id: 'denebeu',
-    nick: '데네브',
-    stationNo: 29418184,
-    cafe: {
-      url: 'https://cafe.naver.com/denebeu',
-      id: 31644578,
-      name: '데네브의 아틀리에',
-      menus: [
-        { id: 27, name: '네브의 일기장' },
-        { id: 28, name: '네브의 대화방' },
-      ],
-    },
-  },
 ];
 
 export const CLIPPERS: readonly string[] = [
