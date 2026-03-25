@@ -353,4 +353,7 @@ const RouteComponent = () => {
 export const Route = createFileRoute('/tools/soopcomment')({
   validateSearch: createStandardSchemaV1(searchParams, { partialOutput: true }),
   component: RouteComponent,
+  headers: () => ({
+    'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',
+  }),
 });

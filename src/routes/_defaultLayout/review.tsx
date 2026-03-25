@@ -39,4 +39,7 @@ const RouteComponent = () => {
 export const Route = createFileRoute('/_defaultLayout/review')({
   staticData: { selectedKey: 'review' },
   component: RouteComponent,
+  headers: () => ({
+    'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',
+  }),
 });

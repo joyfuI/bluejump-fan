@@ -922,6 +922,9 @@ const RouteComponent = () => {
 };
 
 export const Route = createFileRoute('/tools/soopup')({
-  validateSearch: createStandardSchemaV1(searchParams, { partialOutput: true }),
   component: RouteComponent,
+  validateSearch: createStandardSchemaV1(searchParams, { partialOutput: true }),
+  headers: () => ({
+    'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',
+  }),
 });
