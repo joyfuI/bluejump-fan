@@ -2,6 +2,8 @@ import { Link, useMatches } from '@tanstack/react-router';
 import { Layout, Menu, Typography } from 'antd';
 import { ExternalLink, Wrench } from 'lucide-react';
 
+import { MEMBERS } from '@/data/constants.ts';
+
 const items = [
   { key: 'live', label: <Link to="/live">라이브 모아보기</Link> },
   { key: 'calendar', label: <Link to="/calendar">캘린더 모아보기</Link> },
@@ -10,18 +12,25 @@ const items = [
   { key: 'review', label: <Link to="/review">다시보기 모아보기</Link> },
   { key: 'clipper', label: <Link to="/clipper">키리누키 목록</Link> },
   {
-    key: 'bluejump',
-    label: (
-      <a
-        className="inline-flex items-center"
-        href="https://cafe.naver.com/bluejumpofficial"
-        rel="noreferrer"
-        target="_blank"
-      >
-        블루점프 팬카페
-        <ExternalLink className="ml-1" size={16} />
-      </a>
-    ),
+    key: 'fancafe',
+    label: '팬카페',
+    children: MEMBERS.values()
+      .filter((member) => member.cafe)
+      .map((member) => ({
+        key: `fancafe-${member.id}`,
+        label: (
+          <a
+            className="inline-flex items-center"
+            href={member.cafe?.url}
+            rel="noreferrer"
+            target="_blank"
+          >
+            {member.cafe?.name}
+            <ExternalLink className="ml-1" size={16} />
+          </a>
+        ),
+      }))
+      .toArray(),
   },
   {
     key: 'tools',
