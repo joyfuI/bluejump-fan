@@ -22,9 +22,10 @@ export const Route = createFileRoute('/api/cafe-articles')({
         return new Response(text, {
           status: 200,
           headers: {
-            'content-type':
-              res.headers.get('content-type') ?? 'application/json',
-            'cache-control': 'public, s-maxage=60, stale-while-revalidate=600',
+            'Content-Type':
+              res.headers.get('Content-Type') ?? 'application/json',
+            'Cache-Control':
+              'public, s-maxage=600, stale-while-revalidate=36000',
           },
         });
       },
