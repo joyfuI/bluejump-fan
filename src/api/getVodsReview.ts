@@ -94,7 +94,7 @@ export const REVALIDATE = 300;
 
 const getVodsReview = (userId: string, params?: GetVodsReviewParams) =>
   fetchJson<GetVodsReviewResponse>(
-    `https://chapi.sooplive.co.kr/api/${userId}/vods/review?orderby=reg_date&page=${params?.page ?? 1}&field=title,contents,user_nick,user_id&per_page=60`,
+    `https://chapi.sooplive.com/api/${userId}/vods/review?orderby=reg_date&page=${params?.page ?? 1}&field=title,contents,user_nick,user_id&per_page=60`,
   );
 
 export default getVodsReview;

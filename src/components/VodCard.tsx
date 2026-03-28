@@ -20,7 +20,7 @@ const VodCard = ({ data }: VodCardProps) => {
           cover={
             <a
               className="relative overflow-hidden"
-              href={`https://vod.sooplive.co.kr/player/${data.title_no}`}
+              href={`https://vod.sooplive.com/player/${data.title_no}`}
               rel="noreferrer"
               target="_blank"
             >
@@ -50,7 +50,7 @@ const VodCard = ({ data }: VodCardProps) => {
             avatar={
               <a
                 className="text-current"
-                href={`https://www.sooplive.co.kr/station/${data.user_id}`}
+                href={`https://www.sooplive.com/station/${data.user_id}`}
                 rel="noreferrer"
                 target="_blank"
               >
@@ -60,7 +60,7 @@ const VodCard = ({ data }: VodCardProps) => {
             description={
               <a
                 className="text-current"
-                href={`https://www.sooplive.co.kr/station/${data.user_id}`}
+                href={`https://www.sooplive.com/station/${data.user_id}`}
                 rel="noreferrer"
                 target="_blank"
               >
@@ -70,7 +70,7 @@ const VodCard = ({ data }: VodCardProps) => {
             title={
               <a
                 className="text-current"
-                href={`https://vod.sooplive.co.kr/player/${data.title_no}`}
+                href={`https://vod.sooplive.com/player/${data.title_no}`}
                 rel="noreferrer"
                 target="_blank"
                 title={data.title_name}

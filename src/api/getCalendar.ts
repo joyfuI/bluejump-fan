@@ -25,7 +25,7 @@ const getCalendar = (userId: string, params?: GetCalendarParams) => {
   const month = params?.month ?? today.getMonth() + 1;
 
   return fetchJson<GetCalendarResponse>(
-    `https://api-channel.sooplive.co.kr/v1.1/channel/${userId}/calendar?view=month&year=${year}&month=${month}&userId=${userId}`,
+    `https://api-channel.sooplive.com/v1.1/channel/${userId}/calendar?view=month&year=${year}&month=${month}&userId=${userId}`,
   );
 };
 

@@ -80,7 +80,7 @@ export const REVALIDATE = 60;
 
 const getStationInfo = (userId: string) =>
   fetchJson<GetStationInfoResponse>(
-    `https://api-channel.sooplive.co.kr/v1.1/channel/${userId}/station`,
+    `https://api-channel.sooplive.com/v1.1/channel/${userId}/station`,
   );
 
 export default getStationInfo;

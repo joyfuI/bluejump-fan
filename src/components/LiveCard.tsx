@@ -17,16 +17,14 @@ const LiveCard = ({ data }: LiveCardProps) => {
 
   useEffect(() => {
     if (data.broad?.broadNo) {
-      setImageSrc(
-        `https://liveimg.sooplive.co.kr/h/${data.broad.broadNo}.webp`,
-      );
+      setImageSrc(`https://liveimg.sooplive.com/h/${data.broad.broadNo}.webp`);
     }
   }, [data.broad?.broadNo]);
 
   useInterval(() => {
     if (data.broad?.broadNo) {
       setImageSrc(
-        `https://liveimg.sooplive.co.kr/h/${data.broad.broadNo}.webp?t=${Date.now()}`,
+        `https://liveimg.sooplive.com/h/${data.broad.broadNo}.webp?t=${Date.now()}`,
       );
     }
   }, 10000);
@@ -37,7 +35,7 @@ const LiveCard = ({ data }: LiveCardProps) => {
         data.station?.userId && data.broad?.broadTitle && imageSrc ? (
           <a
             className="overflow-hidden"
-            href={`https://play.sooplive.co.kr/${data.station.userId}`}
+            href={`https://play.sooplive.com/${data.station.userId}`}
             rel="noreferrer"
             target="_blank"
           >
@@ -66,7 +64,7 @@ const LiveCard = ({ data }: LiveCardProps) => {
         avatar={
           <a
             className="text-current"
-            href={`https://www.sooplive.co.kr/station/${data.station?.userId ?? ''}`}
+            href={`https://www.sooplive.com/station/${data.station?.userId ?? ''}`}
             rel="noreferrer"
             target="_blank"
           >
@@ -77,7 +75,7 @@ const LiveCard = ({ data }: LiveCardProps) => {
           data.station?.userId && data.broad?.broadTitle ? (
             <a
               className="text-current"
-              href={`https://play.sooplive.co.kr/${data.station.userId}`}
+              href={`https://play.sooplive.com/${data.station.userId}`}
               rel="noreferrer"
               target="_blank"
             >
@@ -90,7 +88,7 @@ const LiveCard = ({ data }: LiveCardProps) => {
         title={
           <a
             className="text-current"
-            href={`https://www.sooplive.co.kr/station/${data.station?.userId ?? ''}`}
+            href={`https://www.sooplive.com/station/${data.station?.userId ?? ''}`}
             rel="noreferrer"
             target="_blank"
           >

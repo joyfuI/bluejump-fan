@@ -182,7 +182,7 @@ const getBoard = (
   params?: GetBoardParams,
 ) =>
   fetchJson<GetBoardResponse>(
-    `https://chapi.sooplive.co.kr/api/${userId}/board/${boardNumber ?? ''}?per_page=20&field=title,contents,user_nick,user_id,hashtags&type=all&order_by=reg_date&board_number=${boardNumber ?? ''}&page=${params?.page ?? 1}`,
+    `https://chapi.sooplive.com/api/${userId}/board/${boardNumber ?? ''}?per_page=20&field=title,contents,user_nick,user_id,hashtags&type=all&order_by=reg_date&board_number=${boardNumber ?? ''}&page=${params?.page ?? 1}`,
   );
 
 export default getBoard;

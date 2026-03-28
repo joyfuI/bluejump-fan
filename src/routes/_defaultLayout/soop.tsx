@@ -86,8 +86,8 @@ const RouteComponent = () => {
                 <a
                   href={
                     item.board_type === 105
-                      ? `https://vod.sooplive.co.kr/player/${item.title_no}`
-                      : `https://www.sooplive.co.kr/station/${item.user_id}/post/${item.title_no}`
+                      ? `https://vod.sooplive.com/player/${item.title_no}`
+                      : `https://www.sooplive.com/station/${item.user_id}/post/${item.title_no}`
                   }
                   rel="noreferrer"
                   target="_blank"
