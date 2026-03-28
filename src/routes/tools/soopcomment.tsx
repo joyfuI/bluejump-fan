@@ -4,8 +4,10 @@
  * - URL state policy (nuqs):
  *   - querystring keeps `url` and `targets` for shareable/reload-safe state.
  *   - when querystring has valid values, the page auto-runs the search.
+ *   - submitted targets are normalized into comma-separated lowercase terms (trim + dedupe).
  * - Input contract:
- *   - post URL: https://www.sooplive.co.kr/station/{userId}/post/{postId}
+ *   - post URL display format: https://www.sooplive.com/station/{userId}/post/{postId}
+ *   - accepted input hosts: sooplive.com / sooplive.co.kr (with or without www)
  *   - targets: comma-separated search terms
  *   - default targets input: MEMBERS[].id joined by comma when query `targets` is empty
  * - Match policy:
@@ -16,8 +18,9 @@
  *   - merge pages and dedupe by pCommentNo
  * - Result policy:
  *   - sort by regDate desc, tie-break by pCommentNo desc
- * - Copy button writes full comment anchor URL:
- *   https://www.sooplive.co.kr/station/{userId}/post/{postId}#comment_noti{pCommentNo}
+ *   - profile image normalizes protocol-relative URLs and falls back to default avatar
+ * - Copy button uses `copyText` utility and writes display-domain comment URL:
+ *   https://www.sooplive.com/station/{userId}/post/{postId}#comment_noti{pCommentNo}
  */
 
 import { useMutation } from '@tanstack/react-query';
@@ -42,6 +45,7 @@ type FilteredComment = {
 };
 
 const DEFAULT_TARGETS = MEMBERS.map((member) => member.id).join(',');
+
 const searchParams = {
   url: parseAsString.withDefault(''),
   targets: parseAsString.withDefault(DEFAULT_TARGETS),
@@ -58,7 +62,15 @@ const parseSoopPostUrl = (raw: string): SoopTarget | null => {
     return null;
   }
 
-  if (url.hostname !== 'www.sooplive.co.kr') return null;
+  const hostname = url.hostname.toLowerCase();
+  if (
+    hostname !== 'www.sooplive.com' &&
+    hostname !== 'sooplive.com' &&
+    hostname !== 'www.sooplive.co.kr' &&
+    hostname !== 'sooplive.co.kr'
+  ) {
+    return null;
+  }
 
   const match = url.pathname.match(/^\/station\/([^/]+)\/post\/(\d+)\/?$/i);
   if (!match) return null;
@@ -68,6 +80,12 @@ const parseSoopPostUrl = (raw: string): SoopTarget | null => {
 
   return { userId: match[1], postId };
 };
+
+const buildPostUrl = (target: SoopTarget) =>
+  `https://www.sooplive.com/station/${target.userId}/post/${target.postId}`;
+
+const buildCommentLink = (target: SoopTarget, pCommentNo: number) =>
+  `${buildPostUrl(target)}#comment_noti${pCommentNo}`;
 
 const parseTargets = (raw: string) =>
   Array.from(
@@ -79,14 +97,18 @@ const parseTargets = (raw: string) =>
     ),
   );
 
+const normalizeProfileImage = (profileImage: string) => {
+  if (!profileImage)
+    return 'https://profile.img.sooplive.com/LOGO/default_avatar.jpg';
+  if (profileImage.startsWith('//')) return `https:${profileImage}`;
+  return profileImage;
+};
+
 const compareByRecent = (a: FilteredComment, b: FilteredComment) => {
   const timeDiff = b.regDate.localeCompare(a.regDate);
   if (timeDiff !== 0) return timeDiff;
   return b.pCommentNo - a.pCommentNo;
 };
-
-const buildCommentLink = (target: SoopTarget, pCommentNo: number) =>
-  `https://www.sooplive.co.kr/station/${target.userId}/post/${target.postId}#comment_noti${pCommentNo}`;
 
 const fetchMatchedComments = async (target: SoopTarget, rawTargets: string) => {
   const targetTerms = parseTargets(rawTargets);
@@ -110,6 +132,8 @@ const fetchMatchedComments = async (target: SoopTarget, rawTargets: string) => {
   const deduped = new Map<number, FilteredComment>();
   for (const page of [firstPage, ...restResponses]) {
     for (const comment of page.data) {
+      if (!comment.pCommentNo) continue;
+
       const lowerUserId = comment.userId.toLowerCase();
       const lowerUserNick = comment.userNick.toLowerCase();
       const byId = targetTerms.some((term) => term === lowerUserId);
@@ -120,7 +144,7 @@ const fetchMatchedComments = async (target: SoopTarget, rawTargets: string) => {
         pCommentNo: comment.pCommentNo,
         userId: comment.userId,
         userNick: comment.userNick,
-        profileImage: comment.profileImage,
+        profileImage: normalizeProfileImage(comment.profileImage),
         regDate: comment.regDate,
         comment: comment.comment,
       });
@@ -137,7 +161,9 @@ const RouteComponent = () => {
   const [submittedTarget, setSubmittedTarget] = useState<SoopTarget | null>(
     null,
   );
+
   const lastAutoFetchKeyRef = useRef('');
+  const copyResetTimerRef = useRef<number | null>(null);
 
   const [queryUrl, setQueryUrl] = useQueryState('url', searchParams.url);
   const [queryTargets, setQueryTargets] = useQueryState(
@@ -145,34 +171,48 @@ const RouteComponent = () => {
     searchParams.targets,
   );
 
-  const queryUrlValue = queryUrl;
-  const queryTargetsValue = queryTargets;
+  useEffect(
+    () => () => {
+      if (copyResetTimerRef.current !== null) {
+        clearTimeout(copyResetTimerRef.current);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
-    setUrlInput(queryUrlValue);
-  }, [queryUrlValue]);
+    const parsed = parseSoopPostUrl(queryUrl);
+    setUrlInput(parsed ? buildPostUrl(parsed) : queryUrl);
+  }, [queryUrl]);
 
   useEffect(() => {
-    setTargetInput(queryTargetsValue || DEFAULT_TARGETS);
-  }, [queryTargetsValue]);
+    setTargetInput(queryTargets || DEFAULT_TARGETS);
+  }, [queryTargets]);
 
   const parsedTarget = useMemo(() => parseSoopPostUrl(urlInput), [urlInput]);
-  const hasTargets = parseTargets(targetInput).length > 0;
+  const parsedInputTerms = useMemo(
+    () => parseTargets(targetInput),
+    [targetInput],
+  );
+  const hasTargets = parsedInputTerms.length > 0;
 
   const parsedQueryTarget = useMemo(
-    () => parseSoopPostUrl(queryUrlValue),
-    [queryUrlValue],
+    () => parseSoopPostUrl(queryUrl),
+    [queryUrl],
   );
-  const queryTerms = useMemo(
-    () => parseTargets(queryTargetsValue),
-    [queryTargetsValue],
-  );
+  const queryTerms = useMemo(() => parseTargets(queryTargets), [queryTargets]);
   const autoFetchKey =
     parsedQueryTarget && queryTerms.length > 0
       ? `${parsedQueryTarget.userId}:${parsedQueryTarget.postId}:${queryTerms.join(',')}`
       : '';
 
-  const query = useMutation({
+  const {
+    mutateAsync,
+    isPending,
+    isError,
+    isSuccess,
+    data: matchedComments,
+  } = useMutation({
     mutationFn: ({
       target,
       targets,
@@ -189,31 +229,37 @@ const RouteComponent = () => {
     lastAutoFetchKeyRef.current = autoFetchKey;
     setCopiedNo(null);
     setSubmittedTarget(parsedQueryTarget);
-    void query.mutateAsync({
-      target: parsedQueryTarget,
-      targets: queryTargetsValue,
-    });
-  }, [autoFetchKey, parsedQueryTarget, query, queryTargetsValue]);
+    void mutateAsync({ target: parsedQueryTarget, targets: queryTargets });
+  }, [autoFetchKey, mutateAsync, parsedQueryTarget, queryTargets]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!parsedTarget || !hasTargets) return;
 
-    const nextUrl = urlInput.trim();
-    const nextTargets = targetInput.trim();
-    lastAutoFetchKeyRef.current = `${parsedTarget.userId}:${parsedTarget.postId}:${parseTargets(nextTargets).join(',')}`;
+    const nextUrl = buildPostUrl(parsedTarget);
+    const normalizedTargets = parsedInputTerms.join(',');
+    const nextKey = `${parsedTarget.userId}:${parsedTarget.postId}:${normalizedTargets}`;
+
+    lastAutoFetchKeyRef.current = nextKey;
     setCopiedNo(null);
     setSubmittedTarget(parsedTarget);
+    setUrlInput(nextUrl);
 
-    await Promise.all([setQueryUrl(nextUrl), setQueryTargets(nextTargets)]);
-    await query.mutateAsync({ target: parsedTarget, targets: nextTargets });
+    await Promise.all([
+      setQueryUrl(nextUrl),
+      setQueryTargets(normalizedTargets),
+    ]);
+    await mutateAsync({ target: parsedTarget, targets: normalizedTargets });
   };
 
-  const handleCopy = async (link: string, pCommentNo: number) => {
+  const handleCopy = (link: string, pCommentNo: number) => {
     try {
       copyText(link);
       setCopiedNo(pCommentNo);
-      setTimeout(() => {
+      if (copyResetTimerRef.current !== null) {
+        clearTimeout(copyResetTimerRef.current);
+      }
+      copyResetTimerRef.current = window.setTimeout(() => {
         setCopiedNo((prev) => (prev === pCommentNo ? null : prev));
       }, 1200);
     } catch {
@@ -236,7 +282,7 @@ const RouteComponent = () => {
             <input
               className="h-11 w-full rounded-xl border border-slate-700 bg-slate-950 pl-10 pr-3 text-sm outline-none transition placeholder:text-slate-500 focus:border-sky-500"
               onChange={(event) => setUrlInput(event.target.value)}
-              placeholder="게시글 주소 (https://www.sooplive.co.kr/station/*****/post/*****)"
+              placeholder="게시글 URL (https://www.sooplive.com/station/*****/post/*****)"
               type="url"
               value={urlInput}
             />
@@ -252,11 +298,11 @@ const RouteComponent = () => {
 
           <button
             className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 text-sm font-semibold text-slate-950 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
-            disabled={!isValidUrl || !hasTargets || query.isPending}
+            disabled={!isValidUrl || !hasTargets || isPending}
             type="submit"
           >
             <Search className="h-4 w-4" />
-            {query.isPending ? '불러오는 중...' : '찾기'}
+            {isPending ? '불러오는 중...' : '찾기'}
           </button>
         </form>
 
@@ -274,29 +320,29 @@ const RouteComponent = () => {
           </p>
         ) : null}
 
-        {query.isError ? (
+        {isError ? (
           <p className="mt-3 rounded-xl border border-rose-900/50 bg-rose-950/40 px-3 py-2 text-sm text-rose-200">
             댓글을 불러오지 못했습니다. URL과 네트워크 상태를 확인해 주세요.
           </p>
         ) : null}
 
-        {query.isSuccess ? (
+        {isSuccess ? (
           <div className="mt-4">
             <p className="mb-2 text-sm text-slate-300">
               찾은 댓글{' '}
               <span className="font-semibold text-slate-100">
-                {query.data.length}
+                {matchedComments.length}
               </span>
               개
             </p>
 
-            {query.data.length === 0 ? (
+            {matchedComments.length === 0 ? (
               <div className="rounded-xl border border-slate-800 bg-slate-950/70 px-3 py-8 text-center text-sm text-slate-400">
                 일치하는 댓글이 없습니다.
               </div>
             ) : (
               <ul className="flex flex-col gap-2.5">
-                {query.data.map((item) => {
+                {matchedComments.map((item) => {
                   const link = submittedTarget
                     ? buildCommentLink(submittedTarget, item.pCommentNo)
                     : '';

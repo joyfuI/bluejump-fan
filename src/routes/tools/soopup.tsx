@@ -6,6 +6,7 @@
  * - URL state policy:
  *   - querystring: userId, postId, cutline (shareable state)
  *   - hash: highlight target only (#<userId>) for scroll-target semantics
+ *   - domain policy: display/share URLs use sooplive.com, but sooplive.co.kr input is also accepted
  * - Pagination race mitigation:
  *   - fetch page 1 -> fetch remaining pages in parallel -> re-fetch page 1
  *   - if lastPage increased, fetch extra pages
@@ -27,7 +28,7 @@
  *   - current URL/cutline are copied to local inputs for quick edit
  * - Input form is intentionally vertical (URL, cutline, highlight).
  * - Right-side like badge opens the source comment in a new tab:
- *   https://www.sooplive.co.kr/station/{userId}/post/{postId}#comment_noti{pCommentNo}
+ *   https://www.sooplive.com/station/{userId}/post/{postId}#comment_noti{pCommentNo}
  * - Dev-only bottom-left button mutates cache for rank-change testing.
  * - Refresh interval is fixed to 10s.
  */
@@ -82,13 +83,17 @@ type SoopupQueryData = {
 
 const REFRESH_INTERVAL_MS = 10_000;
 const FLIP_DURATION_MS = 700;
-const DEFAULT_PROFILE_IMAGE =
-  'https://profile.img.sooplive.co.kr/LOGO/default_avatar.jpg';
 const searchParams = {
   userId: parseAsString,
   postId: parseAsInteger,
   cutline: parseAsInteger,
 };
+const SUPPORTED_SOOP_HOSTS = new Set([
+  'www.sooplive.com',
+  'sooplive.com',
+  'www.sooplive.co.kr',
+  'sooplive.co.kr',
+]);
 
 const parseSoopPostUrl = (raw: string): SoopTarget | null => {
   const trimmed = raw.trim();
@@ -103,7 +108,7 @@ const parseSoopPostUrl = (raw: string): SoopTarget | null => {
     return null;
   }
 
-  if (url.hostname !== 'www.sooplive.co.kr') {
+  if (!SUPPORTED_SOOP_HOSTS.has(url.hostname.toLowerCase())) {
     return null;
   }
 
@@ -121,7 +126,10 @@ const parseSoopPostUrl = (raw: string): SoopTarget | null => {
 };
 
 const buildSoopPostUrl = (target: SoopTarget) =>
-  `https://www.sooplive.co.kr/station/${target.userId}/post/${target.postId}`;
+  `https://www.sooplive.com/station/${target.userId}/post/${target.postId}`;
+
+const buildSoopCommentUrl = (target: SoopTarget, commentKey: number) =>
+  `${buildSoopPostUrl(target)}#comment_noti${commentKey}`;
 
 const parseHighlightFromHash = (hash: string) => {
   const raw = hash.startsWith('#') ? hash.slice(1) : hash;
@@ -161,7 +169,7 @@ const compareRankedComments = (a: RankedComment, b: RankedComment) => {
 
 const normalizeProfileImage = (profileImage: string) => {
   if (!profileImage) {
-    return DEFAULT_PROFILE_IMAGE;
+    return 'https://profile.img.sooplive.com/LOGO/default_avatar.jpg';
   }
 
   if (profileImage.startsWith('//')) {
@@ -383,7 +391,12 @@ const RouteComponent = () => {
 
   const query = useQuery({
     queryKey: ['soop-up-comments', parsedTarget?.userId, parsedTarget?.postId],
-    queryFn: () => fetchAllComments(parsedTarget as SoopTarget),
+    queryFn: async () => {
+      if (!parsedTarget) {
+        throw new Error('Missing SOOP target');
+      }
+      return fetchAllComments(parsedTarget);
+    },
     enabled: Boolean(parsedTarget),
     refetchInterval: REFRESH_INTERVAL_MS,
     staleTime: REFRESH_INTERVAL_MS,
@@ -678,7 +691,7 @@ const RouteComponent = () => {
                   className="h-11 w-full rounded-xl border border-slate-700 bg-slate-950 pl-10 pr-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-500"
                   id={inputId}
                   onChange={(event) => setInputUrl(event.target.value)}
-                  placeholder="게시글 주소 (https://www.sooplive.co.kr/station/*****/post/*****)"
+                  placeholder="게시글 주소 (https://www.sooplive.com/station/*****/post/*****)"
                   type="url"
                   value={inputUrl}
                 />
@@ -882,7 +895,10 @@ const RouteComponent = () => {
                           </div>
                           <a
                             className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1 text-xs font-semibold text-sky-300 transition hover:bg-slate-700 hover:text-sky-200 sm:text-sm"
-                            href={`https://www.sooplive.co.kr/station/${parsedTarget.userId}/post/${parsedTarget.postId}#comment_noti${comment.key}`}
+                            href={buildSoopCommentUrl(
+                              parsedTarget,
+                              comment.key,
+                            )}
                             rel="noreferrer"
                             target="_blank"
                           >
