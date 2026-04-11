@@ -51,6 +51,10 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { name: 'referrer', content: 'no-referrer' }, // 파이어폭스 네이버 카페 이미지 로딩 이슈
       { title: '블루점프 팬사이트' },
+      {
+        name: 'description',
+        content: '버튜버 그룹 블루점프의 팬 사이트입니다.',
+      },
     ],
     links: [
       { rel: 'manifest', href: '/manifest.json' },

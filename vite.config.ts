@@ -15,7 +15,13 @@ const config = defineConfig({
   plugins: [
     devtools(),
     tailwindcss(),
-    tanstackStart(),
+    tanstackStart({
+      prerender: { enabled: true, crawlLinks: true },
+      sitemap: {
+        enabled: true,
+        host: `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL ?? 'localhost:3000'}`,
+      },
+    }),
     nitro(),
     viteReact(),
     babel({ presets: [reactCompilerPreset()] }),
