@@ -60,6 +60,7 @@ const RouteComponent = () => {
 };
 
 export const Route = createFileRoute('/_defaultLayout/clipper')({
+  staticData: { selectedKey: 'clipper' },
   component: RouteComponent,
   headers: () => ({
     'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',
