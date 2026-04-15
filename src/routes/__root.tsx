@@ -9,6 +9,7 @@ import {
 } from '@tanstack/react-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 import { ConfigProvider } from 'antd';
+import koKR from 'antd/locale/ko_KR';
 import { NuqsAdapter } from 'nuqs/adapters/tanstack-router';
 import type { ReactNode } from 'react';
 
@@ -25,7 +26,10 @@ const RootDocument = ({ children }: { children: ReactNode }) => {
       </head>
       <body>
         <StyleProvider layer>
-          <ConfigProvider>
+          <ConfigProvider
+            locale={koKR}
+            theme={{ token: { colorPrimary: '#277ee8' } }}
+          >
             <NuqsAdapter>{children}</NuqsAdapter>
           </ConfigProvider>
         </StyleProvider>
