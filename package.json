@@ -13,34 +13,36 @@
   },
   "dependencies": {
     "@ant-design/cssinjs": "^2.1.2",
-    "@tailwindcss/vite": "^4.2.2",
+    "@tailwindcss/vite": "^4.2.4",
     "@tanstack/react-devtools": "^0.10.2",
-    "@tanstack/react-query": "^5.99.0",
-    "@tanstack/react-query-devtools": "^5.99.0",
-    "@tanstack/react-router": "^1.168.18",
+    "@tanstack/react-query": "^5.100.6",
+    "@tanstack/react-query-devtools": "^5.100.6",
+    "@tanstack/react-router": "^1.168.26",
     "@tanstack/react-router-devtools": "^1.166.13",
-    "@tanstack/react-router-ssr-query": "^1.166.11",
-    "@tanstack/react-start": "^1.167.32",
-    "antd": "^6.3.5",
+    "@tanstack/react-router-ssr-query": "^1.166.12",
+    "@tanstack/react-start": "^1.167.52",
+    "antd": "^6.3.7",
     "dayjs": "^1.11.20",
-    "lucide-react": "^1.8.0",
-    "nitro": "3.0.260311-beta",
+    "lucide-react": "^1.14.0",
+    "nitro": "3.0.260429-beta",
     "nuqs": "^2.8.9",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "tailwindcss": "^4.2.2"
+    "tailwindcss": "^4.2.4"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.11",
-    "@rolldown/plugin-babel": "^0.2.2",
+    "@babel/core": "^7.29.0",
+    "@biomejs/biome": "2.4.13",
+    "@rolldown/plugin-babel": "^0.2.3",
     "@tanstack/devtools-vite": "^0.6.0",
+    "@types/babel__core": "^7.20.5",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^6.0.1",
     "babel-plugin-react-compiler": "^1.0.0",
-    "typescript": "^6.0.2",
-    "vite": "^8.0.8"
+    "typescript": "^6.0.3",
+    "vite": "^8.0.10"
   },
-  "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319"
+  "packageManager": "pnpm@10.33.2+sha512.a90faf6feeab71ad6c6e57f94e0fe1a12f5dcc22cd754db40ae9593eb6a3e0b6b12e3540218bb37ae083404b1f2ce6db2a4121e979829b4aff94b99f49da1cf8"
 }
