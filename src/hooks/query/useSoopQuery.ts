@@ -22,7 +22,12 @@ const useSoopQuery = (options?: UseSoopQueryOptions) => {
           (prev, curr, index) =>
             curr.data
               ? prev.concat(
-                  curr.data.data.filter((item) =>
+                  (
+                    [
+                      ...curr.data.data,
+                      ...curr.data.notice_data,
+                    ] as GetBoardResponse['data']
+                  ).filter((item) =>
                     options?.onlyMember
                       ? item.user_id === MEMBERS[index].id
                       : true,

@@ -2,10 +2,10 @@ import { createFileRoute } from '@tanstack/react-router';
 import { Alert, Flex } from 'antd';
 import { useEffect, useRef } from 'react';
 
-import Accordion from '@/components/Accordion.tsx';
-import ClipperCard from '@/components/ClipperCard.tsx';
-import FilterButton from '@/components/FilterButton.tsx';
-import useClipperQuery from '@/hooks/query/useClipperQuery.ts';
+import Accordion from '@/components/Accordion';
+import ClipperCard from '@/components/ClipperCard';
+import FilterButton from '@/components/FilterButton';
+import useClipperQuery from '@/hooks/query/useClipperQuery';
 
 const RouteComponent = () => {
   const emailRef = useRef<HTMLAnchorElement>(null);

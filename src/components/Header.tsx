@@ -2,7 +2,7 @@ import { Link, useMatches } from '@tanstack/react-router';
 import { Layout, Menu, Typography } from 'antd';
 import { ExternalLink, Wrench } from 'lucide-react';
 
-import { MEMBERS } from '@/data/constants.ts';
+import { MEMBERS } from '@/data/constants';
 
 const items = [
   { key: 'live', label: <Link to="/live">라이브 모아보기</Link> },
