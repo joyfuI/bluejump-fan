@@ -57,13 +57,21 @@ export type GetPostCommentResponse = {
     next: string; // "http://api-channel-origin.sooplive.co.kr/v1.1/channel/lilpa0309/post/185132049/comment?page=2&perPage=30"
     last: string; // "http://api-channel-origin.sooplive.co.kr/v1.1/channel/lilpa0309/post/185132049/comment?page=5&perPage=30"
   };
-  meta: {
-    total: number; // 142
-    itemCount: number; // 30
-    perPage: number; // 30
-    lastPage: number; // 5
-    currentPage: number; // 1
-  };
+  meta:
+    | {
+        total: number; // 142
+        itemCount: number; // 30
+        perPage: number; // 30
+        lastPage: number; // 5
+        currentPage: number; // 1
+      } // 구형
+    | {
+        totalItems: number; // 421
+        itemCount: number; // 1
+        itemsPerPage: number; // 30
+        totalPages: number; // 15
+        currentPage: number; // 15
+      }; // 신형
   hiddenList: [];
   bestCount: number; // 3
   pinCount: number; // 0

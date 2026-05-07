@@ -9,7 +9,9 @@
  *   - domain policy: display/share URLs use sooplive.com, but sooplive.co.kr input is also accepted
  * - Pagination race mitigation:
  *   - fetch page 1 -> fetch remaining pages in parallel -> re-fetch page 1
- *   - if lastPage increased, fetch extra pages
+ *   - SOOP comment API may return either old meta (lastPage) or new meta (totalPages)
+ *   - derive page count from lastPage/totalPages with a minimum fallback of 1
+ *   - if page count increased after the page 1 re-fetch, fetch extra pages
  *   - merge and dedupe by pCommentNo
  * - Ranking policy:
  *   - sort by likeCnt desc
@@ -62,7 +64,9 @@ import {
   useState,
 } from 'react';
 
-import getPostComment from '@/api/getPostComment';
+import getPostComment, {
+  type GetPostCommentResponse,
+} from '@/api/getPostComment';
 
 type SoopTarget = { userId: string; postId: number };
 
@@ -179,13 +183,18 @@ const normalizeProfileImage = (profileImage: string) => {
   return profileImage;
 };
 
+const getCommentLastPage = (meta: GetPostCommentResponse['meta']) => {
+  const lastPage = 'lastPage' in meta ? meta.lastPage : meta.totalPages;
+  return Number.isSafeInteger(lastPage) && lastPage > 0 ? lastPage : 1;
+};
+
 const fetchAllComments = async (
   target: SoopTarget,
 ): Promise<SoopupQueryData> => {
   const firstPage = await getPostComment(target.userId, target.postId, {
     page: 1,
   });
-  const initialLastPage = Math.max(firstPage.meta.lastPage, 1);
+  const initialLastPage = getCommentLastPage(firstPage.meta);
 
   const restPages = Array.from(
     { length: initialLastPage - 1 },
@@ -200,7 +209,7 @@ const fetchAllComments = async (
   const latestFirstPage = await getPostComment(target.userId, target.postId, {
     page: 1,
   });
-  const latestLastPage = Math.max(latestFirstPage.meta.lastPage, 1);
+  const latestLastPage = getCommentLastPage(latestFirstPage.meta);
 
   const extraPages =
     latestLastPage > initialLastPage

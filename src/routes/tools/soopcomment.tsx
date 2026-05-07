@@ -14,7 +14,9 @@
  *   - userId: exact match
  *   - userNick: partial match
  * - Fetch policy:
- *   - request page 1, then request all remaining pages in parallel using meta.lastPage
+ *   - request page 1, then request all remaining pages in parallel
+ *   - SOOP comment API may return either old meta (lastPage) or new meta (totalPages)
+ *   - derive page count from lastPage/totalPages with a minimum fallback of 1
  *   - merge pages and dedupe by pCommentNo
  * - Result policy:
  *   - sort by regDate desc, tie-break by pCommentNo desc
@@ -29,7 +31,9 @@ import { AlertCircle, Copy, Link as LinkIcon, Search } from 'lucide-react';
 import { createStandardSchemaV1, parseAsString, useQueryState } from 'nuqs';
 import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 
-import getPostComment from '@/api/getPostComment';
+import getPostComment, {
+  type GetPostCommentResponse,
+} from '@/api/getPostComment';
 import { MEMBERS } from '@/data/constants';
 import copyText from '@/utils/copyText';
 
@@ -110,6 +114,11 @@ const compareByRecent = (a: FilteredComment, b: FilteredComment) => {
   return b.pCommentNo - a.pCommentNo;
 };
 
+const getCommentLastPage = (meta: GetPostCommentResponse['meta']) => {
+  const lastPage = 'lastPage' in meta ? meta.lastPage : meta.totalPages;
+  return Number.isSafeInteger(lastPage) && lastPage > 0 ? lastPage : 1;
+};
+
 const fetchMatchedComments = async (target: SoopTarget, rawTargets: string) => {
   const targetTerms = parseTargets(rawTargets);
   if (!targetTerms.length) return [];
@@ -117,7 +126,7 @@ const fetchMatchedComments = async (target: SoopTarget, rawTargets: string) => {
   const firstPage = await getPostComment(target.userId, target.postId, {
     page: 1,
   });
-  const lastPage = Math.max(firstPage.meta.lastPage, 1);
+  const lastPage = getCommentLastPage(firstPage.meta);
 
   const restPages = Array.from(
     { length: lastPage - 1 },
