@@ -9,6 +9,7 @@ import { useMemo } from 'react';
 import type { GetCalendarResponse } from '@/api/getCalendar';
 import type { MEMBERS } from '@/data/constants';
 import useCalendarQuery from '@/hooks/query/useCalendarQuery';
+import isServer from '@/utils/isServer';
 
 const badgeColor = {
   방송시작: '#7f7fff',
@@ -17,12 +18,13 @@ const badgeColor = {
   기타: '#acb0b9',
 } as const;
 
-const searchParams = {
-  date: parseAsString.withDefault(dayjs().format('YYYY-MM-DD')),
-};
+const searchParams = { date: parseAsString };
 
 const RouteComponent = () => {
-  const [date, setDate] = useQueryState('date', searchParams.date);
+  const [date, setDate] = useQueryState(
+    'date',
+    searchParams.date.withDefault(dayjs().format('YYYY-MM-DD')),
+  );
   const day = dayjs(date, 'YYYY-MM-DD');
 
   const { data } = useCalendarQuery({
@@ -67,6 +69,10 @@ const RouteComponent = () => {
   const handleChange = (day: Dayjs) => {
     setDate(dayjs(day).format('YYYY-MM-DD'));
   };
+
+  if (isServer()) {
+    return null;
+  }
 
   return (
     <Calendar
