@@ -29,7 +29,7 @@
  *   a subtractive shifted text mask; the offset is intentionally opposite the
  *   visible shadow direction because the shifted mask is removed from the
  *   original glyph mask.
- * - Font policy is strict: text rendering must use `/fonts/Jalnan2.otf` through
+ * - Font policy is strict: text rendering must use `/fonts/jalnan2.otf` through
  *   the `FontFace` API. There is no fallback font path; if the font fails to
  *   load, preview/download stay disabled.
  * - The default date is set on client mount, not during prerender, so static
@@ -100,7 +100,7 @@ type CharacterInteraction =
 const CANVAS_WIDTH = 1920;
 const CANVAS_HEIGHT = 1080;
 const FONT_FAMILY = 'SoopThumbnailJalnan2';
-const FONT_URL = '/fonts/Jalnan2.otf';
+const FONT_URL = '/fonts/jalnan2.otf';
 const TEMPLATE_ASSET_BASE_URL = '/assets/9mogu9';
 const DARK_PANEL_IMAGE_URL = `${TEMPLATE_ASSET_BASE_URL}/dark_gradient.png`;
 const DATE_BAR_IMAGE_URL = `${TEMPLATE_ASSET_BASE_URL}/date_bar.png`;
@@ -1042,7 +1042,7 @@ const RouteComponent = () => {
 
           {fontStatus === 'error' ? (
             <p className="rounded-lg border border-rose-900/70 bg-rose-950/50 px-3 py-2 text-sm text-rose-200">
-              Jalnan2.otf를 불러오지 못했습니다.
+              jalnan2.otf를 불러오지 못했습니다.
             </p>
           ) : null}
 
