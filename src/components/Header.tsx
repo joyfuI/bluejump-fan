@@ -68,6 +68,19 @@ const items = [
               </Link>
             ),
           },
+          {
+            key: 'tools-soop-thumbnail',
+            label: (
+              <Link
+                className="inline-flex items-center"
+                target="_blank"
+                to="/tools/soopthumbnail"
+              >
+                다시보기 썸네일 생성기
+                <ExternalLink className="ml-1" size={16} />
+              </Link>
+            ),
+          },
         ],
       },
     ],

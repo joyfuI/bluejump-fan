@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as DefaultLayoutRouteImport } from './routes/_defaultLayout'
 import { Route as DefaultLayoutIndexRouteImport } from './routes/_defaultLayout/index'
 import { Route as ToolsSoopupRouteImport } from './routes/tools/soopup'
+import { Route as ToolsSoopthumbnailRouteImport } from './routes/tools/soopthumbnail'
 import { Route as ToolsSoopcommentRouteImport } from './routes/tools/soopcomment'
 import { Route as ApiCafeArticlesRouteImport } from './routes/api/cafe-articles'
 import { Route as DefaultLayoutSoopRouteImport } from './routes/_defaultLayout/soop'
@@ -33,6 +34,11 @@ const DefaultLayoutIndexRoute = DefaultLayoutIndexRouteImport.update({
 const ToolsSoopupRoute = ToolsSoopupRouteImport.update({
   id: '/tools/soopup',
   path: '/tools/soopup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsSoopthumbnailRoute = ToolsSoopthumbnailRouteImport.update({
+  id: '/tools/soopthumbnail',
+  path: '/tools/soopthumbnail',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ToolsSoopcommentRoute = ToolsSoopcommentRouteImport.update({
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/soop': typeof DefaultLayoutSoopRoute
   '/api/cafe-articles': typeof ApiCafeArticlesRoute
   '/tools/soopcomment': typeof ToolsSoopcommentRoute
+  '/tools/soopthumbnail': typeof ToolsSoopthumbnailRoute
   '/tools/soopup': typeof ToolsSoopupRoute
 }
 export interface FileRoutesByTo {
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/soop': typeof DefaultLayoutSoopRoute
   '/api/cafe-articles': typeof ApiCafeArticlesRoute
   '/tools/soopcomment': typeof ToolsSoopcommentRoute
+  '/tools/soopthumbnail': typeof ToolsSoopthumbnailRoute
   '/tools/soopup': typeof ToolsSoopupRoute
   '/': typeof DefaultLayoutIndexRoute
 }
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/_defaultLayout/soop': typeof DefaultLayoutSoopRoute
   '/api/cafe-articles': typeof ApiCafeArticlesRoute
   '/tools/soopcomment': typeof ToolsSoopcommentRoute
+  '/tools/soopthumbnail': typeof ToolsSoopthumbnailRoute
   '/tools/soopup': typeof ToolsSoopupRoute
   '/_defaultLayout/': typeof DefaultLayoutIndexRoute
 }
@@ -126,6 +135,7 @@ export interface FileRouteTypes {
     | '/soop'
     | '/api/cafe-articles'
     | '/tools/soopcomment'
+    | '/tools/soopthumbnail'
     | '/tools/soopup'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/soop'
     | '/api/cafe-articles'
     | '/tools/soopcomment'
+    | '/tools/soopthumbnail'
     | '/tools/soopup'
     | '/'
   id:
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/_defaultLayout/soop'
     | '/api/cafe-articles'
     | '/tools/soopcomment'
+    | '/tools/soopthumbnail'
     | '/tools/soopup'
     | '/_defaultLayout/'
   fileRoutesById: FileRoutesById
@@ -158,6 +170,7 @@ export interface RootRouteChildren {
   DefaultLayoutRoute: typeof DefaultLayoutRouteWithChildren
   ApiCafeArticlesRoute: typeof ApiCafeArticlesRoute
   ToolsSoopcommentRoute: typeof ToolsSoopcommentRoute
+  ToolsSoopthumbnailRoute: typeof ToolsSoopthumbnailRoute
   ToolsSoopupRoute: typeof ToolsSoopupRoute
 }
 
@@ -182,6 +195,13 @@ declare module '@tanstack/react-router' {
       path: '/tools/soopup'
       fullPath: '/tools/soopup'
       preLoaderRoute: typeof ToolsSoopupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/soopthumbnail': {
+      id: '/tools/soopthumbnail'
+      path: '/tools/soopthumbnail'
+      fullPath: '/tools/soopthumbnail'
+      preLoaderRoute: typeof ToolsSoopthumbnailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tools/soopcomment': {
@@ -271,6 +291,7 @@ const rootRouteChildren: RootRouteChildren = {
   DefaultLayoutRoute: DefaultLayoutRouteWithChildren,
   ApiCafeArticlesRoute: ApiCafeArticlesRoute,
   ToolsSoopcommentRoute: ToolsSoopcommentRoute,
+  ToolsSoopthumbnailRoute: ToolsSoopthumbnailRoute,
   ToolsSoopupRoute: ToolsSoopupRoute,
 }
 export const routeTree = rootRouteImport
