@@ -1,25 +1,48 @@
 /**
  * SOOP Thumbnail directory context (update this block whenever behavior changes):
  * - This directory owns the `/tools/soopthumbnail` thumbnail maker family.
- * - `index.tsx` keeps shared route shell, template tab metadata, and the
- *   default redirect only; individual template routes own their canvas
- *   rendering and PSD-specific assets.
- * - `/tools/soopthumbnail` redirects to `/tools/soopthumbnail/9mogu9` so the
- *   first template stays addressable by its own route while the base URL still
- *   works.
- * - Add future templates by appending to `soopThumbnailTemplates`, creating a
- *   sibling route file, and rendering it through `SoopThumbnailToolLayout`.
+ * - `index.tsx` keeps the shared route shell, template tab metadata, base
+ *   redirect, and browser-only helpers that are reused by individual template
+ *   routes: font/asset loading, image uploads, date formatting, cover-crop
+ *   drawing, stroked text drawing, shared form controls/download/preview UI,
+ *   and interactive character placement.
+ * - `/tools/soopthumbnail` redirects to `/tools/soopthumbnail/dlsn9911`
+ *   because `제갈금자` is the first template tab.
+ * - Template route files should keep PSD-specific constants and render order
+ *   local, then render through `SoopThumbnailToolLayout`.
+ * - Keep this context block current whenever shared behavior or template
+ *   routing changes so future agents do not have to reverse-engineer intent
+ *   from canvas code alone.
  */
 
 import { createFileRoute, Link } from '@tanstack/react-router';
-import type { ReactNode } from 'react';
+import { Download, ImagePlus, Loader2, Trash2 } from 'lucide-react';
+import {
+  type ChangeEvent,
+  type Dispatch,
+  type InputHTMLAttributes,
+  type PointerEvent,
+  type ReactNode,
+  type RefObject,
+  type SetStateAction,
+  type TextareaHTMLAttributes,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 export const soopThumbnailTemplates = [
+  { id: 'dlsn9911', label: '제갈금자', to: '/tools/soopthumbnail/dlsn9911' },
   { id: '9mogu9', label: '모구구', to: '/tools/soopthumbnail/9mogu9' },
 ] as const;
 
 export type SoopThumbnailTemplateId =
   (typeof soopThumbnailTemplates)[number]['id'];
+
+export type CanvasSize = { height: number; width: number };
+export type ImageBox = { height: number; width: number; x: number; y: number };
+export type LoadStatus = 'loading' | 'loaded' | 'error';
 
 type SoopThumbnailToolLayoutProps = {
   activeTemplateId: SoopThumbnailTemplateId;
@@ -39,7 +62,6 @@ export const SoopThumbnailToolLayout = ({
           <h1 className="font-semibold text-xl text-zinc-50 tracking-normal">
             다시보기 썸네일 생성기
           </h1>
-          <p className="mt-1 text-sm text-zinc-400">1920x1080 PNG</p>
         </div>
 
         <div
@@ -82,9 +104,965 @@ export const SoopThumbnailToolLayout = ({
   </main>
 );
 
+const padDatePart = (value: number) => String(value).padStart(2, '0');
+
+export const formatTodayDate = () => {
+  const now = new Date();
+  return [
+    now.getFullYear(),
+    padDatePart(now.getMonth() + 1),
+    padDatePart(now.getDate()),
+  ].join('.');
+};
+
+export const getDownloadDate = (dateText: string) => {
+  const digits = dateText.replace(/\D/g, '');
+  return digits.length > 0 ? digits : 'date';
+};
+
+export const useTodayDateText = () => {
+  const [dateText, setDateText] = useState('');
+
+  useEffect(() => {
+    setDateText(formatTodayDate());
+  }, []);
+
+  return [dateText, setDateText] as const;
+};
+
+export const downloadCanvasAsPng = (
+  canvas: HTMLCanvasElement,
+  fileName: string,
+  onError: () => void,
+) => {
+  canvas.toBlob((blob) => {
+    if (!blob) {
+      onError();
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(objectUrl);
+  }, 'image/png');
+};
+
+export const getRgba = (hexColor: string, opacity: number) => {
+  const normalizedColor = hexColor.replace('#', '');
+  const red = Number.parseInt(normalizedColor.slice(0, 2), 16);
+  const green = Number.parseInt(normalizedColor.slice(2, 4), 16);
+  const blue = Number.parseInt(normalizedColor.slice(4, 6), 16);
+
+  return `rgba(${red}, ${green}, ${blue}, ${opacity})`;
+};
+
+export const clamp = (value: number, min: number, max: number) =>
+  Math.min(Math.max(value, min), max);
+
+export const getImageNaturalSize = (image: HTMLImageElement) => ({
+  height: image.naturalHeight || image.height,
+  width: image.naturalWidth || image.width,
+});
+
+export const loadImage = (source: string) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error(`Failed to load image: ${source}`));
+    image.decoding = 'async';
+    image.src = source;
+  });
+
+export const buildRoundedRectPath = (
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+) => {
+  const resolvedRadius = Math.min(radius, width / 2, height / 2);
+
+  context.beginPath();
+  context.moveTo(x + resolvedRadius, y);
+  context.lineTo(x + width - resolvedRadius, y);
+  context.quadraticCurveTo(x + width, y, x + width, y + resolvedRadius);
+  context.lineTo(x + width, y + height - resolvedRadius);
+  context.quadraticCurveTo(
+    x + width,
+    y + height,
+    x + width - resolvedRadius,
+    y + height,
+  );
+  context.lineTo(x + resolvedRadius, y + height);
+  context.quadraticCurveTo(x, y + height, x, y + height - resolvedRadius);
+  context.lineTo(x, y + resolvedRadius);
+  context.quadraticCurveTo(x, y, x + resolvedRadius, y);
+  context.closePath();
+};
+
+export const drawCoverImage = (
+  context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+) => {
+  const sourceWidth = image.naturalWidth || image.width;
+  const sourceHeight = image.naturalHeight || image.height;
+
+  if (sourceWidth <= 0 || sourceHeight <= 0) {
+    return;
+  }
+
+  const scale = Math.max(width / sourceWidth, height / sourceHeight);
+  const drawWidth = sourceWidth * scale;
+  const drawHeight = sourceHeight * scale;
+  const drawX = x + (width - drawWidth) / 2;
+  const drawY = y + (height - drawHeight) / 2;
+
+  context.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+};
+
+export const fitFontSize = (
+  context: CanvasRenderingContext2D,
+  text: string,
+  startSize: number,
+  minSize: number,
+  maxWidth: number,
+  fontFamily: string,
+) => {
+  let size = startSize;
+  while (size > minSize) {
+    context.font = `${size}px "${fontFamily}"`;
+    if (context.measureText(text).width <= maxWidth) {
+      break;
+    }
+    size -= 2;
+  }
+  return size;
+};
+
+export type TextDropShadow = {
+  blur: number;
+  color: string;
+  offsetX: number;
+  offsetY: number;
+  opacity: number;
+  strokeWidth: number;
+};
+
+export type TextInnerShadow = {
+  color: string;
+  offsetX: number;
+  offsetY: number;
+  opacity: number;
+};
+
+export const drawOutlinedText = (
+  context: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  options: {
+    align: CanvasTextAlign;
+    baseline?: CanvasTextBaseline;
+    canvasSize: CanvasSize;
+    dropShadow?: TextDropShadow;
+    fillColor?: string;
+    fontFamily: string;
+    fontSize: number;
+    innerShadow?: TextInnerShadow;
+    maxWidth?: number;
+    outerStrokeColor?: string;
+    outerStrokeWidth: number;
+  },
+) => {
+  if (!text) {
+    return;
+  }
+
+  context.save();
+  context.font = `${options.fontSize}px "${options.fontFamily}"`;
+  context.textAlign = options.align;
+  context.textBaseline = options.baseline ?? 'alphabetic';
+  context.lineJoin = 'round';
+  context.miterLimit = 2;
+
+  if (options.dropShadow) {
+    context.save();
+    context.globalAlpha = options.dropShadow.opacity;
+    context.filter = `blur(${options.dropShadow.blur}px)`;
+    context.strokeStyle = options.dropShadow.color;
+    context.fillStyle = options.dropShadow.color;
+    context.lineWidth = options.dropShadow.strokeWidth;
+    context.strokeText(
+      text,
+      x + options.dropShadow.offsetX,
+      y + options.dropShadow.offsetY,
+      options.maxWidth,
+    );
+    context.fillText(
+      text,
+      x + options.dropShadow.offsetX,
+      y + options.dropShadow.offsetY,
+      options.maxWidth,
+    );
+    context.restore();
+  }
+
+  context.strokeStyle = options.outerStrokeColor ?? '#050505';
+  context.lineWidth = options.outerStrokeWidth;
+  context.strokeText(text, x, y, options.maxWidth);
+
+  context.fillStyle = options.fillColor ?? '#ffffff';
+  context.fillText(text, x, y, options.maxWidth);
+
+  if (options.innerShadow && typeof document !== 'undefined') {
+    const shadowCanvas = document.createElement('canvas');
+    shadowCanvas.width = options.canvasSize.width;
+    shadowCanvas.height = options.canvasSize.height;
+    const shadowContext = shadowCanvas.getContext('2d');
+
+    if (shadowContext) {
+      shadowContext.font = context.font;
+      shadowContext.textAlign = options.align;
+      shadowContext.textBaseline = options.baseline ?? 'alphabetic';
+      shadowContext.lineJoin = 'round';
+      shadowContext.miterLimit = 2;
+      shadowContext.fillStyle = getRgba(
+        options.innerShadow.color,
+        options.innerShadow.opacity,
+      );
+      shadowContext.fillText(text, x, y, options.maxWidth);
+      shadowContext.globalCompositeOperation = 'destination-out';
+      shadowContext.fillStyle = '#ffffff';
+      shadowContext.fillText(
+        text,
+        x + options.innerShadow.offsetX,
+        y + options.innerShadow.offsetY,
+        options.maxWidth,
+      );
+      context.drawImage(shadowCanvas, 0, 0);
+    }
+  }
+
+  context.restore();
+};
+
+export const useCanvasFonts = (
+  fonts: ReadonlyArray<{ family: string; testSize?: number; url: string }>,
+) => {
+  const [status, setStatus] = useState<LoadStatus>('loading');
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const loadFonts = async () => {
+      try {
+        const loadedFonts = await Promise.all(
+          fonts.map(async (font) => {
+            const fontFace = new FontFace(font.family, `url(${font.url})`);
+            const loadedFont = await fontFace.load();
+            return { ...font, loadedFont };
+          }),
+        );
+
+        if (isCancelled) {
+          return;
+        }
+
+        for (const font of loadedFonts) {
+          document.fonts.add(font.loadedFont);
+          await document.fonts.load(
+            `${font.testSize ?? 64}px "${font.family}"`,
+          );
+        }
+
+        if (!isCancelled) {
+          setStatus('loaded');
+        }
+      } catch {
+        if (!isCancelled) {
+          setStatus('error');
+        }
+      }
+    };
+
+    setStatus('loading');
+    void loadFonts();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [fonts]);
+
+  return status;
+};
+
+export const useTemplateImages = <T extends string>(
+  sources: Readonly<Record<T, string>>,
+) => {
+  const [status, setStatus] = useState<LoadStatus>('loading');
+  const [images, setImages] = useState<Record<T, HTMLImageElement> | null>(
+    null,
+  );
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const loadTemplateImages = async () => {
+      try {
+        const entries = Object.entries(sources) as Array<[T, string]>;
+        const loadedEntries = await Promise.all(
+          entries.map(async ([key, source]) => [key, await loadImage(source)]),
+        );
+
+        if (isCancelled) {
+          return;
+        }
+
+        setImages(
+          Object.fromEntries(loadedEntries) as Record<T, HTMLImageElement>,
+        );
+        setStatus('loaded');
+      } catch {
+        if (!isCancelled) {
+          setImages(null);
+          setStatus('error');
+        }
+      }
+    };
+
+    setStatus('loading');
+    void loadTemplateImages();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [sources]);
+
+  return { images, status };
+};
+
+export const useImageFileInput = (messages: {
+  invalidType: string;
+  loadFailed: string;
+}) => {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const objectUrlRef = useRef<string | null>(null);
+  const [image, setImage] = useState<HTMLImageElement | null>(null);
+  const [name, setName] = useState('');
+  const [error, setError] = useState('');
+
+  const clearImage = useCallback(() => {
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+
+    setImage(null);
+    setName('');
+    setError('');
+
+    if (inputRef.current) {
+      inputRef.current.value = '';
+    }
+  }, []);
+
+  const handleChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const file = event.currentTarget.files?.[0];
+      setError('');
+
+      if (!file) {
+        return;
+      }
+
+      if (!file.type.startsWith('image/')) {
+        setError(messages.invalidType);
+        return;
+      }
+
+      const nextObjectUrl = URL.createObjectURL(file);
+      const nextImage = new Image();
+
+      nextImage.onload = () => {
+        const previousObjectUrl = objectUrlRef.current;
+        objectUrlRef.current = nextObjectUrl;
+        if (previousObjectUrl) {
+          URL.revokeObjectURL(previousObjectUrl);
+        }
+
+        setImage(nextImage);
+        setName(file.name);
+        setError('');
+      };
+
+      nextImage.onerror = () => {
+        URL.revokeObjectURL(nextObjectUrl);
+        setError(messages.loadFailed);
+      };
+
+      nextImage.decoding = 'async';
+      nextImage.src = nextObjectUrl;
+    },
+    [messages.invalidType, messages.loadFailed],
+  );
+
+  useEffect(
+    () => () => {
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+      }
+    },
+    [],
+  );
+
+  return { clearImage, error, handleChange, image, inputRef, name };
+};
+
+export type ImageFileInputState = ReturnType<typeof useImageFileInput>;
+
+export const DEFAULT_IMAGE_UPLOAD_MESSAGES = {
+  invalidType: '이미지 파일만 업로드할 수 있습니다.',
+  loadFailed: '이미지를 불러오지 못했습니다.',
+} as const;
+
+export const DEFAULT_CHARACTER_UPLOAD_MESSAGES = {
+  invalidType: '이미지 파일만 업로드할 수 있습니다.',
+  loadFailed: '캐릭터 이미지를 불러오지 못했습니다.',
+} as const;
+
+const FIELD_INPUT_CLASS =
+  'h-11 rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-amber-300';
+
+const FIELD_TEXTAREA_CLASS =
+  'min-h-24 resize-y rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-amber-300';
+
+type ThumbnailImageInputProps = {
+  clearLabel?: string;
+  id: string;
+  input: ImageFileInputState;
+  label: string;
+  showClearButton?: boolean;
+  variant?: 'primary' | 'secondary';
+};
+
+export const ThumbnailImageInput = ({
+  clearLabel = '이미지 삭제',
+  id,
+  input,
+  label,
+  showClearButton = false,
+  variant = 'primary',
+}: ThumbnailImageInputProps) => {
+  const labelClass =
+    variant === 'primary'
+      ? 'inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-amber-300 px-4 text-sm font-semibold text-zinc-950 transition hover:bg-amber-200'
+      : 'inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-amber-300/60 bg-zinc-950 px-4 text-sm font-semibold text-amber-200 transition hover:border-amber-200 hover:bg-zinc-900';
+
+  return (
+    <div>
+      <div className={showClearButton ? 'flex gap-2' : undefined}>
+        <label
+          className={`${labelClass} ${showClearButton ? 'flex-1' : 'w-full'}`}
+          htmlFor={id}
+        >
+          <ImagePlus className="h-4 w-4" />
+          {label}
+        </label>
+        {showClearButton && input.image ? (
+          <button
+            aria-label={clearLabel}
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-950 text-zinc-300 transition hover:border-rose-300 hover:text-rose-200"
+            onClick={input.clearImage}
+            title={clearLabel}
+            type="button"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        ) : null}
+      </div>
+      <input
+        accept="image/*"
+        className="sr-only"
+        id={id}
+        onChange={input.handleChange}
+        ref={input.inputRef}
+        type="file"
+      />
+      <p className="mt-2 truncate text-xs text-zinc-500">
+        {input.name || '선택된 이미지 없음'}
+      </p>
+      {input.error ? (
+        <p className="mt-2 text-sm text-rose-300">{input.error}</p>
+      ) : null}
+    </div>
+  );
+};
+
+type ThumbnailTextInputProps = {
+  label: string;
+  onChange: (value: string) => void;
+  value: string;
+} & Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value'>;
+
+export const ThumbnailTextInput = ({
+  label,
+  onChange,
+  value,
+  ...inputProps
+}: ThumbnailTextInputProps) => (
+  <label className="flex flex-col gap-1.5">
+    <span className="text-sm font-medium text-zinc-300">{label}</span>
+    <input
+      className={FIELD_INPUT_CLASS}
+      onChange={(event) => onChange(event.target.value)}
+      type="text"
+      value={value}
+      {...inputProps}
+    />
+  </label>
+);
+
+type ThumbnailTextareaProps = {
+  label: string;
+  onChange: (value: string) => void;
+  value: string;
+} & Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'onChange' | 'value'>;
+
+export const ThumbnailTextarea = ({
+  label,
+  onChange,
+  value,
+  ...textareaProps
+}: ThumbnailTextareaProps) => (
+  <label className="flex flex-col gap-1.5">
+    <span className="text-sm font-medium text-zinc-300">{label}</span>
+    <textarea
+      className={FIELD_TEXTAREA_CLASS}
+      onChange={(event) => onChange(event.target.value)}
+      value={value}
+      {...textareaProps}
+    />
+  </label>
+);
+
+export const ThumbnailStatusMessage = ({
+  children,
+}: {
+  children: ReactNode;
+}) => (
+  <p className="rounded-lg border border-rose-900/70 bg-rose-950/50 px-3 py-2 text-sm text-rose-200">
+    {children}
+  </p>
+);
+
+export const ThumbnailDownloadButton = ({
+  isLoading,
+  isReady,
+  onClick,
+}: {
+  isLoading: boolean;
+  isReady: boolean;
+  onClick: () => void;
+}) => (
+  <button
+    className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-zinc-100 px-4 text-sm font-semibold text-zinc-950 transition hover:bg-white disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-500"
+    disabled={!isReady}
+    onClick={onClick}
+    type="button"
+  >
+    {isLoading ? (
+      <Loader2 className="h-4 w-4 animate-spin" />
+    ) : (
+      <Download className="h-4 w-4" />
+    )}
+    PNG 다운로드
+  </button>
+);
+
+export type CharacterResizeHandle =
+  | 'bottom-left'
+  | 'bottom-right'
+  | 'top-left'
+  | 'top-right';
+
+type CharacterInteractionBase = {
+  startBox: ImageBox;
+  startPointerX: number;
+  startPointerY: number;
+};
+
+type CharacterInteraction =
+  | (CharacterInteractionBase & { mode: 'move' })
+  | (CharacterInteractionBase & {
+      mode: 'resize';
+      resizeHandle: CharacterResizeHandle;
+    });
+
+const characterResizeHandles = [
+  {
+    ariaLabel: '캐릭터 이미지 왼쪽 위 크기 조절',
+    className: '-left-2 -top-2 cursor-nwse-resize',
+    position: 'top-left',
+  },
+  {
+    ariaLabel: '캐릭터 이미지 오른쪽 위 크기 조절',
+    className: '-right-2 -top-2 cursor-nesw-resize',
+    position: 'top-right',
+  },
+  {
+    ariaLabel: '캐릭터 이미지 왼쪽 아래 크기 조절',
+    className: '-bottom-2 -left-2 cursor-nesw-resize',
+    position: 'bottom-left',
+  },
+  {
+    ariaLabel: '캐릭터 이미지 오른쪽 아래 크기 조절',
+    className: '-bottom-2 -right-2 cursor-nwse-resize',
+    position: 'bottom-right',
+  },
+] as const satisfies ReadonlyArray<{
+  ariaLabel: string;
+  className: string;
+  position: CharacterResizeHandle;
+}>;
+
+const getCanvasPointerPosition = (
+  event: PointerEvent<HTMLElement>,
+  canvas: HTMLCanvasElement | null,
+  canvasSize: CanvasSize,
+) => {
+  if (!canvas) {
+    return null;
+  }
+
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) {
+    return null;
+  }
+
+  return {
+    x: (event.clientX - rect.left) * (canvasSize.width / rect.width),
+    y: (event.clientY - rect.top) * (canvasSize.height / rect.height),
+  };
+};
+
+const clampImageBox = (
+  box: ImageBox,
+  bounds: ImageBox,
+  minSize: number,
+): ImageBox => {
+  const width = clamp(box.width, minSize, bounds.width);
+  const height = clamp(box.height, minSize, bounds.height);
+
+  return {
+    height,
+    width,
+    x: clamp(box.x, bounds.x, bounds.x + bounds.width - width),
+    y: clamp(box.y, bounds.y, bounds.y + bounds.height - height),
+  };
+};
+
+const createDefaultImageBox = (
+  image: HTMLImageElement,
+  bounds: ImageBox,
+  minSize: number,
+): ImageBox => {
+  const { height: sourceHeight, width: sourceWidth } =
+    getImageNaturalSize(image);
+
+  if (sourceWidth <= 0 || sourceHeight <= 0) {
+    return bounds;
+  }
+
+  const aspectRatio = sourceWidth / sourceHeight;
+  const width = Math.min(bounds.height * aspectRatio, bounds.width);
+  const height = width / aspectRatio;
+
+  return clampImageBox(
+    {
+      height,
+      width,
+      x: bounds.x + bounds.width - width,
+      y: bounds.y + bounds.height - height,
+    },
+    bounds,
+    minSize,
+  );
+};
+
+const resizeImageBox = (
+  startBox: ImageBox,
+  resizeHandle: CharacterResizeHandle,
+  deltaX: number,
+  deltaY: number,
+  bounds: ImageBox,
+  minSize: number,
+): ImageBox => {
+  const aspectRatio = startBox.width / Math.max(startBox.height, 1);
+  const isLeftHandle = resizeHandle.endsWith('left');
+  const isTopHandle = resizeHandle.startsWith('top');
+  const anchorX = isLeftHandle ? startBox.x + startBox.width : startBox.x;
+  const anchorY = isTopHandle ? startBox.y + startBox.height : startBox.y;
+  const widthFromHorizontal =
+    startBox.width + (isLeftHandle ? -deltaX : deltaX);
+  const widthFromVertical =
+    (startBox.height + (isTopHandle ? -deltaY : deltaY)) * aspectRatio;
+  const requestedWidth =
+    Math.abs(widthFromHorizontal - startBox.width) >=
+    Math.abs(widthFromVertical - startBox.width)
+      ? widthFromHorizontal
+      : widthFromVertical;
+  const maxWidthByX = isLeftHandle
+    ? anchorX - bounds.x
+    : bounds.x + bounds.width - anchorX;
+  const maxHeightByY = isTopHandle
+    ? anchorY - bounds.y
+    : bounds.y + bounds.height - anchorY;
+  const maxWidth = Math.max(
+    minSize,
+    Math.min(maxWidthByX, maxHeightByY * aspectRatio),
+  );
+  const width = clamp(requestedWidth, minSize, maxWidth);
+  const height = width / aspectRatio;
+
+  return {
+    height,
+    width,
+    x: isLeftHandle ? anchorX - width : anchorX,
+    y: isTopHandle ? anchorY - height : anchorY,
+  };
+};
+
+export const useCharacterLayer = ({
+  bounds,
+  canvasRef,
+  canvasSize,
+  image,
+  minSize = 80,
+}: {
+  bounds: ImageBox;
+  canvasRef: RefObject<HTMLCanvasElement | null>;
+  canvasSize: CanvasSize;
+  image: HTMLImageElement | null;
+  minSize?: number;
+}) => {
+  const interactionRef = useRef<CharacterInteraction | null>(null);
+  const [box, setBox] = useState<ImageBox | null>(null);
+
+  useEffect(() => {
+    interactionRef.current = null;
+    setBox(image ? createDefaultImageBox(image, bounds, minSize) : null);
+  }, [bounds, image, minSize]);
+
+  const startInteraction = useCallback(
+    (
+      mode: CharacterInteraction['mode'],
+      event: PointerEvent<HTMLElement>,
+      resizeHandle?: CharacterResizeHandle,
+    ) => {
+      const pointerPosition = getCanvasPointerPosition(
+        event,
+        canvasRef.current,
+        canvasSize,
+      );
+      if (!pointerPosition || !box) {
+        return;
+      }
+
+      const baseInteraction = {
+        startBox: box,
+        startPointerX: pointerPosition.x,
+        startPointerY: pointerPosition.y,
+      };
+
+      if (mode === 'resize') {
+        if (!resizeHandle) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        event.currentTarget.setPointerCapture(event.pointerId);
+        interactionRef.current = { ...baseInteraction, mode, resizeHandle };
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.currentTarget.setPointerCapture(event.pointerId);
+      interactionRef.current = { ...baseInteraction, mode };
+    },
+    [box, canvasRef, canvasSize],
+  );
+
+  const handlePointerMove = useCallback(
+    (event: PointerEvent<HTMLElement>) => {
+      const interaction = interactionRef.current;
+      const pointerPosition = getCanvasPointerPosition(
+        event,
+        canvasRef.current,
+        canvasSize,
+      );
+      if (!interaction || !pointerPosition) {
+        return;
+      }
+
+      event.preventDefault();
+      const deltaX = pointerPosition.x - interaction.startPointerX;
+      const deltaY = pointerPosition.y - interaction.startPointerY;
+
+      if (interaction.mode === 'move') {
+        setBox(
+          clampImageBox(
+            {
+              ...interaction.startBox,
+              x: interaction.startBox.x + deltaX,
+              y: interaction.startBox.y + deltaY,
+            },
+            bounds,
+            minSize,
+          ),
+        );
+        return;
+      }
+
+      setBox(
+        resizeImageBox(
+          interaction.startBox,
+          interaction.resizeHandle,
+          deltaX,
+          deltaY,
+          bounds,
+          minSize,
+        ),
+      );
+    },
+    [bounds, canvasRef, canvasSize, minSize],
+  );
+
+  const finishInteraction = useCallback((event: PointerEvent<HTMLElement>) => {
+    interactionRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }, []);
+
+  return {
+    box,
+    finishInteraction,
+    handlePointerMove,
+    setBox: setBox as Dispatch<SetStateAction<ImageBox | null>>,
+    startInteraction,
+  };
+};
+
+export const CharacterSelectionOverlay = ({
+  box,
+  canvasSize,
+  finishInteraction,
+  handlePointerMove,
+  startInteraction,
+}: {
+  box: ImageBox;
+  canvasSize: CanvasSize;
+  finishInteraction: (event: PointerEvent<HTMLElement>) => void;
+  handlePointerMove: (event: PointerEvent<HTMLElement>) => void;
+  startInteraction: (
+    mode: CharacterInteraction['mode'],
+    event: PointerEvent<HTMLElement>,
+    resizeHandle?: CharacterResizeHandle,
+  ) => void;
+}) => (
+  <div
+    aria-label="캐릭터 이미지 위치"
+    className="absolute touch-none border-2 border-amber-300/90 shadow-[0_0_0_1px_rgba(24,24,27,0.8)]"
+    onPointerCancel={finishInteraction}
+    onPointerDown={(event) => startInteraction('move', event)}
+    onPointerMove={handlePointerMove}
+    onPointerUp={finishInteraction}
+    role="presentation"
+    style={{
+      height: `${(box.height / canvasSize.height) * 100}%`,
+      left: `${(box.x / canvasSize.width) * 100}%`,
+      top: `${(box.y / canvasSize.height) * 100}%`,
+      width: `${(box.width / canvasSize.width) * 100}%`,
+    }}
+  >
+    {characterResizeHandles.map((handle) => (
+      <button
+        aria-label={handle.ariaLabel}
+        className={`${handle.className} absolute h-4 w-4 rounded-full border border-zinc-950 bg-amber-300`}
+        key={handle.position}
+        onPointerCancel={finishInteraction}
+        onPointerDown={(event) =>
+          startInteraction('resize', event, handle.position)
+        }
+        onPointerMove={handlePointerMove}
+        onPointerUp={finishInteraction}
+        type="button"
+      />
+    ))}
+  </div>
+);
+
+type CharacterLayerSelection = Pick<
+  ReturnType<typeof useCharacterLayer>,
+  'finishInteraction' | 'handlePointerMove' | 'startInteraction'
+>;
+
+export const ThumbnailCanvasPreview = ({
+  canvasRef,
+  canvasSize,
+  characterBox,
+  characterControls,
+  isLoading,
+  isReady,
+}: {
+  canvasRef: RefObject<HTMLCanvasElement | null>;
+  canvasSize: CanvasSize;
+  characterBox: ImageBox | null;
+  characterControls: CharacterLayerSelection;
+  isLoading: boolean;
+  isReady: boolean;
+}) => (
+  <div className="relative overflow-hidden rounded-md bg-zinc-950">
+    <canvas
+      aria-label="썸네일 미리보기"
+      className="block h-auto w-full"
+      height={canvasSize.height}
+      ref={canvasRef}
+      width={canvasSize.width}
+    />
+    {characterBox ? (
+      <CharacterSelectionOverlay
+        box={characterBox}
+        canvasSize={canvasSize}
+        finishInteraction={characterControls.finishInteraction}
+        handlePointerMove={characterControls.handlePointerMove}
+        startInteraction={characterControls.startInteraction}
+      />
+    ) : null}
+    {!isReady ? (
+      <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/80 text-sm text-zinc-300">
+        {isLoading ? '템플릿 로딩 중...' : '템플릿 로딩 실패'}
+      </div>
+    ) : null}
+  </div>
+);
+
 export const Route = createFileRoute('/tools/soopthumbnail/')({
   beforeLoad: () => {
-    throw Route.redirect({ replace: true, to: '/tools/soopthumbnail/9mogu9' });
+    throw Route.redirect({
+      replace: true,
+      to: '/tools/soopthumbnail/dlsn9911',
+    });
   },
   component: () => null,
 });

@@ -21,6 +21,7 @@ import { Route as DefaultLayoutClipperRouteImport } from './routes/_defaultLayou
 import { Route as DefaultLayoutCalendarRouteImport } from './routes/_defaultLayout/calendar'
 import { Route as DefaultLayoutCafeRouteImport } from './routes/_defaultLayout/cafe'
 import { Route as ToolsSoopthumbnailIndexRouteImport } from './routes/tools/soopthumbnail/index'
+import { Route as ToolsSoopthumbnailDlsn9911RouteImport } from './routes/tools/soopthumbnail/dlsn9911'
 import { Route as ToolsSoopthumbnail9mogu9RouteImport } from './routes/tools/soopthumbnail/9mogu9'
 
 const DefaultLayoutRoute = DefaultLayoutRouteImport.update({
@@ -82,6 +83,12 @@ const ToolsSoopthumbnailIndexRoute = ToolsSoopthumbnailIndexRouteImport.update({
   path: '/tools/soopthumbnail/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ToolsSoopthumbnailDlsn9911Route =
+  ToolsSoopthumbnailDlsn9911RouteImport.update({
+    id: '/tools/soopthumbnail/dlsn9911',
+    path: '/tools/soopthumbnail/dlsn9911',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ToolsSoopthumbnail9mogu9Route =
   ToolsSoopthumbnail9mogu9RouteImport.update({
     id: '/tools/soopthumbnail/9mogu9',
@@ -101,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/tools/soopcomment': typeof ToolsSoopcommentRoute
   '/tools/soopup': typeof ToolsSoopupRoute
   '/tools/soopthumbnail/9mogu9': typeof ToolsSoopthumbnail9mogu9Route
+  '/tools/soopthumbnail/dlsn9911': typeof ToolsSoopthumbnailDlsn9911Route
   '/tools/soopthumbnail/': typeof ToolsSoopthumbnailIndexRoute
 }
 export interface FileRoutesByTo {
@@ -115,6 +123,7 @@ export interface FileRoutesByTo {
   '/tools/soopup': typeof ToolsSoopupRoute
   '/': typeof DefaultLayoutIndexRoute
   '/tools/soopthumbnail/9mogu9': typeof ToolsSoopthumbnail9mogu9Route
+  '/tools/soopthumbnail/dlsn9911': typeof ToolsSoopthumbnailDlsn9911Route
   '/tools/soopthumbnail': typeof ToolsSoopthumbnailIndexRoute
 }
 export interface FileRoutesById {
@@ -131,6 +140,7 @@ export interface FileRoutesById {
   '/tools/soopup': typeof ToolsSoopupRoute
   '/_defaultLayout/': typeof DefaultLayoutIndexRoute
   '/tools/soopthumbnail/9mogu9': typeof ToolsSoopthumbnail9mogu9Route
+  '/tools/soopthumbnail/dlsn9911': typeof ToolsSoopthumbnailDlsn9911Route
   '/tools/soopthumbnail/': typeof ToolsSoopthumbnailIndexRoute
 }
 export interface FileRouteTypes {
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/tools/soopcomment'
     | '/tools/soopup'
     | '/tools/soopthumbnail/9mogu9'
+    | '/tools/soopthumbnail/dlsn9911'
     | '/tools/soopthumbnail/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/tools/soopup'
     | '/'
     | '/tools/soopthumbnail/9mogu9'
+    | '/tools/soopthumbnail/dlsn9911'
     | '/tools/soopthumbnail'
   id:
     | '__root__'
@@ -176,6 +188,7 @@ export interface FileRouteTypes {
     | '/tools/soopup'
     | '/_defaultLayout/'
     | '/tools/soopthumbnail/9mogu9'
+    | '/tools/soopthumbnail/dlsn9911'
     | '/tools/soopthumbnail/'
   fileRoutesById: FileRoutesById
 }
@@ -185,6 +198,7 @@ export interface RootRouteChildren {
   ToolsSoopcommentRoute: typeof ToolsSoopcommentRoute
   ToolsSoopupRoute: typeof ToolsSoopupRoute
   ToolsSoopthumbnail9mogu9Route: typeof ToolsSoopthumbnail9mogu9Route
+  ToolsSoopthumbnailDlsn9911Route: typeof ToolsSoopthumbnailDlsn9911Route
   ToolsSoopthumbnailIndexRoute: typeof ToolsSoopthumbnailIndexRoute
 }
 
@@ -274,6 +288,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ToolsSoopthumbnailIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tools/soopthumbnail/dlsn9911': {
+      id: '/tools/soopthumbnail/dlsn9911'
+      path: '/tools/soopthumbnail/dlsn9911'
+      fullPath: '/tools/soopthumbnail/dlsn9911'
+      preLoaderRoute: typeof ToolsSoopthumbnailDlsn9911RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tools/soopthumbnail/9mogu9': {
       id: '/tools/soopthumbnail/9mogu9'
       path: '/tools/soopthumbnail/9mogu9'
@@ -314,6 +335,7 @@ const rootRouteChildren: RootRouteChildren = {
   ToolsSoopcommentRoute: ToolsSoopcommentRoute,
   ToolsSoopupRoute: ToolsSoopupRoute,
   ToolsSoopthumbnail9mogu9Route: ToolsSoopthumbnail9mogu9Route,
+  ToolsSoopthumbnailDlsn9911Route: ToolsSoopthumbnailDlsn9911Route,
   ToolsSoopthumbnailIndexRoute: ToolsSoopthumbnailIndexRoute,
 }
 export const routeTree = rootRouteImport
