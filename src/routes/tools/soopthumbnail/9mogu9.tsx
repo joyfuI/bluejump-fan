@@ -40,12 +40,12 @@
  * - Character uploads are a separate interactive canvas layer. They default to
  *   the frame height and bottom-right corner, are drawn after the background
  *   image and before the PSD panel/text, and are edited with a DOM selection
- *   overlay plus four corner resize handles so resize UI never appears in the
- *   exported PNG.
+ *   overlay plus four corner resize handles. The user can clear this layer
+ *   entirely; resize/delete UI never appears in the exported PNG.
  */
 
 import { createFileRoute } from '@tanstack/react-router';
-import { Download, ImagePlus, Loader2 } from 'lucide-react';
+import { Download, ImagePlus, Loader2, Trash2 } from 'lucide-react';
 import {
   type ChangeEvent,
   type PointerEvent,
@@ -550,6 +550,7 @@ const RouteComponent = () => {
   const backgroundInputId = useId();
   const characterInputId = useId();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const characterInputRef = useRef<HTMLInputElement | null>(null);
   const backgroundObjectUrlRef = useRef<string | null>(null);
   const characterObjectUrlRef = useRef<string | null>(null);
   const characterInteractionRef = useRef<CharacterInteraction | null>(null);
@@ -802,6 +803,23 @@ const RouteComponent = () => {
     image.src = nextObjectUrl;
   };
 
+  const clearCharacterImage = () => {
+    if (characterObjectUrlRef.current) {
+      URL.revokeObjectURL(characterObjectUrlRef.current);
+      characterObjectUrlRef.current = null;
+    }
+
+    characterInteractionRef.current = null;
+    setCharacterImage(null);
+    setCharacterBox(null);
+    setCharacterName('');
+    setCharacterError('');
+
+    if (characterInputRef.current) {
+      characterInputRef.current.value = '';
+    }
+  };
+
   const startCharacterInteraction = (
     mode: CharacterInteraction['mode'],
     event: PointerEvent<HTMLElement>,
@@ -986,18 +1004,32 @@ const RouteComponent = () => {
           </label>
 
           <div>
-            <label
-              className="inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-amber-300/60 bg-zinc-950 px-4 text-sm font-semibold text-amber-200 transition hover:border-amber-200 hover:bg-zinc-900"
-              htmlFor={characterInputId}
-            >
-              <ImagePlus className="h-4 w-4" />
-              캐릭터 이미지
-            </label>
+            <div className="flex gap-2">
+              <label
+                className="inline-flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border border-amber-300/60 bg-zinc-950 px-4 text-sm font-semibold text-amber-200 transition hover:border-amber-200 hover:bg-zinc-900"
+                htmlFor={characterInputId}
+              >
+                <ImagePlus className="h-4 w-4" />
+                캐릭터 이미지
+              </label>
+              {characterImage ? (
+                <button
+                  aria-label="캐릭터 이미지 삭제"
+                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-950 text-zinc-300 transition hover:border-rose-300 hover:text-rose-200"
+                  onClick={clearCharacterImage}
+                  title="캐릭터 이미지 삭제"
+                  type="button"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              ) : null}
+            </div>
             <input
               accept="image/*"
               className="sr-only"
               id={characterInputId}
               onChange={handleCharacterChange}
+              ref={characterInputRef}
               type="file"
             />
             <p className="mt-2 truncate text-xs text-zinc-500">
