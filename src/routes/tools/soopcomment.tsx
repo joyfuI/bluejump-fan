@@ -29,7 +29,7 @@ import { useMutation } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { AlertCircle, Copy, Link as LinkIcon, Search } from 'lucide-react';
 import { createStandardSchemaV1, parseAsString, useQueryState } from 'nuqs';
-import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { type SubmitEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 import getPostComment, {
   type GetPostCommentResponse,
@@ -241,7 +241,7 @@ const RouteComponent = () => {
     void mutateAsync({ target: parsedQueryTarget, targets: queryTargets });
   }, [autoFetchKey, mutateAsync, parsedQueryTarget, queryTargets]);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!parsedTarget || !hasTargets) return;
 

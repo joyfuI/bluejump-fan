@@ -56,6 +56,7 @@ import {
 } from 'nuqs';
 import {
   Fragment,
+  type SubmitEvent,
   useEffect,
   useId,
   useLayoutEffect,
@@ -609,7 +610,7 @@ const RouteComponent = () => {
     };
   }, [highlightUserId, query.data?.comments]);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const parsed = parseSoopPostUrl(inputUrl.trim());
