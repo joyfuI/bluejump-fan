@@ -36,6 +36,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   buildRoundedRectPath,
   type CanvasSize,
+  type CharacterOutlineOptions,
   DEFAULT_CHARACTER_UPLOAD_MESSAGES,
   DEFAULT_IMAGE_UPLOAD_MESSAGES,
   downloadCanvasAsPng,
@@ -49,6 +50,7 @@ import {
   SoopThumbnailToolLayout,
   setupThumbnailCanvas,
   ThumbnailCanvasPreview,
+  ThumbnailCheckbox,
   ThumbnailDownloadButton,
   ThumbnailImageInput,
   ThumbnailStatusMessage,
@@ -66,6 +68,7 @@ type RenderOptions = {
   backgroundImage: HTMLImageElement | null;
   characterBox: ImageBox | null;
   characterImage: HTMLImageElement | null;
+  characterOutline: CharacterOutlineOptions;
   darkPanelImage: HTMLImageElement;
   dateText: string;
   dateBarImage: HTMLImageElement;
@@ -105,6 +108,7 @@ const DATE_BAR = { x: 42, y: 610 };
 const LEFT_SKULL = { x: 145, y: 624 };
 const RIGHT_SKULL = { x: 608, y: 625 };
 const CHARACTER_MIN_SIZE = 80;
+const CHARACTER_OUTLINE_WIDTH = 10;
 const DEFAULT_FIRST_TEXT = '#첫번째텍스트';
 const DEFAULT_SECOND_TEXT = '#두번째텍스트';
 const TITLE_DROP_SHADOW = {
@@ -149,6 +153,7 @@ const drawMoguguTemplate = (
     bounds: FRAME,
     characterBox: options.characterBox,
     characterImage: options.characterImage,
+    characterOutline: options.characterOutline,
   });
 
   context.drawImage(options.darkPanelImage, DARK_PANEL.x, DARK_PANEL.y);
@@ -230,6 +235,7 @@ const RouteComponent = () => {
   const [dateText, setDateText] = useTodayDateText();
   const [firstText, setFirstText] = useState(DEFAULT_FIRST_TEXT);
   const [secondText, setSecondText] = useState(DEFAULT_SECOND_TEXT);
+  const [characterOutlineEnabled, setCharacterOutlineEnabled] = useState(false);
   const [downloadError, setDownloadError] = useState('');
   const fontStatus = useCanvasFonts(TEMPLATE_FONTS);
   const { images, status: assetStatus } = useTemplateImages(TEMPLATE_IMAGES);
@@ -258,6 +264,10 @@ const RouteComponent = () => {
       backgroundImage: background.image,
       characterBox: characterLayer.box,
       characterImage: character.image,
+      characterOutline: {
+        enabled: characterOutlineEnabled,
+        width: CHARACTER_OUTLINE_WIDTH,
+      },
       darkPanelImage: images.darkPanel,
       dateBarImage: images.dateBar,
       dateText,
@@ -270,6 +280,7 @@ const RouteComponent = () => {
   }, [
     background.image,
     character.image,
+    characterOutlineEnabled,
     characterLayer.box,
     dateText,
     firstText,
@@ -344,6 +355,12 @@ const RouteComponent = () => {
             label="캐릭터 이미지"
             showClearButton
             variant="secondary"
+          />
+
+          <ThumbnailCheckbox
+            checked={characterOutlineEnabled}
+            label="캐릭터 테두리 적용"
+            onChange={setCharacterOutlineEnabled}
           />
 
           {fontStatus === 'error' ? (

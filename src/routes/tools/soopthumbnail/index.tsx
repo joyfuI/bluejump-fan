@@ -4,7 +4,8 @@
  * - `index.tsx` keeps the shared route shell, template tab metadata, base
  *   redirect, and browser-only helpers that are reused by individual template
  *   routes: font/asset loading, image uploads, date formatting, cover-crop
- *   drawing, stroked/PSD-style text helpers, shared form
+ *   drawing, optional character outline rendering scaled from a 1920x1080
+ *   reference canvas, stroked/PSD-style text helpers, shared form
  *   controls/download/preview UI, and interactive character placement.
  * - The current template tabs are `제갈금자`, `모구구`, and `하로하`; each
  *   template route owns its PSD-specific asset/font constants and draw order.
@@ -46,7 +47,17 @@ export type SoopThumbnailTemplateId =
 export type CanvasSize = { height: number; width: number };
 export type ImageBox = { height: number; width: number; x: number; y: number };
 export type LoadStatus = 'loading' | 'loaded' | 'error';
+export type CharacterOutlineOptions = {
+  color?: string;
+  enabled: boolean;
+  width: number;
+};
 
+const DEFAULT_CHARACTER_OUTLINE_COLOR = '#ffffff';
+const CHARACTER_OUTLINE_REFERENCE_CANVAS_SIZE = {
+  height: 1080,
+  width: 1920,
+} as const satisfies CanvasSize;
 export const DEFAULT_THUMBNAIL_INNER_BACKGROUND = '#ffffff';
 
 type SoopThumbnailToolLayoutProps = {
@@ -246,6 +257,108 @@ export const drawCoverImage = (
   context.drawImage(image, drawX, drawY, drawWidth, drawHeight);
 };
 
+const characterOutlineOffsetsCache = new Map<
+  number,
+  Array<{ x: number; y: number }>
+>();
+
+const getCanvasScale = (canvasSize: CanvasSize, referenceSize: CanvasSize) =>
+  Math.min(
+    canvasSize.width / referenceSize.width,
+    canvasSize.height / referenceSize.height,
+  );
+
+const getScaledCharacterOutlineWidth = (
+  width: number,
+  canvas: HTMLCanvasElement,
+) =>
+  width *
+  getCanvasScale(
+    { height: canvas.height, width: canvas.width },
+    CHARACTER_OUTLINE_REFERENCE_CANVAS_SIZE,
+  );
+
+const getCharacterOutlineOffsets = (width: number) => {
+  const outlineWidth = Math.max(0, width);
+  const cacheKey = Math.round(outlineWidth * 1000) / 1000;
+  const radius = Math.ceil(outlineWidth);
+  const cachedOffsets = characterOutlineOffsetsCache.get(cacheKey);
+  if (cachedOffsets) {
+    return cachedOffsets;
+  }
+
+  const offsets: Array<{ x: number; y: number }> = [];
+  for (let y = -radius; y <= radius; y += 1) {
+    for (let x = -radius; x <= radius; x += 1) {
+      if (x === 0 && y === 0) {
+        continue;
+      }
+
+      if (x * x + y * y <= outlineWidth * outlineWidth) {
+        offsets.push({ x, y });
+      }
+    }
+  }
+
+  characterOutlineOffsetsCache.set(cacheKey, offsets);
+  return offsets;
+};
+
+const drawCharacterOutline = (
+  context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  box: ImageBox,
+  outline: CharacterOutlineOptions,
+) => {
+  const outlineWidth = getScaledCharacterOutlineWidth(
+    outline.width,
+    context.canvas,
+  );
+
+  if (
+    !outline.enabled ||
+    outlineWidth <= 0 ||
+    typeof document === 'undefined'
+  ) {
+    return;
+  }
+
+  const padding = Math.ceil(outlineWidth);
+  const canvasWidth = Math.ceil(box.width + padding * 2);
+  const canvasHeight = Math.ceil(box.height + padding * 2);
+  if (canvasWidth <= 0 || canvasHeight <= 0) {
+    return;
+  }
+
+  const outlineCanvas = document.createElement('canvas');
+  outlineCanvas.width = canvasWidth;
+  outlineCanvas.height = canvasHeight;
+
+  const outlineContext = outlineCanvas.getContext('2d');
+  if (!outlineContext) {
+    return;
+  }
+
+  outlineContext.imageSmoothingEnabled = true;
+  outlineContext.imageSmoothingQuality = 'high';
+
+  for (const offset of getCharacterOutlineOffsets(outlineWidth)) {
+    outlineContext.drawImage(
+      image,
+      padding + offset.x,
+      padding + offset.y,
+      box.width,
+      box.height,
+    );
+  }
+
+  outlineContext.globalCompositeOperation = 'source-in';
+  outlineContext.fillStyle = outline.color ?? DEFAULT_CHARACTER_OUTLINE_COLOR;
+  outlineContext.fillRect(0, 0, canvasWidth, canvasHeight);
+
+  context.drawImage(outlineCanvas, box.x - padding, box.y - padding);
+};
+
 export const setupThumbnailCanvas = (
   context: CanvasRenderingContext2D,
   canvasSize: CanvasSize,
@@ -262,12 +375,14 @@ export const drawEditableImageLayers = (
     bounds,
     characterBox,
     characterImage,
+    characterOutline,
     fillColor = DEFAULT_THUMBNAIL_INNER_BACKGROUND,
   }: {
     backgroundImage: HTMLImageElement | null;
     bounds: ImageBox;
     characterBox: ImageBox | null;
     characterImage: HTMLImageElement | null;
+    characterOutline?: CharacterOutlineOptions;
     fillColor?: string;
   },
 ) => {
@@ -286,6 +401,15 @@ export const drawEditableImageLayers = (
   }
 
   if (characterImage && characterBox) {
+    if (characterOutline) {
+      drawCharacterOutline(
+        context,
+        characterImage,
+        characterBox,
+        characterOutline,
+      );
+    }
+
     context.drawImage(
       characterImage,
       characterBox.x,
@@ -863,6 +987,28 @@ export const ThumbnailTextarea = ({
       value={value}
       {...textareaProps}
     />
+  </label>
+);
+
+type ThumbnailCheckboxProps = {
+  checked: boolean;
+  label: string;
+  onChange: (value: boolean) => void;
+};
+
+export const ThumbnailCheckbox = ({
+  checked,
+  label,
+  onChange,
+}: ThumbnailCheckboxProps) => (
+  <label className="flex h-11 cursor-pointer items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-sm font-medium text-zinc-200 transition hover:border-amber-300/70 hover:text-amber-100">
+    <input
+      checked={checked}
+      className="h-4 w-4 accent-amber-300"
+      onChange={(event) => onChange(event.target.checked)}
+      type="checkbox"
+    />
+    <span>{label}</span>
   </label>
 );
 

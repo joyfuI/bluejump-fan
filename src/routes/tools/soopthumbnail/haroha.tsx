@@ -41,6 +41,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   buildRoundedRectPath,
   type CanvasSize,
+  type CharacterOutlineOptions,
   DEFAULT_CHARACTER_UPLOAD_MESSAGES,
   DEFAULT_IMAGE_UPLOAD_MESSAGES,
   downloadCanvasAsPng,
@@ -56,6 +57,7 @@ import {
   SoopThumbnailToolLayout,
   setupThumbnailCanvas,
   ThumbnailCanvasPreview,
+  ThumbnailCheckbox,
   ThumbnailDownloadButton,
   ThumbnailImageInput,
   ThumbnailStatusMessage,
@@ -73,6 +75,7 @@ type RenderOptions = {
   backgroundImage: HTMLImageElement | null;
   characterBox: ImageBox | null;
   characterImage: HTMLImageElement | null;
+  characterOutline: CharacterOutlineOptions;
   dateText: string;
   firstText: string;
   fourthText: string;
@@ -109,6 +112,8 @@ const CHARACTER_BOUNDS = {
   y: INNER_FRAME.y,
 };
 const CHARACTER_MIN_SIZE = 80;
+const CHARACTER_OUTLINE_COLOR = '#2d241b';
+const CHARACTER_OUTLINE_WIDTH = 10;
 const DEFAULT_FIRST_TEXT = '첫 번째 텍스트';
 const DEFAULT_SECOND_TEXT = '두 번째 텍스트';
 const DEFAULT_THIRD_TEXT = '#세 번째 텍스트';
@@ -242,6 +247,7 @@ const drawHarohaTemplate = (
     bounds: INNER_FRAME,
     characterBox: options.characterBox,
     characterImage: options.characterImage,
+    characterOutline: options.characterOutline,
   });
 
   context.drawImage(
@@ -336,6 +342,7 @@ const RouteComponent = () => {
   const [secondText, setSecondText] = useState(DEFAULT_SECOND_TEXT);
   const [thirdText, setThirdText] = useState(DEFAULT_THIRD_TEXT);
   const [fourthText, setFourthText] = useState(DEFAULT_FOURTH_TEXT);
+  const [characterOutlineEnabled, setCharacterOutlineEnabled] = useState(false);
   const [downloadError, setDownloadError] = useState('');
   const fontStatus = useCanvasFonts(TEMPLATE_FONTS);
   const { images, status: assetStatus } = useTemplateImages(TEMPLATE_IMAGES);
@@ -364,6 +371,11 @@ const RouteComponent = () => {
       backgroundImage: background.image,
       characterBox: characterLayer.box,
       characterImage: character.image,
+      characterOutline: {
+        color: CHARACTER_OUTLINE_COLOR,
+        enabled: characterOutlineEnabled,
+        width: CHARACTER_OUTLINE_WIDTH,
+      },
       dateText,
       firstText,
       fourthText,
@@ -374,6 +386,7 @@ const RouteComponent = () => {
   }, [
     background.image,
     character.image,
+    characterOutlineEnabled,
     characterLayer.box,
     dateText,
     firstText,
@@ -462,6 +475,12 @@ const RouteComponent = () => {
             label="캐릭터 이미지"
             showClearButton
             variant="secondary"
+          />
+
+          <ThumbnailCheckbox
+            checked={characterOutlineEnabled}
+            label="캐릭터 테두리 적용"
+            onChange={setCharacterOutlineEnabled}
           />
 
           {fontStatus === 'error' ? (

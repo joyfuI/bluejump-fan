@@ -53,6 +53,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   buildRoundedRectPath,
   type CanvasSize,
+  type CharacterOutlineOptions,
   DEFAULT_CHARACTER_UPLOAD_MESSAGES,
   DEFAULT_IMAGE_UPLOAD_MESSAGES,
   downloadCanvasAsPng,
@@ -66,6 +67,7 @@ import {
   SoopThumbnailToolLayout,
   setupThumbnailCanvas,
   ThumbnailCanvasPreview,
+  ThumbnailCheckbox,
   ThumbnailDownloadButton,
   ThumbnailImageInput,
   ThumbnailStatusMessage,
@@ -86,6 +88,7 @@ type RenderOptions = {
   backgroundImage: HTMLImageElement | null;
   characterBox: ImageBox | null;
   characterImage: HTMLImageElement | null;
+  characterOutline: CharacterOutlineOptions;
   dateText: string;
   frameImage: HTMLImageElement;
   templateType: Dlsn9911TemplateType;
@@ -115,6 +118,7 @@ const CHARACTER_BOUNDS = {
   y: INNER_FRAME.y,
 };
 const CHARACTER_MIN_SIZE = 64;
+const CHARACTER_OUTLINE_WIDTH = 10;
 const DEFAULT_TITLE_TEXT = '제목텍스트';
 const TITLE_BOX = {
   bottomBaseline: 722,
@@ -510,6 +514,7 @@ const drawDlsn9911Template = (
     bounds: INNER_FRAME,
     characterBox: options.characterBox,
     characterImage: options.characterImage,
+    characterOutline: options.characterOutline,
   });
   context.restore();
 
@@ -576,6 +581,7 @@ const RouteComponent = () => {
     useState<Dlsn9911TemplateType>('normal');
   const [dateText, setDateText] = useTodayDateText();
   const [titleText, setTitleText] = useState(DEFAULT_TITLE_TEXT);
+  const [characterOutlineEnabled, setCharacterOutlineEnabled] = useState(false);
   const [downloadError, setDownloadError] = useState('');
   const fontStatus = useCanvasFonts(TEMPLATE_FONTS);
   const { images, status: assetStatus } = useTemplateImages(TEMPLATE_IMAGES);
@@ -606,6 +612,10 @@ const RouteComponent = () => {
       backgroundImage: background.image,
       characterBox: characterLayer.box,
       characterImage: character.image,
+      characterOutline: {
+        enabled: characterOutlineEnabled,
+        width: CHARACTER_OUTLINE_WIDTH,
+      },
       dateText,
       frameImage,
       templateType,
@@ -614,6 +624,7 @@ const RouteComponent = () => {
   }, [
     background.image,
     character.image,
+    characterOutlineEnabled,
     characterLayer.box,
     dateText,
     frameImage,
@@ -713,6 +724,12 @@ const RouteComponent = () => {
             label="캐릭터 이미지"
             showClearButton
             variant="secondary"
+          />
+
+          <ThumbnailCheckbox
+            checked={characterOutlineEnabled}
+            label="캐릭터 테두리 적용"
+            onChange={setCharacterOutlineEnabled}
           />
 
           {fontStatus === 'error' ? (
