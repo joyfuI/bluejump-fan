@@ -4,8 +4,10 @@
  * - `index.tsx` keeps the shared route shell, template tab metadata, base
  *   redirect, and browser-only helpers that are reused by individual template
  *   routes: font/asset loading, image uploads, date formatting, cover-crop
- *   drawing, stroked text drawing, shared form controls/download/preview UI,
- *   and interactive character placement.
+ *   drawing, stroked/PSD-style text helpers, shared form
+ *   controls/download/preview UI, and interactive character placement.
+ * - The current template tabs are `제갈금자`, `모구구`, and `하로하`; each
+ *   template route owns its PSD-specific asset/font constants and draw order.
  * - `/tools/soopthumbnail` redirects to `/tools/soopthumbnail/dlsn9911`
  *   because `제갈금자` is the first template tab.
  * - Template route files should keep PSD-specific constants and render order
@@ -35,6 +37,7 @@ import {
 export const soopThumbnailTemplates = [
   { id: 'dlsn9911', label: '제갈금자', to: '/tools/soopthumbnail/dlsn9911' },
   { id: '9mogu9', label: '모구구', to: '/tools/soopthumbnail/9mogu9' },
+  { id: 'haroha', label: '하로하', to: '/tools/soopthumbnail/haroha' },
 ] as const;
 
 export type SoopThumbnailTemplateId =
@@ -43,6 +46,8 @@ export type SoopThumbnailTemplateId =
 export type CanvasSize = { height: number; width: number };
 export type ImageBox = { height: number; width: number; x: number; y: number };
 export type LoadStatus = 'loading' | 'loaded' | 'error';
+
+export const DEFAULT_THUMBNAIL_INNER_BACKGROUND = '#ffffff';
 
 type SoopThumbnailToolLayoutProps = {
   activeTemplateId: SoopThumbnailTemplateId;
@@ -150,6 +155,19 @@ export const downloadCanvasAsPng = (
   }, 'image/png');
 };
 
+export const renderThumbnailToCanvas = <TOptions,>(
+  canvas: HTMLCanvasElement,
+  options: TOptions,
+  drawTemplate: (context: CanvasRenderingContext2D, options: TOptions) => void,
+) => {
+  const context = canvas.getContext('2d');
+  if (!context) {
+    return;
+  }
+
+  drawTemplate(context, options);
+};
+
 export const getRgba = (hexColor: string, opacity: number) => {
   const normalizedColor = hexColor.replace('#', '');
   const red = Number.parseInt(normalizedColor.slice(0, 2), 16);
@@ -228,6 +246,56 @@ export const drawCoverImage = (
   context.drawImage(image, drawX, drawY, drawWidth, drawHeight);
 };
 
+export const setupThumbnailCanvas = (
+  context: CanvasRenderingContext2D,
+  canvasSize: CanvasSize,
+) => {
+  context.clearRect(0, 0, canvasSize.width, canvasSize.height);
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = 'high';
+};
+
+export const drawEditableImageLayers = (
+  context: CanvasRenderingContext2D,
+  {
+    backgroundImage,
+    bounds,
+    characterBox,
+    characterImage,
+    fillColor = DEFAULT_THUMBNAIL_INNER_BACKGROUND,
+  }: {
+    backgroundImage: HTMLImageElement | null;
+    bounds: ImageBox;
+    characterBox: ImageBox | null;
+    characterImage: HTMLImageElement | null;
+    fillColor?: string;
+  },
+) => {
+  context.fillStyle = fillColor;
+  context.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+
+  if (backgroundImage) {
+    drawCoverImage(
+      context,
+      backgroundImage,
+      bounds.x,
+      bounds.y,
+      bounds.width,
+      bounds.height,
+    );
+  }
+
+  if (characterImage && characterBox) {
+    context.drawImage(
+      characterImage,
+      characterBox.x,
+      characterBox.y,
+      characterBox.width,
+      characterBox.height,
+    );
+  }
+};
+
 export const fitFontSize = (
   context: CanvasRenderingContext2D,
   text: string,
@@ -245,6 +313,151 @@ export const fitFontSize = (
     size -= 2;
   }
   return size;
+};
+
+export type PsdCanvasTextStyle = {
+  align: CanvasTextAlign;
+  fillColor: string;
+  fontFamily: string;
+  fontSize: number;
+  fontWeight?: number;
+  outerStrokeColor?: string;
+  outerStrokeWidth?: number;
+  scaleX?: number;
+  tracking?: number;
+};
+
+type PsdCanvasTextMeasureStyle = Pick<
+  PsdCanvasTextStyle,
+  'fontFamily' | 'fontSize' | 'fontWeight' | 'scaleX' | 'tracking'
+>;
+
+export const getPsdCanvasFont = (
+  style: Pick<PsdCanvasTextStyle, 'fontFamily' | 'fontSize' | 'fontWeight'>,
+) =>
+  `${style.fontWeight ? `${style.fontWeight} ` : ''}${style.fontSize}px "${
+    style.fontFamily
+  }"`;
+
+export const measurePsdTextWidth = (
+  context: CanvasRenderingContext2D,
+  text: string,
+  style: PsdCanvasTextMeasureStyle,
+) => {
+  context.save();
+  context.font = getPsdCanvasFont(style);
+
+  const characters = [...text];
+  const tracking = style.tracking ?? 0;
+  const width =
+    characters.reduce(
+      (totalWidth, character) =>
+        totalWidth + context.measureText(character).width,
+      0,
+    ) +
+    Math.max(0, characters.length - 1) * tracking;
+
+  context.restore();
+  return width * (style.scaleX ?? 1);
+};
+
+export const fitPsdTextFontSize = (
+  context: CanvasRenderingContext2D,
+  text: string,
+  options: {
+    fontFamily: string;
+    maxWidth: number;
+    minFontSize: number;
+    scaleX?: number;
+    startFontSize: number;
+    tracking?: number;
+  },
+) => {
+  const normalizedText = text.trim();
+  let fontSize = options.startFontSize;
+
+  while (normalizedText && fontSize > options.minFontSize) {
+    const width = measurePsdTextWidth(context, normalizedText, {
+      fontFamily: options.fontFamily,
+      fontSize,
+      scaleX: options.scaleX,
+      tracking: options.tracking,
+    });
+
+    if (width <= options.maxWidth) {
+      break;
+    }
+    fontSize -= 2;
+  }
+
+  return fontSize;
+};
+
+export const getPhotoshopTrackingPx = (fontSize: number, tracking: number) =>
+  (fontSize * tracking) / 1000;
+
+export const drawPsdText = (
+  context: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  style: PsdCanvasTextStyle,
+) => {
+  const normalizedText = text.trim();
+  if (!normalizedText) {
+    return;
+  }
+
+  const scaleX = style.scaleX ?? 1;
+  const tracking = style.tracking ?? 0;
+  const characters = [...normalizedText];
+  const unscaledRunWidth = measurePsdTextWidth(context, normalizedText, {
+    fontFamily: style.fontFamily,
+    fontSize: style.fontSize,
+    fontWeight: style.fontWeight,
+    scaleX: 1,
+    tracking,
+  });
+  let cursor =
+    style.align === 'center'
+      ? -unscaledRunWidth / 2
+      : style.align === 'right'
+        ? -unscaledRunWidth
+        : 0;
+
+  context.save();
+  context.translate(x, y);
+  context.scale(scaleX, 1);
+  context.font = getPsdCanvasFont(style);
+  context.textAlign = 'left';
+  context.textBaseline = 'alphabetic';
+  context.lineJoin = 'round';
+  context.miterLimit = 2;
+
+  if (style.outerStrokeWidth && style.outerStrokeWidth > 0) {
+    context.strokeStyle = style.outerStrokeColor ?? '#050505';
+    context.lineWidth = style.outerStrokeWidth;
+
+    for (const character of characters) {
+      context.strokeText(character, cursor, 0);
+      cursor += context.measureText(character).width + tracking;
+    }
+  }
+
+  cursor =
+    style.align === 'center'
+      ? -unscaledRunWidth / 2
+      : style.align === 'right'
+        ? -unscaledRunWidth
+        : 0;
+  context.fillStyle = style.fillColor;
+
+  for (const character of characters) {
+    context.fillText(character, cursor, 0);
+    cursor += context.measureText(character).width + tracking;
+  }
+
+  context.restore();
 };
 
 export type TextDropShadow = {

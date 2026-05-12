@@ -39,13 +39,15 @@ import {
   DEFAULT_CHARACTER_UPLOAD_MESSAGES,
   DEFAULT_IMAGE_UPLOAD_MESSAGES,
   downloadCanvasAsPng,
-  drawCoverImage,
+  drawEditableImageLayers,
   drawOutlinedText,
   fitFontSize,
   getDownloadDate,
   type ImageBox,
+  renderThumbnailToCanvas,
   type SoopThumbnailTemplateId,
   SoopThumbnailToolLayout,
+  setupThumbnailCanvas,
   ThumbnailCanvasPreview,
   ThumbnailDownloadButton,
   ThumbnailImageInput,
@@ -88,7 +90,6 @@ const TEMPLATE_IMAGES = {
   leftSkull: `${TEMPLATE_ASSET_BASE_URL}/left_skull.png`,
   rightSkull: `${TEMPLATE_ASSET_BASE_URL}/right_skull.png`,
 } as const;
-const TEMPLATE_EMPTY_INNER_BACKGROUND = '#ffffff';
 const TEXT_SHADOW_GOLD = '#ffe8a2';
 const TEXT_INNER_SHADOW = '#3b3b3b';
 
@@ -131,9 +132,7 @@ const drawMoguguTemplate = (
   context: CanvasRenderingContext2D,
   options: RenderOptions,
 ) => {
-  context.clearRect(0, 0, CANVAS_SIZE.width, CANVAS_SIZE.height);
-  context.imageSmoothingEnabled = true;
-  context.imageSmoothingQuality = 'high';
+  setupThumbnailCanvas(context, CANVAS_SIZE);
 
   context.save();
   buildRoundedRectPath(
@@ -145,27 +144,12 @@ const drawMoguguTemplate = (
     FRAME.radius,
   );
   context.clip();
-  context.fillStyle = TEMPLATE_EMPTY_INNER_BACKGROUND;
-  context.fillRect(FRAME.x, FRAME.y, FRAME.width, FRAME.height);
-  if (options.backgroundImage) {
-    drawCoverImage(
-      context,
-      options.backgroundImage,
-      FRAME.x,
-      FRAME.y,
-      FRAME.width,
-      FRAME.height,
-    );
-  }
-  if (options.characterImage && options.characterBox) {
-    context.drawImage(
-      options.characterImage,
-      options.characterBox.x,
-      options.characterBox.y,
-      options.characterBox.width,
-      options.characterBox.height,
-    );
-  }
+  drawEditableImageLayers(context, {
+    backgroundImage: options.backgroundImage,
+    bounds: FRAME,
+    characterBox: options.characterBox,
+    characterImage: options.characterImage,
+  });
 
   context.drawImage(options.darkPanelImage, DARK_PANEL.x, DARK_PANEL.y);
   context.drawImage(options.dateBarImage, DATE_BAR.x, DATE_BAR.y);
@@ -239,15 +223,6 @@ const drawMoguguTemplate = (
   );
 };
 
-const renderThumbnail = (canvas: HTMLCanvasElement, options: RenderOptions) => {
-  const context = canvas.getContext('2d');
-  if (!context) {
-    return;
-  }
-
-  drawMoguguTemplate(context, options);
-};
-
 const RouteComponent = () => {
   const backgroundInputId = useId();
   const characterInputId = useId();
@@ -312,7 +287,11 @@ const RouteComponent = () => {
       return;
     }
 
-    renderThumbnail(canvasRef.current, renderOptions);
+    renderThumbnailToCanvas(
+      canvasRef.current,
+      renderOptions,
+      drawMoguguTemplate,
+    );
   }, [isReady, renderOptions]);
 
   const handleDownload = () => {
@@ -322,7 +301,7 @@ const RouteComponent = () => {
     }
 
     setDownloadError('');
-    renderThumbnail(canvas, renderOptions);
+    renderThumbnailToCanvas(canvas, renderOptions, drawMoguguTemplate);
 
     downloadCanvasAsPng(canvas, downloadFileName, () => {
       setDownloadError('PNG 파일을 만들지 못했습니다.');

@@ -56,11 +56,15 @@ import {
   DEFAULT_CHARACTER_UPLOAD_MESSAGES,
   DEFAULT_IMAGE_UPLOAD_MESSAGES,
   downloadCanvasAsPng,
-  drawCoverImage,
+  drawEditableImageLayers,
   getDownloadDate,
+  getPsdCanvasFont,
   type ImageBox,
+  measurePsdTextWidth,
+  renderThumbnailToCanvas,
   type SoopThumbnailTemplateId,
   SoopThumbnailToolLayout,
+  setupThumbnailCanvas,
   ThumbnailCanvasPreview,
   ThumbnailDownloadButton,
   ThumbnailImageInput,
@@ -102,7 +106,6 @@ const TEMPLATE_IMAGES = {
   normalFrame: `${TEMPLATE_ASSET_BASE_URL}/frame.png`,
   plusFrame: `${TEMPLATE_ASSET_BASE_URL}/frame_plus.png`,
 } as const;
-const TEMPLATE_EMPTY_INNER_BACKGROUND = '#ffffff';
 
 const INNER_FRAME = { height: 724, radius: 83, width: 1321, x: 24, y: 23 };
 const CHARACTER_BOUNDS = {
@@ -244,41 +247,6 @@ type TextPaintLayer = {
 
 type PsdTextRunPass = 'all' | 'foreground' | 'shadows';
 
-const getCanvasFont = (style: PsdTextRunStyle) =>
-  `${style.fontWeight ? `${style.fontWeight} ` : ''}${style.fontSize}px "${
-    style.fontFamily
-  }"`;
-
-const measurePsdTextRunWidth = (
-  context: CanvasRenderingContext2D,
-  text: string,
-  style: Pick<PsdTextRunStyle, 'fontFamily' | 'fontSize' | 'fontWeight'> & {
-    tracking?: number;
-  },
-) => {
-  context.save();
-  context.font = getCanvasFont({
-    align: 'left',
-    fontFamily: style.fontFamily,
-    fontSize: style.fontSize,
-    fontWeight: style.fontWeight,
-    outerStrokeWidth: 0,
-  });
-
-  const characters = [...text];
-  const tracking = style.tracking ?? 0;
-  const width =
-    characters.reduce(
-      (totalWidth, character) =>
-        totalWidth + context.measureText(character).width,
-      0,
-    ) +
-    Math.max(0, characters.length - 1) * tracking;
-
-  context.restore();
-  return width;
-};
-
 const drawPsdTextLayer = (
   context: CanvasRenderingContext2D,
   text: string,
@@ -331,7 +299,7 @@ const drawPsdTextLayer = (
   context.save();
   context.translate(x + (layer.offsetX ?? 0), y + (layer.offsetY ?? 0));
   context.scale(scaleX, scaleY);
-  context.font = getCanvasFont(style);
+  context.font = getPsdCanvasFont(style);
   context.textAlign = 'left';
   context.textBaseline = 'alphabetic';
   context.lineJoin = 'round';
@@ -347,7 +315,12 @@ const drawPsdTextLayer = (
     context.globalCompositeOperation = layer.globalCompositeOperation;
   }
 
-  const runWidth = measurePsdTextRunWidth(context, text, style);
+  const runWidth = measurePsdTextWidth(context, text, {
+    fontFamily: style.fontFamily,
+    fontSize: style.fontSize,
+    fontWeight: style.fontWeight,
+    tracking: style.tracking,
+  });
   let cursor =
     style.align === 'center'
       ? -runWidth / 2
@@ -479,7 +452,7 @@ const layoutTitleText = (
   ) {
     const linesFit = lines.every(
       (line) =>
-        measurePsdTextRunWidth(context, line, {
+        measurePsdTextWidth(context, line, {
           fontFamily: TITLE_FONT_FAMILY,
           fontSize,
         }) <= maxLineWidth,
@@ -501,7 +474,7 @@ const fitDateFontSize = (
 
   while (fontSize > DATE_TEXT.minFontSize) {
     const dateWidth =
-      measurePsdTextRunWidth(context, dateText, {
+      measurePsdTextWidth(context, dateText, {
         fontFamily: DATE_FONT_FAMILY,
         fontSize,
         tracking: DATE_TEXT.tracking,
@@ -520,9 +493,7 @@ const drawDlsn9911Template = (
   context: CanvasRenderingContext2D,
   options: RenderOptions,
 ) => {
-  context.clearRect(0, 0, CANVAS_SIZE.width, CANVAS_SIZE.height);
-  context.imageSmoothingEnabled = true;
-  context.imageSmoothingQuality = 'high';
+  setupThumbnailCanvas(context, CANVAS_SIZE);
 
   context.save();
   buildRoundedRectPath(
@@ -534,34 +505,12 @@ const drawDlsn9911Template = (
     INNER_FRAME.radius,
   );
   context.clip();
-  context.fillStyle = TEMPLATE_EMPTY_INNER_BACKGROUND;
-  context.fillRect(
-    INNER_FRAME.x,
-    INNER_FRAME.y,
-    INNER_FRAME.width,
-    INNER_FRAME.height,
-  );
-
-  if (options.backgroundImage) {
-    drawCoverImage(
-      context,
-      options.backgroundImage,
-      INNER_FRAME.x,
-      INNER_FRAME.y,
-      INNER_FRAME.width,
-      INNER_FRAME.height,
-    );
-  }
-
-  if (options.characterImage && options.characterBox) {
-    context.drawImage(
-      options.characterImage,
-      options.characterBox.x,
-      options.characterBox.y,
-      options.characterBox.width,
-      options.characterBox.height,
-    );
-  }
+  drawEditableImageLayers(context, {
+    backgroundImage: options.backgroundImage,
+    bounds: INNER_FRAME,
+    characterBox: options.characterBox,
+    characterImage: options.characterImage,
+  });
   context.restore();
 
   const titleStyle = TITLE_STYLES[options.templateType];
@@ -617,15 +566,6 @@ const drawDlsn9911Template = (
     scaleY: DATE_TEXT.scaleY,
     tracking: DATE_TEXT.tracking,
   });
-};
-
-const renderThumbnail = (canvas: HTMLCanvasElement, options: RenderOptions) => {
-  const context = canvas.getContext('2d');
-  if (!context) {
-    return;
-  }
-
-  drawDlsn9911Template(context, options);
 };
 
 const RouteComponent = () => {
@@ -691,7 +631,11 @@ const RouteComponent = () => {
       return;
     }
 
-    renderThumbnail(canvasRef.current, renderOptions);
+    renderThumbnailToCanvas(
+      canvasRef.current,
+      renderOptions,
+      drawDlsn9911Template,
+    );
   }, [isReady, renderOptions]);
 
   const handleDownload = () => {
@@ -701,7 +645,7 @@ const RouteComponent = () => {
     }
 
     setDownloadError('');
-    renderThumbnail(canvas, renderOptions);
+    renderThumbnailToCanvas(canvas, renderOptions, drawDlsn9911Template);
 
     downloadCanvasAsPng(canvas, downloadFileName, () => {
       setDownloadError('PNG 파일을 만들지 못했습니다.');

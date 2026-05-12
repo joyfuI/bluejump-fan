@@ -21,6 +21,7 @@ import { Route as DefaultLayoutClipperRouteImport } from './routes/_defaultLayou
 import { Route as DefaultLayoutCalendarRouteImport } from './routes/_defaultLayout/calendar'
 import { Route as DefaultLayoutCafeRouteImport } from './routes/_defaultLayout/cafe'
 import { Route as ToolsSoopthumbnailIndexRouteImport } from './routes/tools/soopthumbnail/index'
+import { Route as ToolsSoopthumbnailHarohaRouteImport } from './routes/tools/soopthumbnail/haroha'
 import { Route as ToolsSoopthumbnailDlsn9911RouteImport } from './routes/tools/soopthumbnail/dlsn9911'
 import { Route as ToolsSoopthumbnail9mogu9RouteImport } from './routes/tools/soopthumbnail/9mogu9'
 
@@ -83,6 +84,12 @@ const ToolsSoopthumbnailIndexRoute = ToolsSoopthumbnailIndexRouteImport.update({
   path: '/tools/soopthumbnail/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ToolsSoopthumbnailHarohaRoute =
+  ToolsSoopthumbnailHarohaRouteImport.update({
+    id: '/tools/soopthumbnail/haroha',
+    path: '/tools/soopthumbnail/haroha',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ToolsSoopthumbnailDlsn9911Route =
   ToolsSoopthumbnailDlsn9911RouteImport.update({
     id: '/tools/soopthumbnail/dlsn9911',
@@ -109,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/tools/soopup': typeof ToolsSoopupRoute
   '/tools/soopthumbnail/9mogu9': typeof ToolsSoopthumbnail9mogu9Route
   '/tools/soopthumbnail/dlsn9911': typeof ToolsSoopthumbnailDlsn9911Route
+  '/tools/soopthumbnail/haroha': typeof ToolsSoopthumbnailHarohaRoute
   '/tools/soopthumbnail/': typeof ToolsSoopthumbnailIndexRoute
 }
 export interface FileRoutesByTo {
@@ -124,6 +132,7 @@ export interface FileRoutesByTo {
   '/': typeof DefaultLayoutIndexRoute
   '/tools/soopthumbnail/9mogu9': typeof ToolsSoopthumbnail9mogu9Route
   '/tools/soopthumbnail/dlsn9911': typeof ToolsSoopthumbnailDlsn9911Route
+  '/tools/soopthumbnail/haroha': typeof ToolsSoopthumbnailHarohaRoute
   '/tools/soopthumbnail': typeof ToolsSoopthumbnailIndexRoute
 }
 export interface FileRoutesById {
@@ -141,6 +150,7 @@ export interface FileRoutesById {
   '/_defaultLayout/': typeof DefaultLayoutIndexRoute
   '/tools/soopthumbnail/9mogu9': typeof ToolsSoopthumbnail9mogu9Route
   '/tools/soopthumbnail/dlsn9911': typeof ToolsSoopthumbnailDlsn9911Route
+  '/tools/soopthumbnail/haroha': typeof ToolsSoopthumbnailHarohaRoute
   '/tools/soopthumbnail/': typeof ToolsSoopthumbnailIndexRoute
 }
 export interface FileRouteTypes {
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/tools/soopup'
     | '/tools/soopthumbnail/9mogu9'
     | '/tools/soopthumbnail/dlsn9911'
+    | '/tools/soopthumbnail/haroha'
     | '/tools/soopthumbnail/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/'
     | '/tools/soopthumbnail/9mogu9'
     | '/tools/soopthumbnail/dlsn9911'
+    | '/tools/soopthumbnail/haroha'
     | '/tools/soopthumbnail'
   id:
     | '__root__'
@@ -189,6 +201,7 @@ export interface FileRouteTypes {
     | '/_defaultLayout/'
     | '/tools/soopthumbnail/9mogu9'
     | '/tools/soopthumbnail/dlsn9911'
+    | '/tools/soopthumbnail/haroha'
     | '/tools/soopthumbnail/'
   fileRoutesById: FileRoutesById
 }
@@ -199,6 +212,7 @@ export interface RootRouteChildren {
   ToolsSoopupRoute: typeof ToolsSoopupRoute
   ToolsSoopthumbnail9mogu9Route: typeof ToolsSoopthumbnail9mogu9Route
   ToolsSoopthumbnailDlsn9911Route: typeof ToolsSoopthumbnailDlsn9911Route
+  ToolsSoopthumbnailHarohaRoute: typeof ToolsSoopthumbnailHarohaRoute
   ToolsSoopthumbnailIndexRoute: typeof ToolsSoopthumbnailIndexRoute
 }
 
@@ -288,6 +302,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ToolsSoopthumbnailIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tools/soopthumbnail/haroha': {
+      id: '/tools/soopthumbnail/haroha'
+      path: '/tools/soopthumbnail/haroha'
+      fullPath: '/tools/soopthumbnail/haroha'
+      preLoaderRoute: typeof ToolsSoopthumbnailHarohaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tools/soopthumbnail/dlsn9911': {
       id: '/tools/soopthumbnail/dlsn9911'
       path: '/tools/soopthumbnail/dlsn9911'
@@ -336,6 +357,7 @@ const rootRouteChildren: RootRouteChildren = {
   ToolsSoopupRoute: ToolsSoopupRoute,
   ToolsSoopthumbnail9mogu9Route: ToolsSoopthumbnail9mogu9Route,
   ToolsSoopthumbnailDlsn9911Route: ToolsSoopthumbnailDlsn9911Route,
+  ToolsSoopthumbnailHarohaRoute: ToolsSoopthumbnailHarohaRoute,
   ToolsSoopthumbnailIndexRoute: ToolsSoopthumbnailIndexRoute,
 }
 export const routeTree = rootRouteImport
