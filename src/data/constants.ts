@@ -89,4 +89,5 @@ export const CLIPPERS: readonly string[] = [
   'UCjyayvu8VlUg3-fvvdG5lAQ', // 과자나라 주민
   'UCw186e1y2vw_JWlX8K50bcQ', // 버공소
   'UC87cvDeTygkdQZmeOaaefCA', // 츄블링
+  'UCkkFUaMD94pzaE9ajLQ3w-A', // 헤일로 Haleo
 ];
