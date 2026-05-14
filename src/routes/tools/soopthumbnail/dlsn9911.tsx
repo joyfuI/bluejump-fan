@@ -118,6 +118,7 @@ const CHARACTER_BOUNDS = {
   y: INNER_FRAME.y,
 };
 const CHARACTER_MIN_SIZE = 64;
+const CHARACTER_OUTLINE_COLOR = '#000000';
 const CHARACTER_OUTLINE_WIDTH = 10;
 const DEFAULT_TITLE_TEXT = '제목텍스트';
 const TITLE_BOX = {
@@ -613,6 +614,7 @@ const RouteComponent = () => {
       characterBox: characterLayer.box,
       characterImage: character.image,
       characterOutline: {
+        color: CHARACTER_OUTLINE_COLOR,
         enabled: characterOutlineEnabled,
         width: CHARACTER_OUTLINE_WIDTH,
       },
