@@ -14,7 +14,7 @@
   "dependencies": {
     "@ant-design/cssinjs": "^2.1.2",
     "@tailwindcss/vite": "^4.3.0",
-    "@tanstack/react-devtools": "^0.10.3",
+    "@tanstack/react-devtools": "^0.10.5",
     "@tanstack/react-query": "^5.100.10",
     "@tanstack/react-query-devtools": "^5.100.10",
     "@tanstack/react-router": "^1.169.2",
@@ -34,7 +34,7 @@
     "@babel/core": "^7.29.0",
     "@biomejs/biome": "2.4.15",
     "@rolldown/plugin-babel": "^0.2.3",
-    "@tanstack/devtools-vite": "^0.6.0",
+    "@tanstack/devtools-vite": "^0.6.1",
     "@types/babel__core": "^7.20.5",
     "@types/node": "^25.7.0",
     "@types/react": "^19.2.14",
@@ -44,5 +44,5 @@
     "typescript": "^6.0.3",
     "vite": "^8.0.12"
   },
-  "packageManager": "pnpm@11.1.1+sha512.d1fdf5f73c617b64fa1a56a81c3c8dfe0e966e33a6010aa256b517ae77be21d93e05affc0de1a83b0e4f29d569f68b446ae8f068cd7247c0bb3df0fb4d7bdf9a"
+  "packageManager": "pnpm@11.1.2+sha512.415a1cc25974731e75455c1468371be74c5aa5fb7621b50d4056d222451609f11412f23fd602e6169f1e060466641f798597e1be961a10688836a67b16569499"
 }
