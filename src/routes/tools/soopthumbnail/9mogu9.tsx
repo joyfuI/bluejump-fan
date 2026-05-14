@@ -334,7 +334,12 @@ const RouteComponent = () => {
             variant="secondary"
           />
 
-          <ThumbnailCharacterImageOptions {...characterImageOptions} />
+          <ThumbnailCharacterImageOptions
+            {...characterImageOptions}
+            characterRotation={characterLayer.rotation}
+            onCharacterRotationChange={characterLayer.setRotation}
+            onCharacterRotationReset={characterLayer.resetRotation}
+          />
 
           {fontStatus === 'error' ? (
             <ThumbnailStatusMessage>

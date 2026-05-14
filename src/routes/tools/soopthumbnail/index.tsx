@@ -6,7 +6,8 @@
  *   routes: font/asset loading, image uploads, date formatting, cover-crop
  *   drawing, optional character outline/shadow rendering scaled from PSD
  *   reference canvases, stroked/PSD-style text helpers, shared form
- *   controls/download/preview UI, and interactive character placement.
+ *   controls/download/preview UI, and interactive character placement with
+ *   partial outside-bounds movement/rotation.
  * - The current template tabs are `제갈금자`, `모구구`, and `하로하`; each
  *   template route owns its PSD-specific asset/font constants and draw order.
  * - `/tools/soopthumbnail` redirects to `/tools/soopthumbnail/dlsn9911`
@@ -19,15 +20,13 @@
  */
 
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { Download, ImagePlus, Loader2, Trash2 } from 'lucide-react';
+import { Download, ImagePlus, Loader2, RotateCcw, Trash2 } from 'lucide-react';
 import {
   type ChangeEvent,
-  type Dispatch,
   type InputHTMLAttributes,
   type PointerEvent,
   type ReactNode,
   type RefObject,
-  type SetStateAction,
   type TextareaHTMLAttributes,
   useCallback,
   useEffect,
@@ -46,7 +45,13 @@ export type SoopThumbnailTemplateId =
   (typeof soopThumbnailTemplates)[number]['id'];
 
 export type CanvasSize = { height: number; width: number };
-export type ImageBox = { height: number; width: number; x: number; y: number };
+export type ImageBox = {
+  height: number;
+  rotation?: number;
+  width: number;
+  x: number;
+  y: number;
+};
 export type LoadStatus = 'loading' | 'loaded' | 'error';
 export type CharacterOutlineOptions = {
   color?: string;
@@ -91,6 +96,11 @@ const DEFAULT_CHARACTER_SHADOW = {
   glow: { blendMode: 'hard-light', color: '#292929', opacity: 0.32, size: 25 },
   opacity: 0.68,
 } as const satisfies Required<Omit<CharacterShadowOptions, 'enabled'>>;
+const CHARACTER_ROTATION_MIN = -180;
+const CHARACTER_ROTATION_MAX = 180;
+const CHARACTER_ROTATION_STEP = 1;
+const CHARACTER_MAX_BOUNDS_RATIO = 2.5;
+const CHARACTER_OUTSIDE_BOUNDS_RATIO = 0.4;
 const CHARACTER_SHADOW_REFERENCE_CANVAS_SIZE = {
   height: 768,
   width: 1365,
@@ -298,6 +308,23 @@ export const getRgba = (hexColor: string, opacity: number) => {
 export const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 
+const normalizeCharacterRotation = (rotation: number) => {
+  if (!Number.isFinite(rotation)) {
+    return 0;
+  }
+
+  return clamp(
+    Math.round(rotation),
+    CHARACTER_ROTATION_MIN,
+    CHARACTER_ROTATION_MAX,
+  );
+};
+
+const getCharacterRotation = (box: ImageBox) =>
+  normalizeCharacterRotation(box.rotation ?? 0);
+
+const getDegreesAsRadians = (degrees: number) => (degrees * Math.PI) / 180;
+
 export const getImageNaturalSize = (image: HTMLImageElement) => ({
   height: image.naturalHeight || image.height,
   width: image.naturalWidth || image.width,
@@ -364,6 +391,40 @@ export const drawCoverImage = (
   context.drawImage(image, drawX, drawY, drawWidth, drawHeight);
 };
 
+const drawCharacterLayerSource = (
+  context: CanvasRenderingContext2D,
+  source: CanvasImageSource,
+  box: ImageBox,
+  padding = 0,
+) => {
+  const rotation = getCharacterRotation(box);
+  const drawWidth = box.width + padding * 2;
+  const drawHeight = box.height + padding * 2;
+
+  if (rotation === 0) {
+    context.drawImage(
+      source,
+      box.x - padding,
+      box.y - padding,
+      drawWidth,
+      drawHeight,
+    );
+    return;
+  }
+
+  context.save();
+  context.translate(box.x + box.width / 2, box.y + box.height / 2);
+  context.rotate(getDegreesAsRadians(rotation));
+  context.drawImage(
+    source,
+    -box.width / 2 - padding,
+    -box.height / 2 - padding,
+    drawWidth,
+    drawHeight,
+  );
+  context.restore();
+};
+
 const characterOutlineOffsetsCache = new Map<
   number,
   Array<{ x: number; y: number }>
@@ -396,7 +457,7 @@ const getScaledCharacterShadowValue = (
   );
 
 const getPhotoshopShadowOffset = (angle: number, distance: number) => {
-  const radians = (angle * Math.PI) / 180;
+  const radians = getDegreesAsRadians(angle);
 
   return { x: -Math.cos(radians) * distance, y: Math.sin(radians) * distance };
 };
@@ -480,7 +541,7 @@ const drawCharacterOutline = (
   outlineContext.fillStyle = outline.color ?? DEFAULT_CHARACTER_OUTLINE_COLOR;
   outlineContext.fillRect(0, 0, canvasWidth, canvasHeight);
 
-  context.drawImage(outlineCanvas, box.x - padding, box.y - padding);
+  drawCharacterLayerSource(context, outlineCanvas, box, padding);
 };
 
 const drawCharacterAlphaEffect = (
@@ -543,7 +604,7 @@ const drawCharacterAlphaEffect = (
   context.save();
   context.globalCompositeOperation = blendMode;
   context.globalAlpha = opacity;
-  context.drawImage(effectCanvas, box.x - padding, box.y - padding);
+  drawCharacterLayerSource(context, effectCanvas, box, padding);
   context.restore();
 };
 
@@ -670,13 +731,7 @@ export const drawEditableImageLayers = (
       );
     }
 
-    context.drawImage(
-      characterImage,
-      characterBox.x,
-      characterBox.y,
-      characterBox.width,
-      characterBox.height,
-    );
+    drawCharacterLayerSource(context, characterImage, characterBox);
   }
 };
 
@@ -1290,31 +1345,86 @@ const ThumbnailCheckboxGroup = ({
 
 export const ThumbnailCharacterImageOptions = ({
   characterOutlineEnabled,
+  characterRotation,
   characterShadowEnabled,
   onCharacterOutlineChange,
+  onCharacterRotationChange,
+  onCharacterRotationReset,
   onCharacterShadowChange,
 }: {
   characterOutlineEnabled: boolean;
+  characterRotation?: number;
   characterShadowEnabled: boolean;
   onCharacterOutlineChange: (value: boolean) => void;
+  onCharacterRotationChange?: (value: number) => void;
+  onCharacterRotationReset?: () => void;
   onCharacterShadowChange: (value: boolean) => void;
-}) => (
-  <ThumbnailCheckboxGroup
-    label="캐릭터 이미지 옵션"
-    options={[
-      {
-        checked: characterOutlineEnabled,
-        label: '테두리 적용',
-        onChange: onCharacterOutlineChange,
-      },
-      {
-        checked: characterShadowEnabled,
-        label: '그림자 적용',
-        onChange: onCharacterShadowChange,
-      },
-    ]}
-  />
-);
+}) => {
+  const hasRotationControl =
+    characterRotation !== undefined && onCharacterRotationChange !== undefined;
+  const normalizedRotation = normalizeCharacterRotation(characterRotation ?? 0);
+
+  return (
+    <div className="flex flex-col gap-3">
+      <ThumbnailCheckboxGroup
+        label="캐릭터 이미지 옵션"
+        options={[
+          {
+            checked: characterOutlineEnabled,
+            label: '테두리 적용',
+            onChange: onCharacterOutlineChange,
+          },
+          {
+            checked: characterShadowEnabled,
+            label: '그림자 적용',
+            onChange: onCharacterShadowChange,
+          },
+        ]}
+      />
+
+      {hasRotationControl ? (
+        <fieldset className="min-w-0 border-0 p-0">
+          <legend className="mb-1.5 p-0 text-sm font-medium text-zinc-300">
+            캐릭터 회전
+          </legend>
+          <div className="flex flex-col gap-3 rounded-lg border border-zinc-700 bg-zinc-950 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <span className="font-semibold text-sm text-zinc-100">
+                {normalizedRotation}°
+              </span>
+              <button
+                aria-label="캐릭터 이미지 회전 초기화"
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-zinc-700 text-zinc-300 transition hover:border-amber-300/70 hover:text-amber-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:text-zinc-600"
+                disabled={normalizedRotation === 0}
+                onClick={() =>
+                  onCharacterRotationReset
+                    ? onCharacterRotationReset()
+                    : onCharacterRotationChange(0)
+                }
+                title="회전 초기화"
+                type="button"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </button>
+            </div>
+            <input
+              aria-label="캐릭터 이미지 회전 각도"
+              className="h-2 w-full accent-amber-300"
+              max={CHARACTER_ROTATION_MAX}
+              min={CHARACTER_ROTATION_MIN}
+              onChange={(event) =>
+                onCharacterRotationChange(Number(event.target.value))
+              }
+              step={CHARACTER_ROTATION_STEP}
+              type="range"
+              value={normalizedRotation}
+            />
+          </div>
+        </fieldset>
+      ) : null}
+    </div>
+  );
+};
 
 export const ThumbnailStatusMessage = ({
   children,
@@ -1416,19 +1526,61 @@ const getCanvasPointerPosition = (
   };
 };
 
+const getCharacterOutsideBoundsLimit = ({
+  height,
+  width,
+}: {
+  height: number;
+  width: number;
+}) => ({
+  x: Math.max(0, width * CHARACTER_OUTSIDE_BOUNDS_RATIO),
+  y: Math.max(0, height * CHARACTER_OUTSIDE_BOUNDS_RATIO),
+});
+
+const getImageBoxAspectRatio = (box: ImageBox) => {
+  const aspectRatio = box.width / Math.max(box.height, 1);
+
+  return Number.isFinite(aspectRatio) && aspectRatio > 0 ? aspectRatio : 1;
+};
+
+const getMaxCharacterWidth = (bounds: ImageBox, aspectRatio: number) =>
+  Math.min(
+    bounds.width * CHARACTER_MAX_BOUNDS_RATIO,
+    bounds.height * CHARACTER_MAX_BOUNDS_RATIO * aspectRatio,
+  );
+
+const getMinCharacterWidth = (minSize: number, aspectRatio: number) =>
+  Math.max(minSize, minSize * aspectRatio);
+
 const clampImageBox = (
   box: ImageBox,
   bounds: ImageBox,
   minSize: number,
 ): ImageBox => {
-  const width = clamp(box.width, minSize, bounds.width);
-  const height = clamp(box.height, minSize, bounds.height);
+  const aspectRatio = getImageBoxAspectRatio(box);
+  const minWidth = getMinCharacterWidth(minSize, aspectRatio);
+  const maxWidth = Math.max(
+    minWidth,
+    getMaxCharacterWidth(bounds, aspectRatio),
+  );
+  const width = clamp(box.width, minWidth, maxWidth);
+  const height = width / aspectRatio;
+  const outsideBoundsLimit = getCharacterOutsideBoundsLimit({ height, width });
 
   return {
     height,
+    rotation: getCharacterRotation(box),
     width,
-    x: clamp(box.x, bounds.x, bounds.x + bounds.width - width),
-    y: clamp(box.y, bounds.y, bounds.y + bounds.height - height),
+    x: clamp(
+      box.x,
+      bounds.x - outsideBoundsLimit.x,
+      bounds.x + bounds.width - width + outsideBoundsLimit.x,
+    ),
+    y: clamp(
+      box.y,
+      bounds.y - outsideBoundsLimit.y,
+      bounds.y + bounds.height - height + outsideBoundsLimit.y,
+    ),
   };
 };
 
@@ -1441,7 +1593,7 @@ const createDefaultImageBox = (
     getImageNaturalSize(image);
 
   if (sourceWidth <= 0 || sourceHeight <= 0) {
-    return bounds;
+    return { ...bounds, rotation: 0 };
   }
 
   const aspectRatio = sourceWidth / sourceHeight;
@@ -1468,7 +1620,7 @@ const resizeImageBox = (
   bounds: ImageBox,
   minSize: number,
 ): ImageBox => {
-  const aspectRatio = startBox.width / Math.max(startBox.height, 1);
+  const aspectRatio = getImageBoxAspectRatio(startBox);
   const isLeftHandle = resizeHandle.endsWith('left');
   const isTopHandle = resizeHandle.startsWith('top');
   const anchorX = isLeftHandle ? startBox.x + startBox.width : startBox.x;
@@ -1482,25 +1634,25 @@ const resizeImageBox = (
     Math.abs(widthFromVertical - startBox.width)
       ? widthFromHorizontal
       : widthFromVertical;
-  const maxWidthByX = isLeftHandle
-    ? anchorX - bounds.x
-    : bounds.x + bounds.width - anchorX;
-  const maxHeightByY = isTopHandle
-    ? anchorY - bounds.y
-    : bounds.y + bounds.height - anchorY;
+  const minWidth = getMinCharacterWidth(minSize, aspectRatio);
   const maxWidth = Math.max(
-    minSize,
-    Math.min(maxWidthByX, maxHeightByY * aspectRatio),
+    minWidth,
+    getMaxCharacterWidth(bounds, aspectRatio),
   );
-  const width = clamp(requestedWidth, minSize, maxWidth);
+  const width = clamp(requestedWidth, minWidth, maxWidth);
   const height = width / aspectRatio;
 
-  return {
-    height,
-    width,
-    x: isLeftHandle ? anchorX - width : anchorX,
-    y: isTopHandle ? anchorY - height : anchorY,
-  };
+  return clampImageBox(
+    {
+      height,
+      rotation: getCharacterRotation(startBox),
+      width,
+      x: isLeftHandle ? anchorX - width : anchorX,
+      y: isTopHandle ? anchorY - height : anchorY,
+    },
+    bounds,
+    minSize,
+  );
 };
 
 export const useCharacterLayer = ({
@@ -1617,11 +1769,25 @@ export const useCharacterLayer = ({
     }
   }, []);
 
+  const setRotation = useCallback((rotation: number) => {
+    setBox((currentBox) =>
+      currentBox
+        ? { ...currentBox, rotation: normalizeCharacterRotation(rotation) }
+        : currentBox,
+    );
+  }, []);
+
+  const resetRotation = useCallback(() => {
+    setRotation(0);
+  }, [setRotation]);
+
   return {
     box,
     finishInteraction,
     handlePointerMove,
-    setBox: setBox as Dispatch<SetStateAction<ImageBox | null>>,
+    resetRotation,
+    rotation: normalizeCharacterRotation(box?.rotation ?? 0),
+    setRotation,
     startInteraction,
   };
 };
@@ -1655,6 +1821,8 @@ export const CharacterSelectionOverlay = ({
       height: `${(box.height / canvasSize.height) * 100}%`,
       left: `${(box.x / canvasSize.width) * 100}%`,
       top: `${(box.y / canvasSize.height) * 100}%`,
+      transform: `rotate(${getCharacterRotation(box)}deg)`,
+      transformOrigin: 'center',
       width: `${(box.width / canvasSize.width) * 100}%`,
     }}
   >
@@ -1695,14 +1863,21 @@ export const ThumbnailCanvasPreview = ({
   isLoading: boolean;
   isReady: boolean;
 }) => (
-  <div className="relative overflow-hidden rounded-md bg-zinc-950">
-    <canvas
-      aria-label="썸네일 미리보기"
-      className="block h-auto w-full"
-      height={canvasSize.height}
-      ref={canvasRef}
-      width={canvasSize.width}
-    />
+  <div className="relative bg-zinc-950">
+    <div className="relative overflow-hidden rounded-md bg-zinc-950">
+      <canvas
+        aria-label="썸네일 미리보기"
+        className="block h-auto w-full"
+        height={canvasSize.height}
+        ref={canvasRef}
+        width={canvasSize.width}
+      />
+      {!isReady ? (
+        <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/80 text-sm text-zinc-300">
+          {isLoading ? '템플릿 로딩 중...' : '템플릿 로딩 실패'}
+        </div>
+      ) : null}
+    </div>
     {characterBox ? (
       <CharacterSelectionOverlay
         box={characterBox}
@@ -1711,11 +1886,6 @@ export const ThumbnailCanvasPreview = ({
         handlePointerMove={characterControls.handlePointerMove}
         startInteraction={characterControls.startInteraction}
       />
-    ) : null}
-    {!isReady ? (
-      <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/80 text-sm text-zinc-300">
-        {isLoading ? '템플릿 로딩 중...' : '템플릿 로딩 실패'}
-      </div>
     ) : null}
   </div>
 );
