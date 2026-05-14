@@ -53,21 +53,20 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   buildRoundedRectPath,
   type CanvasSize,
-  type CharacterOutlineOptions,
   DEFAULT_CHARACTER_UPLOAD_MESSAGES,
   DEFAULT_IMAGE_UPLOAD_MESSAGES,
-  downloadCanvasAsPng,
+  downloadRenderedThumbnail,
   drawEditableImageLayers,
+  type EditableImageRenderOptions,
   getDownloadDate,
   getPsdCanvasFont,
-  type ImageBox,
   measurePsdTextWidth,
   renderThumbnailToCanvas,
   type SoopThumbnailTemplateId,
   SoopThumbnailToolLayout,
   setupThumbnailCanvas,
   ThumbnailCanvasPreview,
-  ThumbnailCheckbox,
+  ThumbnailCharacterImageOptions,
   ThumbnailDownloadButton,
   ThumbnailImageInput,
   ThumbnailStatusMessage,
@@ -84,11 +83,7 @@ const SOOP_THUMBNAIL_TEMPLATE_ID = 'dlsn9911' satisfies SoopThumbnailTemplateId;
 
 type Dlsn9911TemplateType = 'normal' | 'plus';
 
-type RenderOptions = {
-  backgroundImage: HTMLImageElement | null;
-  characterBox: ImageBox | null;
-  characterImage: HTMLImageElement | null;
-  characterOutline: CharacterOutlineOptions;
+type RenderOptions = EditableImageRenderOptions & {
   dateText: string;
   frameImage: HTMLImageElement;
   templateType: Dlsn9911TemplateType;
@@ -516,6 +511,7 @@ const drawDlsn9911Template = (
     characterBox: options.characterBox,
     characterImage: options.characterImage,
     characterOutline: options.characterOutline,
+    characterShadow: options.characterShadow,
   });
   context.restore();
 
@@ -583,6 +579,7 @@ const RouteComponent = () => {
   const [dateText, setDateText] = useTodayDateText();
   const [titleText, setTitleText] = useState(DEFAULT_TITLE_TEXT);
   const [characterOutlineEnabled, setCharacterOutlineEnabled] = useState(false);
+  const [characterShadowEnabled, setCharacterShadowEnabled] = useState(false);
   const [downloadError, setDownloadError] = useState('');
   const fontStatus = useCanvasFonts(TEMPLATE_FONTS);
   const { images, status: assetStatus } = useTemplateImages(TEMPLATE_IMAGES);
@@ -618,6 +615,7 @@ const RouteComponent = () => {
         enabled: characterOutlineEnabled,
         width: CHARACTER_OUTLINE_WIDTH,
       },
+      characterShadow: { enabled: characterShadowEnabled },
       dateText,
       frameImage,
       templateType,
@@ -627,6 +625,7 @@ const RouteComponent = () => {
     background.image,
     character.image,
     characterOutlineEnabled,
+    characterShadowEnabled,
     characterLayer.box,
     dateText,
     frameImage,
@@ -652,16 +651,13 @@ const RouteComponent = () => {
   }, [isReady, renderOptions]);
 
   const handleDownload = () => {
-    const canvas = canvasRef.current;
-    if (!canvas || !isReady || !renderOptions) {
-      return;
-    }
-
-    setDownloadError('');
-    renderThumbnailToCanvas(canvas, renderOptions, drawDlsn9911Template);
-
-    downloadCanvasAsPng(canvas, downloadFileName, () => {
-      setDownloadError('PNG 파일을 만들지 못했습니다.');
+    downloadRenderedThumbnail({
+      canvas: canvasRef.current,
+      drawTemplate: drawDlsn9911Template,
+      fileName: downloadFileName,
+      isReady,
+      options: renderOptions,
+      setError: setDownloadError,
     });
   };
 
@@ -676,8 +672,10 @@ const RouteComponent = () => {
             label="배경 이미지"
           />
 
-          <fieldset className="flex flex-col gap-2">
-            <legend className="text-sm font-medium text-zinc-300">타입</legend>
+          <fieldset className="min-w-0 border-0 p-0">
+            <legend className="mb-1.5 p-0 text-sm font-medium text-zinc-300">
+              타입
+            </legend>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { label: '일반', value: 'normal' },
@@ -728,10 +726,11 @@ const RouteComponent = () => {
             variant="secondary"
           />
 
-          <ThumbnailCheckbox
-            checked={characterOutlineEnabled}
-            label="캐릭터 테두리 적용"
-            onChange={setCharacterOutlineEnabled}
+          <ThumbnailCharacterImageOptions
+            characterOutlineEnabled={characterOutlineEnabled}
+            characterShadowEnabled={characterShadowEnabled}
+            onCharacterOutlineChange={setCharacterOutlineEnabled}
+            onCharacterShadowChange={setCharacterShadowEnabled}
           />
 
           {fontStatus === 'error' ? (

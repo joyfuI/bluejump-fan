@@ -36,21 +36,20 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   buildRoundedRectPath,
   type CanvasSize,
-  type CharacterOutlineOptions,
   DEFAULT_CHARACTER_UPLOAD_MESSAGES,
   DEFAULT_IMAGE_UPLOAD_MESSAGES,
-  downloadCanvasAsPng,
+  downloadRenderedThumbnail,
   drawEditableImageLayers,
   drawOutlinedText,
+  type EditableImageRenderOptions,
   fitFontSize,
   getDownloadDate,
-  type ImageBox,
   renderThumbnailToCanvas,
   type SoopThumbnailTemplateId,
   SoopThumbnailToolLayout,
   setupThumbnailCanvas,
   ThumbnailCanvasPreview,
-  ThumbnailCheckbox,
+  ThumbnailCharacterImageOptions,
   ThumbnailDownloadButton,
   ThumbnailImageInput,
   ThumbnailStatusMessage,
@@ -64,11 +63,7 @@ import {
 
 const SOOP_THUMBNAIL_TEMPLATE_ID = '9mogu9' satisfies SoopThumbnailTemplateId;
 
-type RenderOptions = {
-  backgroundImage: HTMLImageElement | null;
-  characterBox: ImageBox | null;
-  characterImage: HTMLImageElement | null;
-  characterOutline: CharacterOutlineOptions;
+type RenderOptions = EditableImageRenderOptions & {
   darkPanelImage: HTMLImageElement;
   dateText: string;
   dateBarImage: HTMLImageElement;
@@ -154,6 +149,7 @@ const drawMoguguTemplate = (
     characterBox: options.characterBox,
     characterImage: options.characterImage,
     characterOutline: options.characterOutline,
+    characterShadow: options.characterShadow,
   });
 
   context.drawImage(options.darkPanelImage, DARK_PANEL.x, DARK_PANEL.y);
@@ -236,6 +232,7 @@ const RouteComponent = () => {
   const [firstText, setFirstText] = useState(DEFAULT_FIRST_TEXT);
   const [secondText, setSecondText] = useState(DEFAULT_SECOND_TEXT);
   const [characterOutlineEnabled, setCharacterOutlineEnabled] = useState(false);
+  const [characterShadowEnabled, setCharacterShadowEnabled] = useState(false);
   const [downloadError, setDownloadError] = useState('');
   const fontStatus = useCanvasFonts(TEMPLATE_FONTS);
   const { images, status: assetStatus } = useTemplateImages(TEMPLATE_IMAGES);
@@ -268,6 +265,7 @@ const RouteComponent = () => {
         enabled: characterOutlineEnabled,
         width: CHARACTER_OUTLINE_WIDTH,
       },
+      characterShadow: { enabled: characterShadowEnabled },
       darkPanelImage: images.darkPanel,
       dateBarImage: images.dateBar,
       dateText,
@@ -281,6 +279,7 @@ const RouteComponent = () => {
     background.image,
     character.image,
     characterOutlineEnabled,
+    characterShadowEnabled,
     characterLayer.box,
     dateText,
     firstText,
@@ -306,16 +305,13 @@ const RouteComponent = () => {
   }, [isReady, renderOptions]);
 
   const handleDownload = () => {
-    const canvas = canvasRef.current;
-    if (!canvas || !isReady || !renderOptions) {
-      return;
-    }
-
-    setDownloadError('');
-    renderThumbnailToCanvas(canvas, renderOptions, drawMoguguTemplate);
-
-    downloadCanvasAsPng(canvas, downloadFileName, () => {
-      setDownloadError('PNG 파일을 만들지 못했습니다.');
+    downloadRenderedThumbnail({
+      canvas: canvasRef.current,
+      drawTemplate: drawMoguguTemplate,
+      fileName: downloadFileName,
+      isReady,
+      options: renderOptions,
+      setError: setDownloadError,
     });
   };
 
@@ -357,10 +353,11 @@ const RouteComponent = () => {
             variant="secondary"
           />
 
-          <ThumbnailCheckbox
-            checked={characterOutlineEnabled}
-            label="캐릭터 테두리 적용"
-            onChange={setCharacterOutlineEnabled}
+          <ThumbnailCharacterImageOptions
+            characterOutlineEnabled={characterOutlineEnabled}
+            characterShadowEnabled={characterShadowEnabled}
+            onCharacterOutlineChange={setCharacterOutlineEnabled}
+            onCharacterShadowChange={setCharacterShadowEnabled}
           />
 
           {fontStatus === 'error' ? (

@@ -41,23 +41,22 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   buildRoundedRectPath,
   type CanvasSize,
-  type CharacterOutlineOptions,
   DEFAULT_CHARACTER_UPLOAD_MESSAGES,
   DEFAULT_IMAGE_UPLOAD_MESSAGES,
-  downloadCanvasAsPng,
+  downloadRenderedThumbnail,
   drawEditableImageLayers,
   drawPsdText,
+  type EditableImageRenderOptions,
   fitPsdTextFontSize,
   getDownloadDate,
   getPhotoshopTrackingPx,
-  type ImageBox,
   measurePsdTextWidth,
   renderThumbnailToCanvas,
   type SoopThumbnailTemplateId,
   SoopThumbnailToolLayout,
   setupThumbnailCanvas,
   ThumbnailCanvasPreview,
-  ThumbnailCheckbox,
+  ThumbnailCharacterImageOptions,
   ThumbnailDownloadButton,
   ThumbnailImageInput,
   ThumbnailStatusMessage,
@@ -71,11 +70,7 @@ import {
 
 const SOOP_THUMBNAIL_TEMPLATE_ID = 'haroha' satisfies SoopThumbnailTemplateId;
 
-type RenderOptions = {
-  backgroundImage: HTMLImageElement | null;
-  characterBox: ImageBox | null;
-  characterImage: HTMLImageElement | null;
-  characterOutline: CharacterOutlineOptions;
+type RenderOptions = EditableImageRenderOptions & {
   dateText: string;
   firstText: string;
   fourthText: string;
@@ -248,6 +243,7 @@ const drawHarohaTemplate = (
     characterBox: options.characterBox,
     characterImage: options.characterImage,
     characterOutline: options.characterOutline,
+    characterShadow: options.characterShadow,
   });
 
   context.drawImage(
@@ -343,6 +339,7 @@ const RouteComponent = () => {
   const [thirdText, setThirdText] = useState(DEFAULT_THIRD_TEXT);
   const [fourthText, setFourthText] = useState(DEFAULT_FOURTH_TEXT);
   const [characterOutlineEnabled, setCharacterOutlineEnabled] = useState(false);
+  const [characterShadowEnabled, setCharacterShadowEnabled] = useState(false);
   const [downloadError, setDownloadError] = useState('');
   const fontStatus = useCanvasFonts(TEMPLATE_FONTS);
   const { images, status: assetStatus } = useTemplateImages(TEMPLATE_IMAGES);
@@ -376,6 +373,7 @@ const RouteComponent = () => {
         enabled: characterOutlineEnabled,
         width: CHARACTER_OUTLINE_WIDTH,
       },
+      characterShadow: { enabled: characterShadowEnabled },
       dateText,
       firstText,
       fourthText,
@@ -387,6 +385,7 @@ const RouteComponent = () => {
     background.image,
     character.image,
     characterOutlineEnabled,
+    characterShadowEnabled,
     characterLayer.box,
     dateText,
     firstText,
@@ -414,16 +413,13 @@ const RouteComponent = () => {
   }, [isReady, renderOptions]);
 
   const handleDownload = () => {
-    const canvas = canvasRef.current;
-    if (!canvas || !isReady || !renderOptions) {
-      return;
-    }
-
-    setDownloadError('');
-    renderThumbnailToCanvas(canvas, renderOptions, drawHarohaTemplate);
-
-    downloadCanvasAsPng(canvas, downloadFileName, () => {
-      setDownloadError('PNG 파일을 만들지 못했습니다.');
+    downloadRenderedThumbnail({
+      canvas: canvasRef.current,
+      drawTemplate: drawHarohaTemplate,
+      fileName: downloadFileName,
+      isReady,
+      options: renderOptions,
+      setError: setDownloadError,
     });
   };
 
@@ -477,10 +473,11 @@ const RouteComponent = () => {
             variant="secondary"
           />
 
-          <ThumbnailCheckbox
-            checked={characterOutlineEnabled}
-            label="캐릭터 테두리 적용"
-            onChange={setCharacterOutlineEnabled}
+          <ThumbnailCharacterImageOptions
+            characterOutlineEnabled={characterOutlineEnabled}
+            characterShadowEnabled={characterShadowEnabled}
+            onCharacterOutlineChange={setCharacterOutlineEnabled}
+            onCharacterShadowChange={setCharacterShadowEnabled}
           />
 
           {fontStatus === 'error' ? (

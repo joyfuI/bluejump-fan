@@ -4,8 +4,8 @@
  * - `index.tsx` keeps the shared route shell, template tab metadata, base
  *   redirect, and browser-only helpers that are reused by individual template
  *   routes: font/asset loading, image uploads, date formatting, cover-crop
- *   drawing, optional character outline rendering scaled from a 1920x1080
- *   reference canvas, stroked/PSD-style text helpers, shared form
+ *   drawing, optional character outline/shadow rendering scaled from PSD
+ *   reference canvases, stroked/PSD-style text helpers, shared form
  *   controls/download/preview UI, and interactive character placement.
  * - The current template tabs are `제갈금자`, `모구구`, and `하로하`; each
  *   template route owns its PSD-specific asset/font constants and draw order.
@@ -52,11 +52,46 @@ export type CharacterOutlineOptions = {
   enabled: boolean;
   width: number;
 };
+export type CharacterShadowOptions = {
+  angle?: number;
+  blendMode?: GlobalCompositeOperation;
+  blur?: number;
+  color?: string;
+  distance?: number;
+  enabled: boolean;
+  glow?: {
+    blendMode?: GlobalCompositeOperation;
+    color?: string;
+    opacity?: number;
+    size?: number;
+  };
+  opacity?: number;
+};
+export type EditableImageRenderOptions = {
+  backgroundImage: HTMLImageElement | null;
+  characterBox: ImageBox | null;
+  characterImage: HTMLImageElement | null;
+  characterOutline: CharacterOutlineOptions;
+  characterShadow: CharacterShadowOptions;
+};
 
 const DEFAULT_CHARACTER_OUTLINE_COLOR = '#ffffff';
 const CHARACTER_OUTLINE_REFERENCE_CANVAS_SIZE = {
   height: 1080,
   width: 1920,
+} as const satisfies CanvasSize;
+const DEFAULT_CHARACTER_SHADOW = {
+  angle: 136,
+  blendMode: 'source-over',
+  blur: 3,
+  color: '#000000',
+  distance: 5,
+  glow: { blendMode: 'hard-light', color: '#292929', opacity: 0.32, size: 25 },
+  opacity: 0.68,
+} as const satisfies Required<Omit<CharacterShadowOptions, 'enabled'>>;
+const CHARACTER_SHADOW_REFERENCE_CANVAS_SIZE = {
+  height: 768,
+  width: 1365,
 } as const satisfies CanvasSize;
 export const DEFAULT_THUMBNAIL_INNER_BACKGROUND = '#ffffff';
 
@@ -146,7 +181,10 @@ export const useTodayDateText = () => {
   return [dateText, setDateText] as const;
 };
 
-export const downloadCanvasAsPng = (
+const DEFAULT_THUMBNAIL_DOWNLOAD_ERROR_MESSAGE =
+  'PNG 파일을 만들지 못했습니다.';
+
+const downloadCanvasAsPng = (
   canvas: HTMLCanvasElement,
   fileName: string,
   onError: () => void,
@@ -177,6 +215,33 @@ export const renderThumbnailToCanvas = <TOptions,>(
   }
 
   drawTemplate(context, options);
+};
+
+export const downloadRenderedThumbnail = <TOptions,>({
+  canvas,
+  drawTemplate,
+  fileName,
+  isReady,
+  options,
+  setError,
+}: {
+  canvas: HTMLCanvasElement | null;
+  drawTemplate: (context: CanvasRenderingContext2D, options: TOptions) => void;
+  fileName: string;
+  isReady: boolean;
+  options: TOptions | null;
+  setError: (message: string) => void;
+}) => {
+  if (!canvas || !isReady || !options) {
+    return;
+  }
+
+  setError('');
+  renderThumbnailToCanvas(canvas, options, drawTemplate);
+
+  downloadCanvasAsPng(canvas, fileName, () => {
+    setError(DEFAULT_THUMBNAIL_DOWNLOAD_ERROR_MESSAGE);
+  });
 };
 
 export const getRgba = (hexColor: string, opacity: number) => {
@@ -278,6 +343,24 @@ const getScaledCharacterOutlineWidth = (
     CHARACTER_OUTLINE_REFERENCE_CANVAS_SIZE,
   );
 
+const getScaledCharacterShadowValue = (
+  value: number,
+  canvas: HTMLCanvasElement,
+) =>
+  value *
+  getCanvasScale(
+    { height: canvas.height, width: canvas.width },
+    CHARACTER_SHADOW_REFERENCE_CANVAS_SIZE,
+  );
+
+const getPhotoshopShadowOffset = (angle: number, distance: number) => {
+  const radians = (angle * Math.PI) / 180;
+
+  return { x: -Math.cos(radians) * distance, y: Math.sin(radians) * distance };
+};
+
+const clampOpacity = (opacity: number) => Math.min(1, Math.max(0, opacity));
+
 const getCharacterOutlineOffsets = (width: number) => {
   const outlineWidth = Math.max(0, width);
   const cacheKey = Math.round(outlineWidth * 1000) / 1000;
@@ -310,16 +393,15 @@ const drawCharacterOutline = (
   box: ImageBox,
   outline: CharacterOutlineOptions,
 ) => {
+  if (!outline.enabled || typeof document === 'undefined') {
+    return;
+  }
+
   const outlineWidth = getScaledCharacterOutlineWidth(
     outline.width,
     context.canvas,
   );
-
-  if (
-    !outline.enabled ||
-    outlineWidth <= 0 ||
-    typeof document === 'undefined'
-  ) {
+  if (outlineWidth <= 0) {
     return;
   }
 
@@ -359,6 +441,131 @@ const drawCharacterOutline = (
   context.drawImage(outlineCanvas, box.x - padding, box.y - padding);
 };
 
+const drawCharacterAlphaEffect = (
+  context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  box: ImageBox,
+  {
+    blendMode,
+    blur,
+    color,
+    offsetX,
+    offsetY,
+    opacity,
+  }: {
+    blendMode: GlobalCompositeOperation;
+    blur: number;
+    color: string;
+    offsetX: number;
+    offsetY: number;
+    opacity: number;
+  },
+) => {
+  if (opacity <= 0) {
+    return;
+  }
+
+  const padding = Math.ceil(
+    blur * 2 + Math.max(Math.abs(offsetX), Math.abs(offsetY)),
+  );
+  const canvasWidth = Math.ceil(box.width + padding * 2);
+  const canvasHeight = Math.ceil(box.height + padding * 2);
+  if (canvasWidth <= 0 || canvasHeight <= 0) {
+    return;
+  }
+
+  const effectCanvas = document.createElement('canvas');
+  effectCanvas.width = canvasWidth;
+  effectCanvas.height = canvasHeight;
+
+  const effectContext = effectCanvas.getContext('2d');
+  if (!effectContext) {
+    return;
+  }
+
+  effectContext.imageSmoothingEnabled = true;
+  effectContext.imageSmoothingQuality = 'high';
+  effectContext.filter = blur > 0 ? `blur(${blur}px)` : 'none';
+  effectContext.drawImage(
+    image,
+    padding + offsetX,
+    padding + offsetY,
+    box.width,
+    box.height,
+  );
+  effectContext.filter = 'none';
+  effectContext.globalCompositeOperation = 'source-in';
+  effectContext.fillStyle = color;
+  effectContext.fillRect(0, 0, canvasWidth, canvasHeight);
+
+  context.save();
+  context.globalCompositeOperation = blendMode;
+  context.globalAlpha = opacity;
+  context.drawImage(effectCanvas, box.x - padding, box.y - padding);
+  context.restore();
+};
+
+const drawCharacterShadow = (
+  context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  box: ImageBox,
+  shadow: CharacterShadowOptions,
+) => {
+  if (!shadow.enabled || typeof document === 'undefined') {
+    return;
+  }
+
+  const opacity = clampOpacity(
+    shadow.opacity ?? DEFAULT_CHARACTER_SHADOW.opacity,
+  );
+  const blur = Math.max(
+    0,
+    getScaledCharacterShadowValue(
+      shadow.blur ?? DEFAULT_CHARACTER_SHADOW.blur,
+      context.canvas,
+    ),
+  );
+  const distance = Math.max(
+    0,
+    getScaledCharacterShadowValue(
+      shadow.distance ?? DEFAULT_CHARACTER_SHADOW.distance,
+      context.canvas,
+    ),
+  );
+
+  const offset = getPhotoshopShadowOffset(
+    shadow.angle ?? DEFAULT_CHARACTER_SHADOW.angle,
+    distance,
+  );
+  drawCharacterAlphaEffect(context, image, box, {
+    blendMode: shadow.blendMode ?? DEFAULT_CHARACTER_SHADOW.blendMode,
+    blur,
+    color: shadow.color ?? DEFAULT_CHARACTER_SHADOW.color,
+    offsetX: offset.x,
+    offsetY: offset.y,
+    opacity,
+  });
+
+  const glow = shadow.glow ?? DEFAULT_CHARACTER_SHADOW.glow;
+  const glowSize = Math.max(
+    0,
+    getScaledCharacterShadowValue(
+      glow.size ?? DEFAULT_CHARACTER_SHADOW.glow.size,
+      context.canvas,
+    ),
+  );
+  drawCharacterAlphaEffect(context, image, box, {
+    blendMode: glow.blendMode ?? DEFAULT_CHARACTER_SHADOW.glow.blendMode,
+    blur: glowSize,
+    color: glow.color ?? DEFAULT_CHARACTER_SHADOW.glow.color,
+    offsetX: 0,
+    offsetY: 0,
+    opacity: clampOpacity(
+      glow.opacity ?? DEFAULT_CHARACTER_SHADOW.glow.opacity,
+    ),
+  });
+};
+
 export const setupThumbnailCanvas = (
   context: CanvasRenderingContext2D,
   canvasSize: CanvasSize,
@@ -376,6 +583,7 @@ export const drawEditableImageLayers = (
     characterBox,
     characterImage,
     characterOutline,
+    characterShadow,
     fillColor = DEFAULT_THUMBNAIL_INNER_BACKGROUND,
   }: {
     backgroundImage: HTMLImageElement | null;
@@ -383,6 +591,7 @@ export const drawEditableImageLayers = (
     characterBox: ImageBox | null;
     characterImage: HTMLImageElement | null;
     characterOutline?: CharacterOutlineOptions;
+    characterShadow?: CharacterShadowOptions;
     fillColor?: string;
   },
 ) => {
@@ -401,6 +610,15 @@ export const drawEditableImageLayers = (
   }
 
   if (characterImage && characterBox) {
+    if (characterShadow) {
+      drawCharacterShadow(
+        context,
+        characterImage,
+        characterBox,
+        characterShadow,
+      );
+    }
+
     if (characterOutline) {
       drawCharacterOutline(
         context,
@@ -990,26 +1208,70 @@ export const ThumbnailTextarea = ({
   </label>
 );
 
-type ThumbnailCheckboxProps = {
+type ThumbnailCheckboxGroupOption = {
   checked: boolean;
   label: string;
   onChange: (value: boolean) => void;
 };
 
-export const ThumbnailCheckbox = ({
-  checked,
+type ThumbnailCheckboxGroupProps = {
+  label: string;
+  options: ThumbnailCheckboxGroupOption[];
+};
+
+const ThumbnailCheckboxGroup = ({
   label,
-  onChange,
-}: ThumbnailCheckboxProps) => (
-  <label className="flex h-11 cursor-pointer items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-sm font-medium text-zinc-200 transition hover:border-amber-300/70 hover:text-amber-100">
-    <input
-      checked={checked}
-      className="h-4 w-4 accent-amber-300"
-      onChange={(event) => onChange(event.target.checked)}
-      type="checkbox"
-    />
-    <span>{label}</span>
-  </label>
+  options,
+}: ThumbnailCheckboxGroupProps) => (
+  <fieldset className="min-w-0 border-0 p-0">
+    <legend className="mb-1.5 p-0 text-sm font-medium text-zinc-300">
+      {label}
+    </legend>
+    <div className="flex flex-wrap gap-2 rounded-lg border border-zinc-700 bg-zinc-950 p-2">
+      {options.map((option) => (
+        <label
+          className="inline-flex h-8 cursor-pointer items-center gap-2 rounded-md px-2.5 text-sm font-medium text-zinc-200 transition hover:bg-zinc-900 hover:text-amber-100"
+          key={option.label}
+        >
+          <input
+            checked={option.checked}
+            className="h-4 w-4 accent-amber-300"
+            onChange={(event) => option.onChange(event.target.checked)}
+            type="checkbox"
+          />
+          <span>{option.label}</span>
+        </label>
+      ))}
+    </div>
+  </fieldset>
+);
+
+export const ThumbnailCharacterImageOptions = ({
+  characterOutlineEnabled,
+  characterShadowEnabled,
+  onCharacterOutlineChange,
+  onCharacterShadowChange,
+}: {
+  characterOutlineEnabled: boolean;
+  characterShadowEnabled: boolean;
+  onCharacterOutlineChange: (value: boolean) => void;
+  onCharacterShadowChange: (value: boolean) => void;
+}) => (
+  <ThumbnailCheckboxGroup
+    label="캐릭터 이미지 옵션"
+    options={[
+      {
+        checked: characterOutlineEnabled,
+        label: '테두리 적용',
+        onChange: onCharacterOutlineChange,
+      },
+      {
+        checked: characterShadowEnabled,
+        label: '그림자 적용',
+        onChange: onCharacterShadowChange,
+      },
+    ]}
+  />
 );
 
 export const ThumbnailStatusMessage = ({
