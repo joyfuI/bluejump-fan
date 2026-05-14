@@ -188,9 +188,9 @@ const TITLE_STYLES: Record<Dlsn9911TemplateType, TitleEffectStyle> = {
       blendMode: 'source-over',
       blur: 8,
       color: '#ccd400',
-      offsetX: 9,
-      offsetY: 8,
-      opacity: 0.85,
+      offsetX: 6,
+      offsetY: 6,
+      opacity: 0.6,
     },
     outerStrokeWidth: 8,
     scaleX: 1.1,
@@ -540,14 +540,6 @@ const drawDlsn9911Template = (
     scaleY: titleStyle.scaleY,
   } satisfies PsdTextRunStyle;
 
-  titleTextRuns.forEach(({ line, y }) => {
-    drawPsdTextRun(context, line, TITLE_BOX.x, y, titleTextStyle, 'shadows');
-  });
-
-  titleTextRuns.forEach(({ line, y }) => {
-    drawPsdTextRun(context, line, TITLE_BOX.x, y, titleTextStyle, 'foreground');
-  });
-
   context.drawImage(
     options.frameImage,
     0,
@@ -555,6 +547,14 @@ const drawDlsn9911Template = (
     CANVAS_SIZE.width,
     CANVAS_SIZE.height,
   );
+
+  titleTextRuns.forEach(({ line, y }) => {
+    drawPsdTextRun(context, line, TITLE_BOX.x, y, titleTextStyle, 'shadows');
+  });
+
+  titleTextRuns.forEach(({ line, y }) => {
+    drawPsdTextRun(context, line, TITLE_BOX.x, y, titleTextStyle, 'foreground');
+  });
 
   const dateFontSize = fitDateFontSize(context, options.dateText);
   drawPsdTextRun(context, options.dateText, DATE_TEXT.x, DATE_TEXT.baseline, {
