@@ -48,20 +48,18 @@
  */
 
 import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 
 import {
   buildRoundedRectPath,
   type CanvasSize,
   DEFAULT_CHARACTER_UPLOAD_MESSAGES,
   DEFAULT_IMAGE_UPLOAD_MESSAGES,
-  downloadRenderedThumbnail,
   drawEditableImageLayers,
   type EditableImageRenderOptions,
   getDownloadDate,
   getPsdCanvasFont,
   measurePsdTextWidth,
-  renderThumbnailToCanvas,
   type SoopThumbnailTemplateId,
   SoopThumbnailToolLayout,
   setupThumbnailCanvas,
@@ -73,9 +71,11 @@ import {
   ThumbnailTextarea,
   ThumbnailTextInput,
   useCanvasFonts,
+  useCharacterImageOptions,
   useCharacterLayer,
   useImageFileInput,
   useTemplateImages,
+  useThumbnailRenderer,
   useTodayDateText,
 } from './index';
 
@@ -578,9 +578,7 @@ const RouteComponent = () => {
     useState<Dlsn9911TemplateType>('normal');
   const [dateText, setDateText] = useTodayDateText();
   const [titleText, setTitleText] = useState(DEFAULT_TITLE_TEXT);
-  const [characterOutlineEnabled, setCharacterOutlineEnabled] = useState(false);
-  const [characterShadowEnabled, setCharacterShadowEnabled] = useState(false);
-  const [downloadError, setDownloadError] = useState('');
+  const characterImageOptions = useCharacterImageOptions({ shadow: true });
   const fontStatus = useCanvasFonts(TEMPLATE_FONTS);
   const { images, status: assetStatus } = useTemplateImages(TEMPLATE_IMAGES);
   const background = useImageFileInput(DEFAULT_IMAGE_UPLOAD_MESSAGES);
@@ -612,10 +610,12 @@ const RouteComponent = () => {
       characterImage: character.image,
       characterOutline: {
         color: CHARACTER_OUTLINE_COLOR,
-        enabled: characterOutlineEnabled,
+        enabled: characterImageOptions.characterOutlineEnabled,
         width: CHARACTER_OUTLINE_WIDTH,
       },
-      characterShadow: { enabled: characterShadowEnabled },
+      characterShadow: {
+        enabled: characterImageOptions.characterShadowEnabled,
+      },
       dateText,
       frameImage,
       templateType,
@@ -624,8 +624,7 @@ const RouteComponent = () => {
   }, [
     background.image,
     character.image,
-    characterOutlineEnabled,
-    characterShadowEnabled,
+    characterImageOptions,
     characterLayer.box,
     dateText,
     frameImage,
@@ -633,33 +632,15 @@ const RouteComponent = () => {
     titleText,
   ]);
 
-  const isReady =
-    fontStatus === 'loaded' &&
-    assetStatus === 'loaded' &&
-    renderOptions !== null;
-
-  useEffect(() => {
-    if (!isReady || !canvasRef.current || !renderOptions) {
-      return;
-    }
-
-    renderThumbnailToCanvas(
-      canvasRef.current,
-      renderOptions,
-      drawDlsn9911Template,
-    );
-  }, [isReady, renderOptions]);
-
-  const handleDownload = () => {
-    downloadRenderedThumbnail({
-      canvas: canvasRef.current,
+  const { downloadError, handleDownload, isLoading, isReady } =
+    useThumbnailRenderer({
+      assetStatus,
+      canvasRef,
       drawTemplate: drawDlsn9911Template,
       fileName: downloadFileName,
-      isReady,
+      fontStatus,
       options: renderOptions,
-      setError: setDownloadError,
     });
-  };
 
   return (
     <SoopThumbnailToolLayout
@@ -726,12 +707,7 @@ const RouteComponent = () => {
             variant="secondary"
           />
 
-          <ThumbnailCharacterImageOptions
-            characterOutlineEnabled={characterOutlineEnabled}
-            characterShadowEnabled={characterShadowEnabled}
-            onCharacterOutlineChange={setCharacterOutlineEnabled}
-            onCharacterShadowChange={setCharacterShadowEnabled}
-          />
+          <ThumbnailCharacterImageOptions {...characterImageOptions} />
 
           {fontStatus === 'error' ? (
             <ThumbnailStatusMessage>
@@ -750,7 +726,7 @@ const RouteComponent = () => {
           ) : null}
 
           <ThumbnailDownloadButton
-            isLoading={fontStatus === 'loading' || assetStatus === 'loading'}
+            isLoading={isLoading}
             isReady={isReady}
             onClick={handleDownload}
           />
@@ -762,7 +738,7 @@ const RouteComponent = () => {
           canvasSize={CANVAS_SIZE}
           characterBox={character.image ? characterLayer.box : null}
           characterControls={characterLayer}
-          isLoading={fontStatus === 'loading' || assetStatus === 'loading'}
+          isLoading={isLoading}
           isReady={isReady}
         />
       }

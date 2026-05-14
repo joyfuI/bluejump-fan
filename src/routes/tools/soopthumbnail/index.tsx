@@ -31,6 +31,7 @@ import {
   type TextareaHTMLAttributes,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -74,6 +75,7 @@ export type EditableImageRenderOptions = {
   characterOutline: CharacterOutlineOptions;
   characterShadow: CharacterShadowOptions;
 };
+type CharacterImageOptionsDefaults = { outline?: boolean; shadow?: boolean };
 
 const DEFAULT_CHARACTER_OUTLINE_COLOR = '#ffffff';
 const CHARACTER_OUTLINE_REFERENCE_CANVAS_SIZE = {
@@ -181,6 +183,24 @@ export const useTodayDateText = () => {
   return [dateText, setDateText] as const;
 };
 
+export const useCharacterImageOptions = ({
+  outline = false,
+  shadow = false,
+}: CharacterImageOptionsDefaults = {}) => {
+  const [characterOutlineEnabled, onCharacterOutlineChange] = useState(outline);
+  const [characterShadowEnabled, onCharacterShadowChange] = useState(shadow);
+
+  return useMemo(
+    () => ({
+      characterOutlineEnabled,
+      characterShadowEnabled,
+      onCharacterOutlineChange,
+      onCharacterShadowChange,
+    }),
+    [characterOutlineEnabled, characterShadowEnabled],
+  );
+};
+
 const DEFAULT_THUMBNAIL_DOWNLOAD_ERROR_MESSAGE =
   'PNG 파일을 만들지 못했습니다.';
 
@@ -204,10 +224,15 @@ const downloadCanvasAsPng = (
   }, 'image/png');
 };
 
-export const renderThumbnailToCanvas = <TOptions,>(
+type ThumbnailDrawTemplate<TOptions> = (
+  context: CanvasRenderingContext2D,
+  options: TOptions,
+) => void;
+
+const renderThumbnailToCanvas = <TOptions,>(
   canvas: HTMLCanvasElement,
   options: TOptions,
-  drawTemplate: (context: CanvasRenderingContext2D, options: TOptions) => void,
+  drawTemplate: ThumbnailDrawTemplate<TOptions>,
 ) => {
   const context = canvas.getContext('2d');
   if (!context) {
@@ -217,31 +242,48 @@ export const renderThumbnailToCanvas = <TOptions,>(
   drawTemplate(context, options);
 };
 
-export const downloadRenderedThumbnail = <TOptions,>({
-  canvas,
+export const useThumbnailRenderer = <TOptions,>({
+  assetStatus,
+  canvasRef,
   drawTemplate,
   fileName,
-  isReady,
+  fontStatus,
   options,
-  setError,
 }: {
-  canvas: HTMLCanvasElement | null;
-  drawTemplate: (context: CanvasRenderingContext2D, options: TOptions) => void;
+  assetStatus: LoadStatus;
+  canvasRef: RefObject<HTMLCanvasElement | null>;
+  drawTemplate: ThumbnailDrawTemplate<TOptions>;
   fileName: string;
-  isReady: boolean;
+  fontStatus: LoadStatus;
   options: TOptions | null;
-  setError: (message: string) => void;
 }) => {
-  if (!canvas || !isReady || !options) {
-    return;
-  }
+  const [downloadError, setDownloadError] = useState('');
+  const isLoading = fontStatus === 'loading' || assetStatus === 'loading';
+  const isReady =
+    fontStatus === 'loaded' && assetStatus === 'loaded' && options !== null;
 
-  setError('');
-  renderThumbnailToCanvas(canvas, options, drawTemplate);
+  useEffect(() => {
+    if (!isReady || !canvasRef.current || !options) {
+      return;
+    }
 
-  downloadCanvasAsPng(canvas, fileName, () => {
-    setError(DEFAULT_THUMBNAIL_DOWNLOAD_ERROR_MESSAGE);
-  });
+    renderThumbnailToCanvas(canvasRef.current, options, drawTemplate);
+  }, [canvasRef, drawTemplate, isReady, options]);
+
+  const handleDownload = useCallback(() => {
+    if (!isReady || !canvasRef.current || !options) {
+      return;
+    }
+
+    setDownloadError('');
+    renderThumbnailToCanvas(canvasRef.current, options, drawTemplate);
+
+    downloadCanvasAsPng(canvasRef.current, fileName, () => {
+      setDownloadError(DEFAULT_THUMBNAIL_DOWNLOAD_ERROR_MESSAGE);
+    });
+  }, [canvasRef, drawTemplate, fileName, isReady, options]);
+
+  return { downloadError, handleDownload, isLoading, isReady };
 };
 
 export const getRgba = (hexColor: string, opacity: number) => {
