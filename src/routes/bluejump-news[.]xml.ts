@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 
 import getBluejumpNews from '@/api/getBluejumpNews';
+import escapeXml from '@/utils/escapeXml';
 
 export const Route = createFileRoute('/bluejump-news.xml')({
   server: {
@@ -11,7 +12,7 @@ export const Route = createFileRoute('/bluejump-news.xml')({
         const today = new Date();
 
         const rss = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
   <channel>
     <title>블루점프의 최신 뉴스</title>
     <link>https://bluejump.co.kr/news</link>
@@ -21,9 +22,9 @@ export const Route = createFileRoute('/bluejump-news.xml')({
 ${data
   .map(
     (item) => `    <item>
-      <title>${item.title ?? item.title_en}</title>
+      <title>${escapeXml(item.title ?? item.title_en)}</title>
       <link>https://bluejump.co.kr/news/${item.id}</link>
-      <description>${item.content ?? item.content_en}</description>
+      <description>${escapeXml(item.content ?? item.content_en)}</description>
       <category>${item.category}</category>
       <author>${item.creator}</author>
       <pubDate>${new Date(item.created_at).toUTCString()}</pubDate>
