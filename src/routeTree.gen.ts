@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as BluejumpNewsDotxmlRouteImport } from './routes/bluejump-news[.]xml'
 import { Route as DefaultLayoutRouteImport } from './routes/_defaultLayout'
 import { Route as DefaultLayoutIndexRouteImport } from './routes/_defaultLayout/index'
 import { Route as ToolsSoopupRouteImport } from './routes/tools/soopup'
@@ -25,6 +26,11 @@ import { Route as ToolsSoopthumbnailHarohaRouteImport } from './routes/tools/soo
 import { Route as ToolsSoopthumbnailDlsn9911RouteImport } from './routes/tools/soopthumbnail/dlsn9911'
 import { Route as ToolsSoopthumbnail9mogu9RouteImport } from './routes/tools/soopthumbnail/9mogu9'
 
+const BluejumpNewsDotxmlRoute = BluejumpNewsDotxmlRouteImport.update({
+  id: '/bluejump-news.xml',
+  path: '/bluejump-news.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DefaultLayoutRoute = DefaultLayoutRouteImport.update({
   id: '/_defaultLayout',
   getParentRoute: () => rootRouteImport,
@@ -105,6 +111,7 @@ const ToolsSoopthumbnail9mogu9Route =
 
 export interface FileRoutesByFullPath {
   '/': typeof DefaultLayoutIndexRoute
+  '/bluejump-news.xml': typeof BluejumpNewsDotxmlRoute
   '/cafe': typeof DefaultLayoutCafeRoute
   '/calendar': typeof DefaultLayoutCalendarRoute
   '/clipper': typeof DefaultLayoutClipperRoute
@@ -120,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/tools/soopthumbnail/': typeof ToolsSoopthumbnailIndexRoute
 }
 export interface FileRoutesByTo {
+  '/bluejump-news.xml': typeof BluejumpNewsDotxmlRoute
   '/cafe': typeof DefaultLayoutCafeRoute
   '/calendar': typeof DefaultLayoutCalendarRoute
   '/clipper': typeof DefaultLayoutClipperRoute
@@ -138,6 +146,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_defaultLayout': typeof DefaultLayoutRouteWithChildren
+  '/bluejump-news.xml': typeof BluejumpNewsDotxmlRoute
   '/_defaultLayout/cafe': typeof DefaultLayoutCafeRoute
   '/_defaultLayout/calendar': typeof DefaultLayoutCalendarRoute
   '/_defaultLayout/clipper': typeof DefaultLayoutClipperRoute
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/bluejump-news.xml'
     | '/cafe'
     | '/calendar'
     | '/clipper'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/tools/soopthumbnail/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/bluejump-news.xml'
     | '/cafe'
     | '/calendar'
     | '/clipper'
@@ -189,6 +200,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_defaultLayout'
+    | '/bluejump-news.xml'
     | '/_defaultLayout/cafe'
     | '/_defaultLayout/calendar'
     | '/_defaultLayout/clipper'
@@ -207,6 +219,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   DefaultLayoutRoute: typeof DefaultLayoutRouteWithChildren
+  BluejumpNewsDotxmlRoute: typeof BluejumpNewsDotxmlRoute
   ApiCafeArticlesRoute: typeof ApiCafeArticlesRoute
   ToolsSoopcommentRoute: typeof ToolsSoopcommentRoute
   ToolsSoopupRoute: typeof ToolsSoopupRoute
@@ -218,6 +231,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/bluejump-news.xml': {
+      id: '/bluejump-news.xml'
+      path: '/bluejump-news.xml'
+      fullPath: '/bluejump-news.xml'
+      preLoaderRoute: typeof BluejumpNewsDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_defaultLayout': {
       id: '/_defaultLayout'
       path: ''
@@ -352,6 +372,7 @@ const DefaultLayoutRouteWithChildren = DefaultLayoutRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   DefaultLayoutRoute: DefaultLayoutRouteWithChildren,
+  BluejumpNewsDotxmlRoute: BluejumpNewsDotxmlRoute,
   ApiCafeArticlesRoute: ApiCafeArticlesRoute,
   ToolsSoopcommentRoute: ToolsSoopcommentRoute,
   ToolsSoopupRoute: ToolsSoopupRoute,
