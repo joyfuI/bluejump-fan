@@ -8,14 +8,8 @@
  *   live in sibling `index.tsx`; keep repeated editor mechanics there instead
  *   of re-copying them into template files.
  * - The source PSD for the `모구구` template is 1920x1080 and is intentionally
- *   not parsed at runtime. The lower-left dark gradient panel comes from PSD
- *   layer `레이어 3`; the date bar is an isolated raster of PSD layer `사각형 2`
- *   with its layer-effect alpha fade preserved, not the raw solid vector fill.
- *   The frame, lower-left gradient, date bar, and skull marks are loaded from
- *   `/assets/9mogu9/*.png`; keep those files as the source of truth instead of
- *   inlining raster art in this route.
- * - Skull PNGs are drawn after the date text so the date stroke/max-width
- *   rendering cannot cover the right skull marker.
+ *   not parsed at runtime. Only `/assets/9mogu9/frame.png` is loaded as
+ *   template art; the other PSD raster assets are intentionally not rendered.
  * - Keep the PSD's pale-yellow outer template/border area from `frame.png`.
  *   Only the inner frame background is white when the user has not uploaded a
  *   background image.
@@ -39,6 +33,7 @@ import {
   DEFAULT_CHARACTER_UPLOAD_MESSAGES,
   DEFAULT_IMAGE_UPLOAD_MESSAGES,
   drawEditableImageLayers,
+  drawFullCanvasImage,
   drawOutlinedText,
   type EditableImageRenderOptions,
   fitFontSize,
@@ -64,13 +59,9 @@ import {
 const SOOP_THUMBNAIL_TEMPLATE_ID = '9mogu9' satisfies SoopThumbnailTemplateId;
 
 type RenderOptions = EditableImageRenderOptions & {
-  darkPanelImage: HTMLImageElement;
   dateText: string;
-  dateBarImage: HTMLImageElement;
   firstText: string;
   frameImage: HTMLImageElement;
-  leftSkullImage: HTMLImageElement;
-  rightSkullImage: HTMLImageElement;
   secondText: string;
 };
 
@@ -80,14 +71,7 @@ const FONT_URL = '/fonts/jalnan2.otf';
 const TEMPLATE_FONTS = [
   { family: FONT_FAMILY, testSize: 64, url: FONT_URL },
 ] as const;
-const TEMPLATE_ASSET_BASE_URL = '/assets/9mogu9';
-const TEMPLATE_IMAGES = {
-  darkPanel: `${TEMPLATE_ASSET_BASE_URL}/dark_gradient.png`,
-  dateBar: `${TEMPLATE_ASSET_BASE_URL}/date_bar.png`,
-  frame: `${TEMPLATE_ASSET_BASE_URL}/frame.png`,
-  leftSkull: `${TEMPLATE_ASSET_BASE_URL}/left_skull.png`,
-  rightSkull: `${TEMPLATE_ASSET_BASE_URL}/right_skull.png`,
-} as const;
+const TEMPLATE_IMAGES = { frame: '/assets/9mogu9/frame.png' } as const;
 const TEXT_SHADOW_GOLD = '#ffe8a2';
 const TEXT_INNER_SHADOW = '#3b3b3b';
 
@@ -98,10 +82,6 @@ const CHARACTER_BOUNDS = {
   x: FRAME.x,
   y: FRAME.y,
 };
-const DARK_PANEL = { x: -33, y: 496 };
-const DATE_BAR = { x: 42, y: 610 };
-const LEFT_SKULL = { x: 145, y: 624 };
-const RIGHT_SKULL = { x: 608, y: 625 };
 const CHARACTER_MIN_SIZE = 80;
 const CHARACTER_OUTLINE_WIDTH = 10;
 const DEFAULT_FIRST_TEXT = '#첫번째텍스트';
@@ -152,9 +132,9 @@ const drawMoguguTemplate = (
     characterShadow: options.characterShadow,
   });
 
-  context.drawImage(options.darkPanelImage, DARK_PANEL.x, DARK_PANEL.y);
-  context.drawImage(options.dateBarImage, DATE_BAR.x, DATE_BAR.y);
   context.restore();
+
+  drawFullCanvasImage(context, options.frameImage, CANVAS_SIZE);
 
   const dateFontSize = fitFontSize(
     context,
@@ -173,9 +153,6 @@ const drawMoguguTemplate = (
     maxWidth: 370,
     outerStrokeWidth: 12,
   });
-
-  context.drawImage(options.leftSkullImage, LEFT_SKULL.x, LEFT_SKULL.y);
-  context.drawImage(options.rightSkullImage, RIGHT_SKULL.x, RIGHT_SKULL.y);
 
   const firstFontSize = fitFontSize(
     context,
@@ -214,14 +191,6 @@ const drawMoguguTemplate = (
     maxWidth: 1760,
     outerStrokeWidth: 18,
   });
-
-  context.drawImage(
-    options.frameImage,
-    0,
-    0,
-    CANVAS_SIZE.width,
-    CANVAS_SIZE.height,
-  );
 };
 
 const RouteComponent = () => {
@@ -266,13 +235,9 @@ const RouteComponent = () => {
       characterShadow: {
         enabled: characterImageOptions.characterShadowEnabled,
       },
-      darkPanelImage: images.darkPanel,
-      dateBarImage: images.dateBar,
       dateText,
       firstText,
       frameImage: images.frame,
-      leftSkullImage: images.leftSkull,
-      rightSkullImage: images.rightSkull,
       secondText,
     };
   }, [

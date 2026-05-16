@@ -56,6 +56,7 @@ import {
   DEFAULT_CHARACTER_UPLOAD_MESSAGES,
   DEFAULT_IMAGE_UPLOAD_MESSAGES,
   drawEditableImageLayers,
+  drawFullCanvasImage,
   type EditableImageRenderOptions,
   getDownloadDate,
   getPsdCanvasFont,
@@ -82,6 +83,14 @@ import {
 const SOOP_THUMBNAIL_TEMPLATE_ID = 'dlsn9911' satisfies SoopThumbnailTemplateId;
 
 type Dlsn9911TemplateType = 'normal' | 'plus';
+
+const TEMPLATE_TYPE_OPTIONS = [
+  { label: '일반', value: 'normal' },
+  { label: '구플', value: 'plus' },
+] as const satisfies ReadonlyArray<{
+  label: string;
+  value: Dlsn9911TemplateType;
+}>;
 
 type RenderOptions = EditableImageRenderOptions & {
   dateText: string;
@@ -540,13 +549,7 @@ const drawDlsn9911Template = (
     scaleY: titleStyle.scaleY,
   } satisfies PsdTextRunStyle;
 
-  context.drawImage(
-    options.frameImage,
-    0,
-    0,
-    CANVAS_SIZE.width,
-    CANVAS_SIZE.height,
-  );
+  drawFullCanvasImage(context, options.frameImage, CANVAS_SIZE);
 
   titleTextRuns.forEach(({ line, y }) => {
     drawPsdTextRun(context, line, TITLE_BOX.x, y, titleTextStyle, 'shadows');
@@ -658,10 +661,7 @@ const RouteComponent = () => {
               타입
             </legend>
             <div className="grid grid-cols-2 gap-2">
-              {[
-                { label: '일반', value: 'normal' },
-                { label: '구플', value: 'plus' },
-              ].map((option) => (
+              {TEMPLATE_TYPE_OPTIONS.map((option) => (
                 <label
                   className={`flex h-10 cursor-pointer items-center justify-center rounded-lg border px-3 text-sm font-semibold transition ${
                     templateType === option.value
@@ -674,9 +674,7 @@ const RouteComponent = () => {
                     checked={templateType === option.value}
                     className="sr-only"
                     name="dlsn9911-template-type"
-                    onChange={() =>
-                      setTemplateType(option.value as Dlsn9911TemplateType)
-                    }
+                    onChange={() => setTemplateType(option.value)}
                     type="radio"
                     value={option.value}
                   />

@@ -6,8 +6,8 @@
  *   routes: font/asset loading, image uploads, date formatting, cover-crop
  *   drawing, optional character outline/shadow rendering scaled from PSD
  *   reference canvases, stroked/PSD-style text helpers, shared form
- *   controls/download/preview UI, and interactive character placement with
- *   partial outside-bounds movement/rotation.
+ *   controls/download/preview UI, full-canvas overlay drawing, and interactive
+ *   character placement with partial outside-bounds movement/rotation.
  * - The current template tabs are `제갈금자`, `모구구`, and `하로하`; each
  *   template route owns its PSD-specific asset/font constants and draw order.
  * - `/tools/soopthumbnail` redirects to `/tools/soopthumbnail/dlsn9911`
@@ -35,7 +35,7 @@ import {
   useState,
 } from 'react';
 
-export const soopThumbnailTemplates = [
+const soopThumbnailTemplates = [
   { id: 'dlsn9911', label: '제갈금자', to: '/tools/soopthumbnail/dlsn9911' },
   { id: '9mogu9', label: '모구구', to: '/tools/soopthumbnail/9mogu9' },
   { id: 'haroha', label: '하로하', to: '/tools/soopthumbnail/haroha' },
@@ -52,7 +52,7 @@ export type ImageBox = {
   x: number;
   y: number;
 };
-export type LoadStatus = 'loading' | 'loaded' | 'error';
+type LoadStatus = 'loading' | 'loaded' | 'error';
 export type CharacterOutlineOptions = {
   color?: string;
   enabled: boolean;
@@ -105,7 +105,7 @@ const CHARACTER_SHADOW_REFERENCE_CANVAS_SIZE = {
   height: 768,
   width: 1365,
 } as const satisfies CanvasSize;
-export const DEFAULT_THUMBNAIL_INNER_BACKGROUND = '#ffffff';
+const DEFAULT_THUMBNAIL_INNER_BACKGROUND = '#ffffff';
 
 type SoopThumbnailToolLayoutProps = {
   activeTemplateId: SoopThumbnailTemplateId;
@@ -169,7 +169,7 @@ export const SoopThumbnailToolLayout = ({
 
 const padDatePart = (value: number) => String(value).padStart(2, '0');
 
-export const formatTodayDate = () => {
+const formatTodayDate = () => {
   const now = new Date();
   return [
     now.getFullYear(),
@@ -296,7 +296,7 @@ export const useThumbnailRenderer = <TOptions,>({
   return { downloadError, handleDownload, isLoading, isReady };
 };
 
-export const getRgba = (hexColor: string, opacity: number) => {
+const getRgba = (hexColor: string, opacity: number) => {
   const normalizedColor = hexColor.replace('#', '');
   const red = Number.parseInt(normalizedColor.slice(0, 2), 16);
   const green = Number.parseInt(normalizedColor.slice(2, 4), 16);
@@ -305,7 +305,7 @@ export const getRgba = (hexColor: string, opacity: number) => {
   return `rgba(${red}, ${green}, ${blue}, ${opacity})`;
 };
 
-export const clamp = (value: number, min: number, max: number) =>
+const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 
 const normalizeCharacterRotation = (rotation: number) => {
@@ -325,12 +325,12 @@ const getCharacterRotation = (box: ImageBox) =>
 
 const getDegreesAsRadians = (degrees: number) => (degrees * Math.PI) / 180;
 
-export const getImageNaturalSize = (image: HTMLImageElement) => ({
+const getImageNaturalSize = (image: HTMLImageElement) => ({
   height: image.naturalHeight || image.height,
   width: image.naturalWidth || image.width,
 });
 
-export const loadImage = (source: string) =>
+const loadImage = (source: string) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
     image.onload = () => resolve(image);
@@ -367,7 +367,7 @@ export const buildRoundedRectPath = (
   context.closePath();
 };
 
-export const drawCoverImage = (
+const drawCoverImage = (
   context: CanvasRenderingContext2D,
   image: HTMLImageElement,
   x: number,
@@ -678,6 +678,14 @@ export const setupThumbnailCanvas = (
   context.imageSmoothingQuality = 'high';
 };
 
+export const drawFullCanvasImage = (
+  context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  canvasSize: CanvasSize,
+) => {
+  context.drawImage(image, 0, 0, canvasSize.width, canvasSize.height);
+};
+
 export const drawEditableImageLayers = (
   context: CanvasRenderingContext2D,
   {
@@ -754,7 +762,7 @@ export const fitFontSize = (
   return size;
 };
 
-export type PsdCanvasTextStyle = {
+type PsdCanvasTextStyle = {
   align: CanvasTextAlign;
   fillColor: string;
   fontFamily: string;
@@ -899,7 +907,7 @@ export const drawPsdText = (
   context.restore();
 };
 
-export type TextDropShadow = {
+type TextDropShadow = {
   blur: number;
   color: string;
   offsetX: number;
@@ -908,7 +916,7 @@ export type TextDropShadow = {
   strokeWidth: number;
 };
 
-export type TextInnerShadow = {
+type TextInnerShadow = {
   color: string;
   offsetX: number;
   offsetY: number;
@@ -1178,7 +1186,7 @@ export const useImageFileInput = (messages: {
   return { clearImage, error, handleChange, image, inputRef, name };
 };
 
-export type ImageFileInputState = ReturnType<typeof useImageFileInput>;
+type ImageFileInputState = ReturnType<typeof useImageFileInput>;
 
 export const DEFAULT_IMAGE_UPLOAD_MESSAGES = {
   invalidType: '이미지 파일만 업로드할 수 있습니다.',
@@ -1460,7 +1468,7 @@ export const ThumbnailDownloadButton = ({
   </button>
 );
 
-export type CharacterResizeHandle =
+type CharacterResizeHandle =
   | 'bottom-left'
   | 'bottom-right'
   | 'top-left'
@@ -1792,7 +1800,7 @@ export const useCharacterLayer = ({
   };
 };
 
-export const CharacterSelectionOverlay = ({
+const CharacterSelectionOverlay = ({
   box,
   canvasSize,
   finishInteraction,

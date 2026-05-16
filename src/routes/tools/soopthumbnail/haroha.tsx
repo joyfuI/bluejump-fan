@@ -44,6 +44,7 @@ import {
   DEFAULT_CHARACTER_UPLOAD_MESSAGES,
   DEFAULT_IMAGE_UPLOAD_MESSAGES,
   drawEditableImageLayers,
+  drawFullCanvasImage,
   drawPsdText,
   type EditableImageRenderOptions,
   fitPsdTextFontSize,
@@ -88,10 +89,7 @@ const TEMPLATE_FONTS = [
   { family: DATE_FONT_FAMILY, testSize: 72, url: DATE_FONT_URL },
   { family: TITLE_FONT_FAMILY, testSize: 128, url: TITLE_FONT_URL },
 ] as const;
-const TEMPLATE_ASSET_BASE_URL = '/assets/haroha';
-const TEMPLATE_IMAGES = {
-  frame: `${TEMPLATE_ASSET_BASE_URL}/frame.png`,
-} as const;
+const TEMPLATE_IMAGES = { frame: '/assets/haroha/frame.png' } as const;
 const TEMPLATE_BROWN = '#2d241b';
 const TEMPLATE_YELLOW = '#ffef94';
 const TITLE_HORIZONTAL_SCALE = 0.9;
@@ -109,10 +107,10 @@ const CHARACTER_BOUNDS = {
 const CHARACTER_MIN_SIZE = 80;
 const CHARACTER_OUTLINE_COLOR = '#2d241b';
 const CHARACTER_OUTLINE_WIDTH = 10;
-const DEFAULT_FIRST_TEXT = '첫 번째 텍스트';
-const DEFAULT_SECOND_TEXT = '두 번째 텍스트';
-const DEFAULT_THIRD_TEXT = '#세 번째 텍스트';
-const DEFAULT_FOURTH_TEXT = '#네 번째 텍스트';
+const DEFAULT_FIRST_TEXT = '첫번째텍스트';
+const DEFAULT_SECOND_TEXT = '두번째텍스트';
+const DEFAULT_THIRD_TEXT = '#세번째텍스트';
+const DEFAULT_FOURTH_TEXT = '#네번째텍스트';
 const DATE_TEXT = {
   baseline: 106,
   maxWidth: 370,
@@ -246,13 +244,7 @@ const drawHarohaTemplate = (
     characterShadow: options.characterShadow,
   });
 
-  context.drawImage(
-    options.frameImage,
-    0,
-    0,
-    CANVAS_SIZE.width,
-    CANVAS_SIZE.height,
-  );
+  drawFullCanvasImage(context, options.frameImage, CANVAS_SIZE);
 
   const dateFontSize = fitPsdTextFontSize(context, options.dateText, {
     fontFamily: DATE_FONT_FAMILY,
