@@ -19,7 +19,7 @@ export const MEMBERS: readonly Member[] = [
       url: 'https://cafe.naver.com/bluejumpofficial',
       id: 31345283,
       name: '대월향의 1평 사장실',
-      menus: [{ id: 37, name: '맴버들의 이모저모' }],
+      menus: [{ id: 37, name: '대월향의 이모저모' }],
     },
   },
   {
@@ -77,6 +77,33 @@ export const MEMBERS: readonly Member[] = [
         { id: 5, name: '일기장' },
         { id: 25, name: '누렁이 선물' },
         { id: 24, name: '카톡' },
+      ],
+    },
+  },
+  {
+    id: 'marronie',
+    nick: '마로니',
+    stationNo: 30400072,
+    cafe: {
+      url: 'https://cafe.naver.com/marroniepark',
+      id: 31556246,
+      name: '마로니 공원',
+      menus: [{ id: 17, name: '마로니 일상' }],
+    },
+  },
+  {
+    id: 'yangdoki',
+    nick: '양도끼',
+    stationNo: 26435439,
+    cafe: {
+      url: 'https://cafe.naver.com/yangdoki',
+      id: 30947879,
+      name: 'AXE함',
+      menus: [
+        { id: 22, name: '알림' },
+        { id: 2, name: '뻘글' },
+        { id: 27, name: '낙서방' },
+        { id: 73, name: '비밀방' },
       ],
     },
   },
