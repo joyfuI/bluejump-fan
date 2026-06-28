@@ -15,8 +15,8 @@ import { Route as DefaultLayoutIndexRouteImport } from './routes/_defaultLayout/
 import { Route as ToolsSoopupRouteImport } from './routes/tools/soopup'
 import { Route as ToolsSoopcommentRouteImport } from './routes/tools/soopcomment'
 import { Route as ApiCafeArticlesRouteImport } from './routes/api/cafe-articles'
+import { Route as DefaultLayoutVodRouteImport } from './routes/_defaultLayout/vod'
 import { Route as DefaultLayoutSoopRouteImport } from './routes/_defaultLayout/soop'
-import { Route as DefaultLayoutReviewRouteImport } from './routes/_defaultLayout/review'
 import { Route as DefaultLayoutLiveRouteImport } from './routes/_defaultLayout/live'
 import { Route as DefaultLayoutClipperRouteImport } from './routes/_defaultLayout/clipper'
 import { Route as DefaultLayoutCalendarRouteImport } from './routes/_defaultLayout/calendar'
@@ -55,14 +55,14 @@ const ApiCafeArticlesRoute = ApiCafeArticlesRouteImport.update({
   path: '/api/cafe-articles',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DefaultLayoutVodRoute = DefaultLayoutVodRouteImport.update({
+  id: '/vod',
+  path: '/vod',
+  getParentRoute: () => DefaultLayoutRoute,
+} as any)
 const DefaultLayoutSoopRoute = DefaultLayoutSoopRouteImport.update({
   id: '/soop',
   path: '/soop',
-  getParentRoute: () => DefaultLayoutRoute,
-} as any)
-const DefaultLayoutReviewRoute = DefaultLayoutReviewRouteImport.update({
-  id: '/review',
-  path: '/review',
   getParentRoute: () => DefaultLayoutRoute,
 } as any)
 const DefaultLayoutLiveRoute = DefaultLayoutLiveRouteImport.update({
@@ -116,8 +116,8 @@ export interface FileRoutesByFullPath {
   '/calendar': typeof DefaultLayoutCalendarRoute
   '/clipper': typeof DefaultLayoutClipperRoute
   '/live': typeof DefaultLayoutLiveRoute
-  '/review': typeof DefaultLayoutReviewRoute
   '/soop': typeof DefaultLayoutSoopRoute
+  '/vod': typeof DefaultLayoutVodRoute
   '/api/cafe-articles': typeof ApiCafeArticlesRoute
   '/tools/soopcomment': typeof ToolsSoopcommentRoute
   '/tools/soopup': typeof ToolsSoopupRoute
@@ -132,8 +132,8 @@ export interface FileRoutesByTo {
   '/calendar': typeof DefaultLayoutCalendarRoute
   '/clipper': typeof DefaultLayoutClipperRoute
   '/live': typeof DefaultLayoutLiveRoute
-  '/review': typeof DefaultLayoutReviewRoute
   '/soop': typeof DefaultLayoutSoopRoute
+  '/vod': typeof DefaultLayoutVodRoute
   '/api/cafe-articles': typeof ApiCafeArticlesRoute
   '/tools/soopcomment': typeof ToolsSoopcommentRoute
   '/tools/soopup': typeof ToolsSoopupRoute
@@ -151,8 +151,8 @@ export interface FileRoutesById {
   '/_defaultLayout/calendar': typeof DefaultLayoutCalendarRoute
   '/_defaultLayout/clipper': typeof DefaultLayoutClipperRoute
   '/_defaultLayout/live': typeof DefaultLayoutLiveRoute
-  '/_defaultLayout/review': typeof DefaultLayoutReviewRoute
   '/_defaultLayout/soop': typeof DefaultLayoutSoopRoute
+  '/_defaultLayout/vod': typeof DefaultLayoutVodRoute
   '/api/cafe-articles': typeof ApiCafeArticlesRoute
   '/tools/soopcomment': typeof ToolsSoopcommentRoute
   '/tools/soopup': typeof ToolsSoopupRoute
@@ -171,8 +171,8 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/clipper'
     | '/live'
-    | '/review'
     | '/soop'
+    | '/vod'
     | '/api/cafe-articles'
     | '/tools/soopcomment'
     | '/tools/soopup'
@@ -187,8 +187,8 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/clipper'
     | '/live'
-    | '/review'
     | '/soop'
+    | '/vod'
     | '/api/cafe-articles'
     | '/tools/soopcomment'
     | '/tools/soopup'
@@ -205,8 +205,8 @@ export interface FileRouteTypes {
     | '/_defaultLayout/calendar'
     | '/_defaultLayout/clipper'
     | '/_defaultLayout/live'
-    | '/_defaultLayout/review'
     | '/_defaultLayout/soop'
+    | '/_defaultLayout/vod'
     | '/api/cafe-articles'
     | '/tools/soopcomment'
     | '/tools/soopup'
@@ -273,18 +273,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCafeArticlesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_defaultLayout/vod': {
+      id: '/_defaultLayout/vod'
+      path: '/vod'
+      fullPath: '/vod'
+      preLoaderRoute: typeof DefaultLayoutVodRouteImport
+      parentRoute: typeof DefaultLayoutRoute
+    }
     '/_defaultLayout/soop': {
       id: '/_defaultLayout/soop'
       path: '/soop'
       fullPath: '/soop'
       preLoaderRoute: typeof DefaultLayoutSoopRouteImport
-      parentRoute: typeof DefaultLayoutRoute
-    }
-    '/_defaultLayout/review': {
-      id: '/_defaultLayout/review'
-      path: '/review'
-      fullPath: '/review'
-      preLoaderRoute: typeof DefaultLayoutReviewRouteImport
       parentRoute: typeof DefaultLayoutRoute
     }
     '/_defaultLayout/live': {
@@ -351,8 +351,8 @@ interface DefaultLayoutRouteChildren {
   DefaultLayoutCalendarRoute: typeof DefaultLayoutCalendarRoute
   DefaultLayoutClipperRoute: typeof DefaultLayoutClipperRoute
   DefaultLayoutLiveRoute: typeof DefaultLayoutLiveRoute
-  DefaultLayoutReviewRoute: typeof DefaultLayoutReviewRoute
   DefaultLayoutSoopRoute: typeof DefaultLayoutSoopRoute
+  DefaultLayoutVodRoute: typeof DefaultLayoutVodRoute
   DefaultLayoutIndexRoute: typeof DefaultLayoutIndexRoute
 }
 
@@ -361,8 +361,8 @@ const DefaultLayoutRouteChildren: DefaultLayoutRouteChildren = {
   DefaultLayoutCalendarRoute: DefaultLayoutCalendarRoute,
   DefaultLayoutClipperRoute: DefaultLayoutClipperRoute,
   DefaultLayoutLiveRoute: DefaultLayoutLiveRoute,
-  DefaultLayoutReviewRoute: DefaultLayoutReviewRoute,
   DefaultLayoutSoopRoute: DefaultLayoutSoopRoute,
+  DefaultLayoutVodRoute: DefaultLayoutVodRoute,
   DefaultLayoutIndexRoute: DefaultLayoutIndexRoute,
 }
 

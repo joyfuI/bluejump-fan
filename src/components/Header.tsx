@@ -23,9 +23,9 @@ const items = [
   { key: 'calendar', label: <Link to="/calendar">캘린더 모아보기</Link> },
   { key: 'soop', label: <Link to="/soop">방송국글 모아보기</Link> },
   { key: 'cafe', label: <Link to="/cafe">카페글 모아보기</Link> },
-  // { key: 'review', label: <Link to="/review">다시보기 모아보기</Link> },
+  // { key: 'vod', label: <Link to="/vod">다시보기 모아보기</Link> },
   {
-    key: 'review',
+    key: 'vod',
     label: (
       <a
         className="inline-flex items-center"
@@ -96,8 +96,15 @@ const items = [
               </Link>
             ),
           },
+        ],
+      },
+      {
+        key: 'tools-streaming',
+        label: '방송 관련',
+        type: 'group',
+        children: [
           {
-            key: 'tools-soop-thumbnail',
+            key: 'tools-streaming-thumbnail',
             label: (
               <Link
                 className="inline-flex items-center"

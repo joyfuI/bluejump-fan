@@ -36,7 +36,7 @@ const RouteComponent = () => {
   );
 };
 
-export const Route = createFileRoute('/_defaultLayout/review')({
+export const Route = createFileRoute('/_defaultLayout/vod')({
   staticData: { selectedKey: 'review' },
   component: RouteComponent,
   headers: () => ({
