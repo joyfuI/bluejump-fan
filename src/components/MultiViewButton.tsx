@@ -14,7 +14,7 @@ const MultiViewButton = ({ data }: MultiViewButtonProps) => {
   const [open, setOpen] = useState(false);
   const [check, setCheck] = useState<string[]>([]);
 
-  const handleClick = (userId: string) => {
+  const handleCheck = (userId: string) => {
     let newCheck = [...check];
     if (check.includes(userId)) {
       newCheck = newCheck.filter((item) => item !== userId);
@@ -31,6 +31,10 @@ const MultiViewButton = ({ data }: MultiViewButtonProps) => {
 
   const handleCancel = () => {
     setOpen(false);
+  };
+
+  const handleOpen = () => {
+    setOpen(true);
   };
 
   return (
@@ -66,6 +70,10 @@ const MultiViewButton = ({ data }: MultiViewButtonProps) => {
         />
         <Flex gap="small" vertical>
           {data.map((item, index) => {
+            const handleClick = () => {
+              handleCheck(item.station?.userId ?? '');
+            };
+
             return (
               <Button
                 block
@@ -77,7 +85,7 @@ const MultiViewButton = ({ data }: MultiViewButtonProps) => {
                   />
                 }
                 key={item.station?.userId ?? index}
-                onClick={() => handleClick(item.station?.userId ?? '')}
+                onClick={handleClick}
                 size="large"
                 type={
                   check.includes(item.station?.userId ?? '')
@@ -102,7 +110,7 @@ const MultiViewButton = ({ data }: MultiViewButtonProps) => {
             width={20}
           />
         }
-        onClick={() => setOpen(true)}
+        onClick={handleOpen}
         tooltip="멀티뷰"
       />
     </>

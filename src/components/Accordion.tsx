@@ -18,13 +18,17 @@ const Accordion = ({
   const [open, setOpen] = useState(defaultOpen);
   const contentId = useId();
 
+  const handleOpen = () => {
+    setOpen((prev) => !prev);
+  };
+
   return (
     <span className={`inline ${className}`}>
       <button
         aria-controls={contentId}
         aria-expanded={open}
         className="inline-flex items-baseline gap-1 align-baseline text-left leading-[inherit] cursor-pointer"
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={handleOpen}
         type="button"
       >
         <ChevronRight

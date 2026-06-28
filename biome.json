@@ -21,7 +21,7 @@
     "enabled": true,
     "domains": { "react": "all" },
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "style": { "useComponentExportOnlyModules": "off" }
     }
   },

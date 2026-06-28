@@ -28,6 +28,10 @@ const FilterButton = ({ children }: FilterButtonProps) => {
     setOpen(false);
   };
 
+  const handleOpen = () => {
+    setOpen(true);
+  };
+
   return (
     <>
       <Drawer onClose={handleClose} open={open} title="필터">
@@ -47,11 +51,7 @@ const FilterButton = ({ children }: FilterButtonProps) => {
           ) : null}
         </Flex>
       </Drawer>
-      <FloatButton
-        icon={<ListFilter />}
-        onClick={() => setOpen(true)}
-        tooltip="필터"
-      />
+      <FloatButton icon={<ListFilter />} onClick={handleOpen} tooltip="필터" />
     </>
   );
 };
