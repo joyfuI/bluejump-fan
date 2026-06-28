@@ -5,39 +5,39 @@ import { ExternalLink, Wrench } from 'lucide-react';
 import { MEMBERS } from '@/data/constants';
 
 const items = [
-  // { key: 'live', label: <Link to="/live">라이브 모아보기</Link> },
-  {
-    key: 'live',
-    label: (
-      <a
-        className="inline-flex items-center"
-        href="https://bluejump.co.kr/live"
-        rel="noreferrer"
-        target="_blank"
-      >
-        라이브 모아보기
-        <ExternalLink className="ml-1" size={16} />
-      </a>
-    ),
-  },
+  { key: 'live', label: <Link to="/live">라이브 모아보기</Link> },
+  // {
+  //   key: 'live',
+  //   label: (
+  //     <a
+  //       className="inline-flex items-center"
+  //       href="https://bluejump.co.kr/live"
+  //       rel="noreferrer"
+  //       target="_blank"
+  //     >
+  //       라이브 모아보기
+  //       <ExternalLink className="ml-1" size={16} />
+  //     </a>
+  //   ),
+  // },
   { key: 'calendar', label: <Link to="/calendar">캘린더 모아보기</Link> },
   { key: 'soop', label: <Link to="/soop">방송국글 모아보기</Link> },
   { key: 'cafe', label: <Link to="/cafe">카페글 모아보기</Link> },
-  // { key: 'vod', label: <Link to="/vod">다시보기 모아보기</Link> },
-  {
-    key: 'vod',
-    label: (
-      <a
-        className="inline-flex items-center"
-        href="https://bluejump.co.kr/vod"
-        rel="noreferrer"
-        target="_blank"
-      >
-        다시보기 모아보기
-        <ExternalLink className="ml-1" size={16} />
-      </a>
-    ),
-  },
+  { key: 'vod', label: <Link to="/vod">다시보기 모아보기</Link> },
+  // {
+  //   key: 'vod',
+  //   label: (
+  //     <a
+  //       className="inline-flex items-center"
+  //       href="https://bluejump.co.kr/vod"
+  //       rel="noreferrer"
+  //       target="_blank"
+  //     >
+  //       다시보기 모아보기
+  //       <ExternalLink className="ml-1" size={16} />
+  //     </a>
+  //   ),
+  // },
   { key: 'clipper', label: <Link to="/clipper">키리누키 목록</Link> },
   {
     key: 'fancafe',
