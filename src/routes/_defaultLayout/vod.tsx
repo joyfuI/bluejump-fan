@@ -37,7 +37,7 @@ const RouteComponent = () => {
 };
 
 export const Route = createFileRoute('/_defaultLayout/vod')({
-  staticData: { selectedKey: 'review' },
+  staticData: { selectedKey: 'vod' },
   component: RouteComponent,
   headers: () => ({
     'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',
