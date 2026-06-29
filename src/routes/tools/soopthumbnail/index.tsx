@@ -1277,18 +1277,27 @@ export const ThumbnailTextInput = ({
   onChange,
   value,
   ...inputProps
-}: ThumbnailTextInputProps) => (
-  <label className="flex flex-col gap-1.5">
-    <span className="text-sm font-medium text-zinc-300">{label}</span>
-    <input
-      className={FIELD_INPUT_CLASS}
-      onChange={(event) => onChange(event.target.value)}
-      type="text"
-      value={value}
-      {...inputProps}
-    />
-  </label>
-);
+}: ThumbnailTextInputProps) => {
+  const handleChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      onChange(event.target.value);
+    },
+    [onChange],
+  );
+
+  return (
+    <label className="flex flex-col gap-1.5">
+      <span className="text-sm font-medium text-zinc-300">{label}</span>
+      <input
+        className={FIELD_INPUT_CLASS}
+        onChange={handleChange}
+        type="text"
+        value={value}
+        {...inputProps}
+      />
+    </label>
+  );
+};
 
 type ThumbnailTextareaProps = {
   label: string;
@@ -1301,17 +1310,26 @@ export const ThumbnailTextarea = ({
   onChange,
   value,
   ...textareaProps
-}: ThumbnailTextareaProps) => (
-  <label className="flex flex-col gap-1.5">
-    <span className="text-sm font-medium text-zinc-300">{label}</span>
-    <textarea
-      className={FIELD_TEXTAREA_CLASS}
-      onChange={(event) => onChange(event.target.value)}
-      value={value}
-      {...textareaProps}
-    />
-  </label>
-);
+}: ThumbnailTextareaProps) => {
+  const handleChange = useCallback(
+    (event: ChangeEvent<HTMLTextAreaElement>) => {
+      onChange(event.target.value);
+    },
+    [onChange],
+  );
+
+  return (
+    <label className="flex flex-col gap-1.5">
+      <span className="text-sm font-medium text-zinc-300">{label}</span>
+      <textarea
+        className={FIELD_TEXTAREA_CLASS}
+        onChange={handleChange}
+        value={value}
+        {...textareaProps}
+      />
+    </label>
+  );
+};
 
 type ThumbnailCheckboxGroupOption = {
   checked: boolean;
@@ -1324,6 +1342,31 @@ type ThumbnailCheckboxGroupProps = {
   options: ThumbnailCheckboxGroupOption[];
 };
 
+const ThumbnailCheckboxGroupOptionInput = ({
+  checked,
+  label,
+  onChange,
+}: ThumbnailCheckboxGroupOption) => {
+  const handleChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      onChange(event.target.checked);
+    },
+    [onChange],
+  );
+
+  return (
+    <label className="inline-flex h-8 cursor-pointer items-center gap-2 rounded-md px-2.5 text-sm font-medium text-zinc-200 transition hover:bg-zinc-900 hover:text-amber-100">
+      <input
+        checked={checked}
+        className="h-4 w-4 accent-amber-300"
+        onChange={handleChange}
+        type="checkbox"
+      />
+      <span>{label}</span>
+    </label>
+  );
+};
+
 const ThumbnailCheckboxGroup = ({
   label,
   options,
@@ -1334,18 +1377,7 @@ const ThumbnailCheckboxGroup = ({
     </legend>
     <div className="flex flex-wrap gap-2 rounded-lg border border-zinc-700 bg-zinc-950 p-2">
       {options.map((option) => (
-        <label
-          className="inline-flex h-8 cursor-pointer items-center gap-2 rounded-md px-2.5 text-sm font-medium text-zinc-200 transition hover:bg-zinc-900 hover:text-amber-100"
-          key={option.label}
-        >
-          <input
-            checked={option.checked}
-            className="h-4 w-4 accent-amber-300"
-            onChange={(event) => option.onChange(event.target.checked)}
-            type="checkbox"
-          />
-          <span>{option.label}</span>
-        </label>
+        <ThumbnailCheckboxGroupOptionInput {...option} key={option.label} />
       ))}
     </div>
   </fieldset>
@@ -1371,6 +1403,20 @@ export const ThumbnailCharacterImageOptions = ({
   const hasRotationControl =
     characterRotation !== undefined && onCharacterRotationChange !== undefined;
   const normalizedRotation = normalizeCharacterRotation(characterRotation ?? 0);
+  const handleCharacterRotationReset = useCallback(() => {
+    if (onCharacterRotationReset) {
+      onCharacterRotationReset();
+      return;
+    }
+
+    onCharacterRotationChange?.(0);
+  }, [onCharacterRotationChange, onCharacterRotationReset]);
+  const handleCharacterRotationChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      onCharacterRotationChange?.(Number(event.target.value));
+    },
+    [onCharacterRotationChange],
+  );
 
   return (
     <div className="flex flex-col gap-3">
@@ -1404,11 +1450,7 @@ export const ThumbnailCharacterImageOptions = ({
                 aria-label="캐릭터 이미지 회전 초기화"
                 className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-zinc-700 text-zinc-300 transition hover:border-amber-300/70 hover:text-amber-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:text-zinc-600"
                 disabled={normalizedRotation === 0}
-                onClick={() =>
-                  onCharacterRotationReset
-                    ? onCharacterRotationReset()
-                    : onCharacterRotationChange(0)
-                }
+                onClick={handleCharacterRotationReset}
                 title="회전 초기화"
                 type="button"
               >
@@ -1420,9 +1462,7 @@ export const ThumbnailCharacterImageOptions = ({
               className="h-2 w-full accent-amber-300"
               max={CHARACTER_ROTATION_MAX}
               min={CHARACTER_ROTATION_MIN}
-              onChange={(event) =>
-                onCharacterRotationChange(Number(event.target.value))
-              }
+              onChange={handleCharacterRotationChange}
               step={CHARACTER_ROTATION_STEP}
               type="range"
               value={normalizedRotation}
@@ -1800,13 +1840,7 @@ export const useCharacterLayer = ({
   };
 };
 
-const CharacterSelectionOverlay = ({
-  box,
-  canvasSize,
-  finishInteraction,
-  handlePointerMove,
-  startInteraction,
-}: {
+type CharacterSelectionOverlayProps = {
   box: ImageBox;
   canvasSize: CanvasSize;
   finishInteraction: (event: PointerEvent<HTMLElement>) => void;
@@ -1816,40 +1850,83 @@ const CharacterSelectionOverlay = ({
     event: PointerEvent<HTMLElement>,
     resizeHandle?: CharacterResizeHandle,
   ) => void;
-}) => (
-  <div
-    aria-label="캐릭터 이미지 위치"
-    className="absolute touch-none border-2 border-amber-300/90 shadow-[0_0_0_1px_rgba(24,24,27,0.8)]"
-    onPointerCancel={finishInteraction}
-    onPointerDown={(event) => startInteraction('move', event)}
-    onPointerMove={handlePointerMove}
-    onPointerUp={finishInteraction}
-    role="presentation"
-    style={{
-      height: `${(box.height / canvasSize.height) * 100}%`,
-      left: `${(box.x / canvasSize.width) * 100}%`,
-      top: `${(box.y / canvasSize.height) * 100}%`,
-      transform: `rotate(${getCharacterRotation(box)}deg)`,
-      transformOrigin: 'center',
-      width: `${(box.width / canvasSize.width) * 100}%`,
-    }}
-  >
-    {characterResizeHandles.map((handle) => (
-      <button
-        aria-label={handle.ariaLabel}
-        className={`${handle.className} absolute h-4 w-4 rounded-full border border-zinc-950 bg-amber-300`}
-        key={handle.position}
-        onPointerCancel={finishInteraction}
-        onPointerDown={(event) =>
-          startInteraction('resize', event, handle.position)
-        }
-        onPointerMove={handlePointerMove}
-        onPointerUp={finishInteraction}
-        type="button"
-      />
-    ))}
-  </div>
-);
+};
+
+type CharacterResizeHandleButtonProps = Pick<
+  CharacterSelectionOverlayProps,
+  'finishInteraction' | 'handlePointerMove' | 'startInteraction'
+> & { handle: (typeof characterResizeHandles)[number] };
+
+const CharacterResizeHandleButton = ({
+  finishInteraction,
+  handle,
+  handlePointerMove,
+  startInteraction,
+}: CharacterResizeHandleButtonProps) => {
+  const handlePointerDown = useCallback(
+    (event: PointerEvent<HTMLElement>) => {
+      startInteraction('resize', event, handle.position);
+    },
+    [handle.position, startInteraction],
+  );
+
+  return (
+    <button
+      aria-label={handle.ariaLabel}
+      className={`${handle.className} absolute h-4 w-4 rounded-full border border-zinc-950 bg-amber-300`}
+      onPointerCancel={finishInteraction}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={finishInteraction}
+      type="button"
+    />
+  );
+};
+
+const CharacterSelectionOverlay = ({
+  box,
+  canvasSize,
+  finishInteraction,
+  handlePointerMove,
+  startInteraction,
+}: CharacterSelectionOverlayProps) => {
+  const handlePointerDown = useCallback(
+    (event: PointerEvent<HTMLElement>) => {
+      startInteraction('move', event);
+    },
+    [startInteraction],
+  );
+
+  return (
+    <div
+      aria-label="캐릭터 이미지 위치"
+      className="absolute touch-none border-2 border-amber-300/90 shadow-[0_0_0_1px_rgba(24,24,27,0.8)]"
+      onPointerCancel={finishInteraction}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={finishInteraction}
+      role="presentation"
+      style={{
+        height: `${(box.height / canvasSize.height) * 100}%`,
+        left: `${(box.x / canvasSize.width) * 100}%`,
+        top: `${(box.y / canvasSize.height) * 100}%`,
+        transform: `rotate(${getCharacterRotation(box)}deg)`,
+        transformOrigin: 'center',
+        width: `${(box.width / canvasSize.width) * 100}%`,
+      }}
+    >
+      {characterResizeHandles.map((handle) => (
+        <CharacterResizeHandleButton
+          finishInteraction={finishInteraction}
+          handle={handle}
+          handlePointerMove={handlePointerMove}
+          key={handle.position}
+          startInteraction={startInteraction}
+        />
+      ))}
+    </div>
+  );
+};
 
 type CharacterLayerSelection = Pick<
   ReturnType<typeof useCharacterLayer>,

@@ -29,7 +29,16 @@ import { useMutation } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { AlertCircle, Copy, Link as LinkIcon, Search } from 'lucide-react';
 import { createStandardSchemaV1, parseAsString, useQueryState } from 'nuqs';
-import { type SubmitEvent, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  type ChangeEvent,
+  type MouseEvent,
+  type SubmitEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import getPostComment, {
   type GetPostCommentResponse,
@@ -231,6 +240,20 @@ const RouteComponent = () => {
     }) => fetchMatchedComments(target, targets),
   });
 
+  const handleUrlInputChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      setUrlInput(event.target.value);
+    },
+    [],
+  );
+
+  const handleTargetInputChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      setTargetInput(event.target.value);
+    },
+    [],
+  );
+
   useEffect(() => {
     if (!autoFetchKey || !parsedQueryTarget) return;
     if (lastAutoFetchKeyRef.current === autoFetchKey) return;
@@ -261,7 +284,7 @@ const RouteComponent = () => {
     await mutateAsync({ target: parsedTarget, targets: normalizedTargets });
   };
 
-  const handleCopy = (link: string, pCommentNo: number) => {
+  const handleCopy = useCallback((link: string, pCommentNo: number) => {
     try {
       copyText(link);
       setCopiedNo(pCommentNo);
@@ -274,7 +297,21 @@ const RouteComponent = () => {
     } catch {
       setCopiedNo(null);
     }
-  };
+  }, []);
+
+  const handleCopyButtonClick = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      const { commentNo, link } = event.currentTarget.dataset;
+      const pCommentNo = Number(commentNo);
+      if (!link || !Number.isSafeInteger(pCommentNo)) {
+        setCopiedNo(null);
+        return;
+      }
+
+      handleCopy(link, pCommentNo);
+    },
+    [handleCopy],
+  );
 
   const isValidUrl = Boolean(parsedTarget);
 
@@ -290,7 +327,7 @@ const RouteComponent = () => {
             <LinkIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
             <input
               className="h-11 w-full rounded-xl border border-slate-700 bg-slate-950 pl-10 pr-3 text-sm outline-none transition placeholder:text-slate-500 focus:border-sky-500"
-              onChange={(event) => setUrlInput(event.target.value)}
+              onChange={handleUrlInputChange}
               placeholder="게시글 URL (https://www.sooplive.com/station/*****/post/*****)"
               type="url"
               value={urlInput}
@@ -299,7 +336,7 @@ const RouteComponent = () => {
 
           <input
             className="h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm outline-none transition placeholder:text-slate-500 focus:border-sky-500"
-            onChange={(event) => setTargetInput(event.target.value)}
+            onChange={handleTargetInputChange}
             placeholder="찾을 ID 또는 닉네임 (여러 개는 콤마로 구분)"
             type="text"
             value={targetInput}
@@ -386,7 +423,9 @@ const RouteComponent = () => {
                       <div className="mt-2 flex justify-end">
                         <button
                           className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-700 bg-slate-900 px-2.5 text-xs font-medium text-slate-200 transition hover:border-sky-500 hover:text-sky-300"
-                          onClick={() => handleCopy(link, item.pCommentNo)}
+                          data-comment-no={item.pCommentNo}
+                          data-link={link}
+                          onClick={handleCopyButtonClick}
                           type="button"
                         >
                           <Copy className="h-3.5 w-3.5" />

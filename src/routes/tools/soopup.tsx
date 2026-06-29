@@ -55,8 +55,9 @@ import {
   useQueryState,
 } from 'nuqs';
 import {
-  Fragment,
+  type ChangeEvent,
   type SubmitEvent,
+  useCallback,
   useEffect,
   useId,
   useLayoutEffect,
@@ -316,6 +317,110 @@ const AnimatedLikeCount = ({ value }: { value: number }) => {
   return <>{animatedValue.toLocaleString()}</>;
 };
 
+const RankedCommentListItem = ({
+  comment,
+  cutoffRank,
+  highlightUserId,
+  isFirst,
+  isTieWithNext,
+  isTieWithPrev,
+  itemRefs,
+  parsedTarget,
+  rank,
+  showCutline,
+}: {
+  comment: RankedComment;
+  cutoffRank?: number;
+  highlightUserId: string;
+  isFirst: boolean;
+  isTieWithNext: boolean;
+  isTieWithPrev: boolean;
+  itemRefs: { current: Map<number, HTMLLIElement> };
+  parsedTarget: SoopTarget;
+  rank: number;
+  showCutline: boolean;
+}) => {
+  const handleItemRef = useCallback(
+    (element: HTMLLIElement | null) => {
+      if (element) {
+        itemRefs.current.set(comment.key, element);
+      } else {
+        itemRefs.current.delete(comment.key);
+      }
+    },
+    [comment.key, itemRefs],
+  );
+
+  const isHighlighted =
+    highlightUserId.trim().toLowerCase() === comment.userId.toLowerCase();
+
+  return (
+    <>
+      {showCutline ? (
+        <li aria-hidden className="my-1 flex items-center gap-2">
+          <div className="h-px flex-1 border-t border-dashed border-slate-600" />
+          <span className="shrink-0 rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-[10px] font-semibold text-slate-300">
+            탈락
+          </span>
+          <div className="h-px flex-1 border-t border-dashed border-slate-600" />
+        </li>
+      ) : null}
+      <li
+        className={`flex items-center gap-2 border bg-slate-950/80 p-2.5 sm:gap-3 sm:p-3 ${
+          showCutline || isFirst || isTieWithPrev ? 'mt-0' : 'mt-2'
+        } ${isTieWithPrev ? '-mt-px rounded-t-none' : 'rounded-t-xl'} ${
+          isTieWithNext ? 'rounded-b-none' : 'rounded-b-xl'
+        } ${isTieWithPrev ? 'border-t-0' : ''} ${
+          isTieWithNext ? 'border-b-0' : ''
+        } ${
+          isHighlighted
+            ? 'border-sky-500/80 ring-1 ring-sky-500/40'
+            : 'border-slate-800'
+        }`}
+        ref={handleItemRef}
+      >
+        <div className="flex w-12 shrink-0 justify-center sm:w-14">
+          <span
+            className={`inline-flex min-w-9 items-center justify-center rounded-md px-2.5 py-1 text-sm font-extrabold leading-none sm:min-w-10 sm:text-base ${
+              cutoffRank !== undefined && rank === cutoffRank
+                ? 'bg-rose-600 text-rose-50 ring-1 ring-rose-400/70'
+                : rank === 1
+                  ? 'bg-yellow-400 text-slate-950'
+                  : rank === 2
+                    ? 'bg-slate-300 text-slate-950'
+                    : rank === 3
+                      ? 'bg-amber-700 text-amber-100'
+                      : 'bg-slate-800 text-slate-100'
+            }`}
+          >
+            {rank}
+          </span>
+        </div>
+        <img
+          alt={comment.userNick}
+          className="h-9 w-9 shrink-0 rounded-full border border-slate-700 object-cover sm:h-10 sm:w-10"
+          loading="lazy"
+          src={comment.profileImage}
+        />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium text-slate-100 sm:text-base">
+            {comment.userNick}
+          </p>
+        </div>
+        <a
+          className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1 text-xs font-semibold text-sky-300 transition hover:bg-slate-700 hover:text-sky-200 sm:text-sm"
+          href={buildSoopCommentUrl(parsedTarget, comment.key)}
+          rel="noreferrer"
+          target="_blank"
+        >
+          <ThumbsUp className="h-3.5 w-3.5" />
+          <AnimatedLikeCount value={comment.likeCnt} />
+        </a>
+      </li>
+    </>
+  );
+};
+
 const RouteComponent = () => {
   const queryClient = useQueryClient();
   const inputId = useId();
@@ -346,6 +451,27 @@ const RouteComponent = () => {
   const [queryCutline, setQueryCutline] = useQueryState(
     'cutline',
     searchParams.cutline,
+  );
+
+  const handleInputUrlChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      setInputUrl(event.target.value);
+    },
+    [],
+  );
+
+  const handleCutlineInputChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      setCutlineInput(event.target.value);
+    },
+    [],
+  );
+
+  const handleHighlightInputChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      setHighlightInput(event.target.value);
+    },
+    [],
   );
 
   const parsedTarget = useMemo(() => {
@@ -700,7 +826,7 @@ const RouteComponent = () => {
                 <input
                   className="h-11 w-full rounded-xl border border-slate-700 bg-slate-950 pl-10 pr-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-500"
                   id={inputId}
-                  onChange={(event) => setInputUrl(event.target.value)}
+                  onChange={handleInputUrlChange}
                   placeholder="게시글 주소 (https://www.sooplive.com/station/*****/post/*****)"
                   type="url"
                   value={inputUrl}
@@ -715,7 +841,7 @@ const RouteComponent = () => {
                   className="h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-500"
                   id={cutlineInputId}
                   inputMode="numeric"
-                  onChange={(event) => setCutlineInput(event.target.value)}
+                  onChange={handleCutlineInputChange}
                   pattern="[0-9]*"
                   placeholder="커트라인 (선택)"
                   type="text"
@@ -730,7 +856,7 @@ const RouteComponent = () => {
                 <input
                   className="h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-500 focus:border-sky-500"
                   id={highlightInputId}
-                  onChange={(event) => setHighlightInput(event.target.value)}
+                  onChange={handleHighlightInputChange}
                   placeholder="하이라이트 ID (선택)"
                   type="text"
                   value={highlightInput}
@@ -833,90 +959,19 @@ const RouteComponent = () => {
                     const isTieWithNext = nextLikeCnt === comment.likeCnt;
 
                     return (
-                      <Fragment key={comment.key}>
-                        {showCutline ? (
-                          <li
-                            aria-hidden
-                            className="my-1 flex items-center gap-2"
-                          >
-                            <div className="h-px flex-1 border-t border-dashed border-slate-600" />
-                            <span className="shrink-0 rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-[10px] font-semibold text-slate-300">
-                              탈락
-                            </span>
-                            <div className="h-px flex-1 border-t border-dashed border-slate-600" />
-                          </li>
-                        ) : null}
-                        <li
-                          className={`flex items-center gap-2 border bg-slate-950/80 p-2.5 sm:gap-3 sm:p-3 ${
-                            showCutline ||
-                            index === 0 ||
-                            prevLikeCnt === comment.likeCnt
-                              ? 'mt-0'
-                              : 'mt-2'
-                          } ${
-                            isTieWithPrev
-                              ? '-mt-px rounded-t-none'
-                              : 'rounded-t-xl'
-                          } ${
-                            isTieWithNext ? 'rounded-b-none' : 'rounded-b-xl'
-                          } ${isTieWithPrev ? 'border-t-0' : ''} ${
-                            isTieWithNext ? 'border-b-0' : ''
-                          } ${
-                            highlightUserId.trim().toLowerCase() ===
-                            comment.userId.toLowerCase()
-                              ? 'border-sky-500/80 ring-1 ring-sky-500/40'
-                              : 'border-slate-800'
-                          }`}
-                          ref={(element) => {
-                            if (element) {
-                              itemRefs.current.set(comment.key, element);
-                            } else {
-                              itemRefs.current.delete(comment.key);
-                            }
-                          }}
-                        >
-                          <div className="flex w-12 shrink-0 justify-center sm:w-14">
-                            <span
-                              className={`inline-flex min-w-9 items-center justify-center rounded-md px-2.5 py-1 text-sm font-extrabold leading-none sm:min-w-10 sm:text-base ${
-                                cutoffRank !== undefined && rank === cutoffRank
-                                  ? 'bg-rose-600 text-rose-50 ring-1 ring-rose-400/70'
-                                  : rank === 1
-                                    ? 'bg-yellow-400 text-slate-950'
-                                    : rank === 2
-                                      ? 'bg-slate-300 text-slate-950'
-                                      : rank === 3
-                                        ? 'bg-amber-700 text-amber-100'
-                                        : 'bg-slate-800 text-slate-100'
-                              }`}
-                            >
-                              {rank}
-                            </span>
-                          </div>
-                          <img
-                            alt={comment.userNick}
-                            className="h-9 w-9 shrink-0 rounded-full border border-slate-700 object-cover sm:h-10 sm:w-10"
-                            loading="lazy"
-                            src={comment.profileImage}
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-slate-100 sm:text-base">
-                              {comment.userNick}
-                            </p>
-                          </div>
-                          <a
-                            className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-2 py-1 text-xs font-semibold text-sky-300 transition hover:bg-slate-700 hover:text-sky-200 sm:text-sm"
-                            href={buildSoopCommentUrl(
-                              parsedTarget,
-                              comment.key,
-                            )}
-                            rel="noreferrer"
-                            target="_blank"
-                          >
-                            <ThumbsUp className="h-3.5 w-3.5" />
-                            <AnimatedLikeCount value={comment.likeCnt} />
-                          </a>
-                        </li>
-                      </Fragment>
+                      <RankedCommentListItem
+                        comment={comment}
+                        cutoffRank={cutoffRank}
+                        highlightUserId={highlightUserId}
+                        isFirst={index === 0}
+                        isTieWithNext={isTieWithNext}
+                        isTieWithPrev={isTieWithPrev}
+                        itemRefs={itemRefs}
+                        key={comment.key}
+                        parsedTarget={parsedTarget}
+                        rank={rank}
+                        showCutline={showCutline}
+                      />
                     );
                   })}
                 </ul>

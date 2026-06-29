@@ -3,6 +3,7 @@ import { Alert, Image, List } from 'antd';
 import dayjs from 'dayjs';
 import { parseAsArrayOf, parseAsString, useQueryState } from 'nuqs';
 
+import type { GetCafeArticlesResponse } from '@/api/getCafeArticles';
 import Accordion from '@/components/Accordion';
 import FilterButton from '@/components/FilterButton';
 import { MEMBERS } from '@/data/constants';
@@ -27,6 +28,49 @@ const RouteComponent = () => {
   );
 
   const { data } = useCafeQuery();
+
+  const renderItem = (
+    item: GetCafeArticlesResponse['result']['articleList'][0],
+  ) => (
+    <List.Item
+      extra={
+        item.item.representImage ? (
+          <Image
+            alt={item.item.subject}
+            className="object-cover"
+            height={144}
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            src={item.item.representImage}
+            width={144}
+          />
+        ) : (
+          <div className="w-36 h-36" />
+        )
+      }
+      key={item.item.articleId}
+    >
+      <List.Item.Meta
+        description={[
+          item.item.writerInfo.nickName,
+          item.item.menuName,
+          dayjs(item.item.writeDateTimestamp).format('LLL'),
+        ]
+          .filter(Boolean)
+          .join(' / ')}
+        title={
+          <a
+            href={`https://cafe.naver.com/ArticleRead.nhn?clubid=${item.item.cafeId}&articleid=${item.item.articleId}`}
+            rel="noreferrer"
+            target="_blank"
+          >
+            [{cafeIdMap[item.item.cafeId].nick}] {item.item.subject}
+          </a>
+        }
+      />
+      {item.item.summary}
+    </List.Item>
+  );
 
   return (
     <>
@@ -66,46 +110,7 @@ const RouteComponent = () => {
           userId.includes(cafeIdMap[item.item.cafeId].id),
         )}
         itemLayout="vertical"
-        renderItem={(item) => (
-          <List.Item
-            extra={
-              item.item.representImage ? (
-                <Image
-                  alt={item.item.subject}
-                  className="object-cover"
-                  height={144}
-                  loading="lazy"
-                  referrerPolicy="no-referrer"
-                  src={item.item.representImage}
-                  width={144}
-                />
-              ) : (
-                <div className="w-36 h-36" />
-              )
-            }
-            key={item.item.articleId}
-          >
-            <List.Item.Meta
-              description={[
-                item.item.writerInfo.nickName,
-                item.item.menuName,
-                dayjs(item.item.writeDateTimestamp).format('LLL'),
-              ]
-                .filter(Boolean)
-                .join(' / ')}
-              title={
-                <a
-                  href={`https://cafe.naver.com/ArticleRead.nhn?clubid=${item.item.cafeId}&articleid=${item.item.articleId}`}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  [{cafeIdMap[item.item.cafeId].nick}] {item.item.subject}
-                </a>
-              }
-            />
-            {item.item.summary}
-          </List.Item>
-        )}
+        renderItem={renderItem}
         size="large"
       />
       <FilterButton />

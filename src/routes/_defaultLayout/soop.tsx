@@ -9,6 +9,7 @@ import {
   useQueryState,
 } from 'nuqs';
 
+import type { GetBoardResponse } from '@/api/getBoard';
 import FilterButton from '@/components/FilterButton';
 import { MEMBERS } from '@/data/constants';
 import useSoopQuery from '@/hooks/query/useSoopQuery';
@@ -39,6 +40,54 @@ const RouteComponent = () => {
     setOnlyMember(checked);
   };
 
+  const renderItem = (item: GetBoardResponse['data'][0]) => (
+    <List.Item
+      extra={
+        item.photos?.length || item.ucc?.thumb ? (
+          <Image
+            alt={item.title_name}
+            className="object-cover"
+            height={144}
+            loading="lazy"
+            src={
+              item.board_type === 105 && item.ucc
+                ? item.ucc.thumb
+                : item.photos[0].url
+            }
+            width={144}
+          />
+        ) : (
+          <div className="w-36 h-36" />
+        )
+      }
+      key={item.title_no}
+    >
+      <List.Item.Meta
+        description={[
+          item.user_nick,
+          item.display.bbs_name,
+          dayjs(item.reg_date, 'YYYY-MM-DD HH:mm:ss').format('LLL'),
+        ]
+          .filter(Boolean)
+          .join(' / ')}
+        title={
+          <a
+            href={
+              item.board_type === 105
+                ? `https://vod.sooplive.com/player/${item.title_no}`
+                : `https://www.sooplive.com/station/${item.user_id}/post/${item.title_no}`
+            }
+            rel="noreferrer"
+            target="_blank"
+          >
+            [{stationNoMap[item.station_no].nick}] {item.title_name}
+          </a>
+        }
+      />
+      {item.content.summary}
+    </List.Item>
+  );
+
   return (
     <>
       <Alert
@@ -52,53 +101,7 @@ const RouteComponent = () => {
           userId.includes(stationNoMap[item.station_no].id),
         )}
         itemLayout="vertical"
-        renderItem={(item) => (
-          <List.Item
-            extra={
-              item.photos?.length || item.ucc?.thumb ? (
-                <Image
-                  alt={item.title_name}
-                  className="object-cover"
-                  height={144}
-                  loading="lazy"
-                  src={
-                    item.board_type === 105 && item.ucc
-                      ? item.ucc.thumb
-                      : item.photos[0].url
-                  }
-                  width={144}
-                />
-              ) : (
-                <div className="w-36 h-36" />
-              )
-            }
-            key={item.title_no}
-          >
-            <List.Item.Meta
-              description={[
-                item.user_nick,
-                item.display.bbs_name,
-                dayjs(item.reg_date, 'YYYY-MM-DD HH:mm:ss').format('LLL'),
-              ]
-                .filter(Boolean)
-                .join(' / ')}
-              title={
-                <a
-                  href={
-                    item.board_type === 105
-                      ? `https://vod.sooplive.com/player/${item.title_no}`
-                      : `https://www.sooplive.com/station/${item.user_id}/post/${item.title_no}`
-                  }
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  [{stationNoMap[item.station_no].nick}] {item.title_name}
-                </a>
-              }
-            />
-            {item.content.summary}
-          </List.Item>
-        )}
+        renderItem={renderItem}
         size="large"
       />
       <FilterButton>

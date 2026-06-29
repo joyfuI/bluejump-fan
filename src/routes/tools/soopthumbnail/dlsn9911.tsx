@@ -48,7 +48,14 @@
  */
 
 import { createFileRoute } from '@tanstack/react-router';
-import { useId, useMemo, useRef, useState } from 'react';
+import {
+  type ChangeEvent,
+  useCallback,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import {
   buildRoundedRectPath,
@@ -91,6 +98,9 @@ const TEMPLATE_TYPE_OPTIONS = [
   label: string;
   value: Dlsn9911TemplateType;
 }>;
+
+const isDlsn9911TemplateType = (value: string): value is Dlsn9911TemplateType =>
+  TEMPLATE_TYPE_OPTIONS.some((option) => option.value === value);
 
 type RenderOptions = EditableImageRenderOptions & {
   dateText: string;
@@ -581,6 +591,15 @@ const RouteComponent = () => {
     useState<Dlsn9911TemplateType>('normal');
   const [dateText, setDateText] = useTodayDateText();
   const [titleText, setTitleText] = useState(DEFAULT_TITLE_TEXT);
+  const handleTemplateTypeChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const { value } = event.target;
+      if (isDlsn9911TemplateType(value)) {
+        setTemplateType(value);
+      }
+    },
+    [],
+  );
   const characterImageOptions = useCharacterImageOptions({ shadow: true });
   const fontStatus = useCanvasFonts(TEMPLATE_FONTS);
   const { images, status: assetStatus } = useTemplateImages(TEMPLATE_IMAGES);
@@ -674,7 +693,7 @@ const RouteComponent = () => {
                     checked={templateType === option.value}
                     className="sr-only"
                     name="dlsn9911-template-type"
-                    onChange={() => setTemplateType(option.value)}
+                    onChange={handleTemplateTypeChange}
                     type="radio"
                     value={option.value}
                   />
