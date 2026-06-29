@@ -59,7 +59,10 @@ const RouteComponent = () => {
             color={badgeColor[item.calendarTypeName]}
             text={
               <span
-                className={options?.small ? 'text-xs' : 'text-base'}
+                className={`${options?.small ? 'text-xs' : 'text-base'} rounded`}
+                style={{
+                  backgroundColor: `color-mix(in srgb, ${item.color}, white 20%)`,
+                }}
               >{`${item.eventTime} | ${item.nick} | ${item.title}`}</span>
             }
           />

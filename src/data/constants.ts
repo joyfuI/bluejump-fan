@@ -8,6 +8,7 @@ type Member = {
     readonly name: string;
     readonly menus?: { readonly id: number; readonly name: string }[];
   };
+  readonly color?: string;
 };
 
 export const MEMBERS: readonly Member[] = [
@@ -21,6 +22,7 @@ export const MEMBERS: readonly Member[] = [
       name: '대월향의 1평 사장실',
       menus: [{ id: 37, name: '대월향의 이모저모' }],
     },
+    color: '#dcf8ff',
   },
   {
     id: 'dlsn9911',
@@ -35,6 +37,7 @@ export const MEMBERS: readonly Member[] = [
         { id: 85, name: '팬심후기' },
       ],
     },
+    color: '#f7cbcb',
   },
   {
     id: '9mogu9',
@@ -49,6 +52,7 @@ export const MEMBERS: readonly Member[] = [
         { id: 30, name: '팬심 후기' },
       ],
     },
+    color: '#fce5cd',
   },
   {
     id: 'haroha',
@@ -64,6 +68,7 @@ export const MEMBERS: readonly Member[] = [
         { id: 31, name: '창고대방출' },
       ],
     },
+    color: '#fff2cc',
   },
   {
     id: 'kgoyangyeeee',
@@ -79,6 +84,7 @@ export const MEMBERS: readonly Member[] = [
         { id: 24, name: '카톡' },
       ],
     },
+    color: '#d7f0cd',
   },
   {
     id: 'marronie',
