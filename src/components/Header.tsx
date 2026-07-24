@@ -38,6 +38,7 @@ const items = [
   //     </a>
   //   ),
   // },
+  { key: 'musicbook', label: <Link to="/musicbook">노래책</Link> },
   { key: 'clipper', label: <Link to="/clipper">키리누키 목록</Link> },
   {
     key: 'fancafe',
@@ -123,12 +124,14 @@ const items = [
 ];
 
 const Header = () => {
-  const matches = useMatches();
-  const selectedKeys = matches
-    .values()
-    .filter((m) => m.staticData?.selectedKey)
-    .map((m) => m.staticData.selectedKey)
-    .toArray() as string[];
+  const selectedKeys = useMatches({
+    select: (matches) =>
+      matches
+        .values()
+        .filter((m) => m.staticData?.selectedKey)
+        .map((m) => m.staticData.selectedKey)
+        .toArray() as string[],
+  });
 
   return (
     <Layout.Header className="flex items-center gap-12">

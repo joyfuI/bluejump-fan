@@ -123,7 +123,7 @@ const RouteComponent = () => {
 
       <Modal
         centered
-        footer={[]}
+        footer={null}
         onCancel={handleClose}
         open={open}
         title={day.format('YYYY-MM-DD')}

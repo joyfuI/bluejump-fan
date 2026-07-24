@@ -17,14 +17,20 @@ import { Route as ToolsSoopcommentRouteImport } from './routes/tools/soopcomment
 import { Route as ApiCafeArticlesRouteImport } from './routes/api/cafe-articles'
 import { Route as DefaultLayoutVodRouteImport } from './routes/_defaultLayout/vod'
 import { Route as DefaultLayoutSoopRouteImport } from './routes/_defaultLayout/soop'
+import { Route as DefaultLayoutMusicbookRouteImport } from './routes/_defaultLayout/musicbook'
 import { Route as DefaultLayoutLiveRouteImport } from './routes/_defaultLayout/live'
 import { Route as DefaultLayoutClipperRouteImport } from './routes/_defaultLayout/clipper'
 import { Route as DefaultLayoutCalendarRouteImport } from './routes/_defaultLayout/calendar'
 import { Route as DefaultLayoutCafeRouteImport } from './routes/_defaultLayout/cafe'
 import { Route as ToolsSoopthumbnailIndexRouteImport } from './routes/tools/soopthumbnail/index'
+import { Route as DefaultLayoutMusicbookIndexRouteImport } from './routes/_defaultLayout/musicbook/index'
 import { Route as ToolsSoopthumbnailHarohaRouteImport } from './routes/tools/soopthumbnail/haroha'
 import { Route as ToolsSoopthumbnailDlsn9911RouteImport } from './routes/tools/soopthumbnail/dlsn9911'
 import { Route as ToolsSoopthumbnail9mogu9RouteImport } from './routes/tools/soopthumbnail/9mogu9'
+import { Route as DefaultLayoutMusicbookYangdokiRouteImport } from './routes/_defaultLayout/musicbook/yangdoki'
+import { Route as DefaultLayoutMusicbookMarronieRouteImport } from './routes/_defaultLayout/musicbook/marronie'
+import { Route as DefaultLayoutMusicbookHarohaRouteImport } from './routes/_defaultLayout/musicbook/haroha'
+import { Route as DefaultLayoutMusicbook9mogu9RouteImport } from './routes/_defaultLayout/musicbook/9mogu9'
 
 const BluejumpNewsDotxmlRoute = BluejumpNewsDotxmlRouteImport.update({
   id: '/bluejump-news.xml',
@@ -65,6 +71,11 @@ const DefaultLayoutSoopRoute = DefaultLayoutSoopRouteImport.update({
   path: '/soop',
   getParentRoute: () => DefaultLayoutRoute,
 } as any)
+const DefaultLayoutMusicbookRoute = DefaultLayoutMusicbookRouteImport.update({
+  id: '/musicbook',
+  path: '/musicbook',
+  getParentRoute: () => DefaultLayoutRoute,
+} as any)
 const DefaultLayoutLiveRoute = DefaultLayoutLiveRouteImport.update({
   id: '/live',
   path: '/live',
@@ -90,6 +101,12 @@ const ToolsSoopthumbnailIndexRoute = ToolsSoopthumbnailIndexRouteImport.update({
   path: '/tools/soopthumbnail/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DefaultLayoutMusicbookIndexRoute =
+  DefaultLayoutMusicbookIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DefaultLayoutMusicbookRoute,
+  } as any)
 const ToolsSoopthumbnailHarohaRoute =
   ToolsSoopthumbnailHarohaRouteImport.update({
     id: '/tools/soopthumbnail/haroha',
@@ -108,6 +125,30 @@ const ToolsSoopthumbnail9mogu9Route =
     path: '/tools/soopthumbnail/9mogu9',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DefaultLayoutMusicbookYangdokiRoute =
+  DefaultLayoutMusicbookYangdokiRouteImport.update({
+    id: '/yangdoki',
+    path: '/yangdoki',
+    getParentRoute: () => DefaultLayoutMusicbookRoute,
+  } as any)
+const DefaultLayoutMusicbookMarronieRoute =
+  DefaultLayoutMusicbookMarronieRouteImport.update({
+    id: '/marronie',
+    path: '/marronie',
+    getParentRoute: () => DefaultLayoutMusicbookRoute,
+  } as any)
+const DefaultLayoutMusicbookHarohaRoute =
+  DefaultLayoutMusicbookHarohaRouteImport.update({
+    id: '/haroha',
+    path: '/haroha',
+    getParentRoute: () => DefaultLayoutMusicbookRoute,
+  } as any)
+const DefaultLayoutMusicbook9mogu9Route =
+  DefaultLayoutMusicbook9mogu9RouteImport.update({
+    id: '/9mogu9',
+    path: '/9mogu9',
+    getParentRoute: () => DefaultLayoutMusicbookRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof DefaultLayoutIndexRoute
@@ -116,14 +157,20 @@ export interface FileRoutesByFullPath {
   '/calendar': typeof DefaultLayoutCalendarRoute
   '/clipper': typeof DefaultLayoutClipperRoute
   '/live': typeof DefaultLayoutLiveRoute
+  '/musicbook': typeof DefaultLayoutMusicbookRouteWithChildren
   '/soop': typeof DefaultLayoutSoopRoute
   '/vod': typeof DefaultLayoutVodRoute
   '/api/cafe-articles': typeof ApiCafeArticlesRoute
   '/tools/soopcomment': typeof ToolsSoopcommentRoute
   '/tools/soopup': typeof ToolsSoopupRoute
+  '/musicbook/9mogu9': typeof DefaultLayoutMusicbook9mogu9Route
+  '/musicbook/haroha': typeof DefaultLayoutMusicbookHarohaRoute
+  '/musicbook/marronie': typeof DefaultLayoutMusicbookMarronieRoute
+  '/musicbook/yangdoki': typeof DefaultLayoutMusicbookYangdokiRoute
   '/tools/soopthumbnail/9mogu9': typeof ToolsSoopthumbnail9mogu9Route
   '/tools/soopthumbnail/dlsn9911': typeof ToolsSoopthumbnailDlsn9911Route
   '/tools/soopthumbnail/haroha': typeof ToolsSoopthumbnailHarohaRoute
+  '/musicbook/': typeof DefaultLayoutMusicbookIndexRoute
   '/tools/soopthumbnail/': typeof ToolsSoopthumbnailIndexRoute
 }
 export interface FileRoutesByTo {
@@ -138,9 +185,14 @@ export interface FileRoutesByTo {
   '/tools/soopcomment': typeof ToolsSoopcommentRoute
   '/tools/soopup': typeof ToolsSoopupRoute
   '/': typeof DefaultLayoutIndexRoute
+  '/musicbook/9mogu9': typeof DefaultLayoutMusicbook9mogu9Route
+  '/musicbook/haroha': typeof DefaultLayoutMusicbookHarohaRoute
+  '/musicbook/marronie': typeof DefaultLayoutMusicbookMarronieRoute
+  '/musicbook/yangdoki': typeof DefaultLayoutMusicbookYangdokiRoute
   '/tools/soopthumbnail/9mogu9': typeof ToolsSoopthumbnail9mogu9Route
   '/tools/soopthumbnail/dlsn9911': typeof ToolsSoopthumbnailDlsn9911Route
   '/tools/soopthumbnail/haroha': typeof ToolsSoopthumbnailHarohaRoute
+  '/musicbook': typeof DefaultLayoutMusicbookIndexRoute
   '/tools/soopthumbnail': typeof ToolsSoopthumbnailIndexRoute
 }
 export interface FileRoutesById {
@@ -151,15 +203,21 @@ export interface FileRoutesById {
   '/_defaultLayout/calendar': typeof DefaultLayoutCalendarRoute
   '/_defaultLayout/clipper': typeof DefaultLayoutClipperRoute
   '/_defaultLayout/live': typeof DefaultLayoutLiveRoute
+  '/_defaultLayout/musicbook': typeof DefaultLayoutMusicbookRouteWithChildren
   '/_defaultLayout/soop': typeof DefaultLayoutSoopRoute
   '/_defaultLayout/vod': typeof DefaultLayoutVodRoute
   '/api/cafe-articles': typeof ApiCafeArticlesRoute
   '/tools/soopcomment': typeof ToolsSoopcommentRoute
   '/tools/soopup': typeof ToolsSoopupRoute
   '/_defaultLayout/': typeof DefaultLayoutIndexRoute
+  '/_defaultLayout/musicbook/9mogu9': typeof DefaultLayoutMusicbook9mogu9Route
+  '/_defaultLayout/musicbook/haroha': typeof DefaultLayoutMusicbookHarohaRoute
+  '/_defaultLayout/musicbook/marronie': typeof DefaultLayoutMusicbookMarronieRoute
+  '/_defaultLayout/musicbook/yangdoki': typeof DefaultLayoutMusicbookYangdokiRoute
   '/tools/soopthumbnail/9mogu9': typeof ToolsSoopthumbnail9mogu9Route
   '/tools/soopthumbnail/dlsn9911': typeof ToolsSoopthumbnailDlsn9911Route
   '/tools/soopthumbnail/haroha': typeof ToolsSoopthumbnailHarohaRoute
+  '/_defaultLayout/musicbook/': typeof DefaultLayoutMusicbookIndexRoute
   '/tools/soopthumbnail/': typeof ToolsSoopthumbnailIndexRoute
 }
 export interface FileRouteTypes {
@@ -171,14 +229,20 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/clipper'
     | '/live'
+    | '/musicbook'
     | '/soop'
     | '/vod'
     | '/api/cafe-articles'
     | '/tools/soopcomment'
     | '/tools/soopup'
+    | '/musicbook/9mogu9'
+    | '/musicbook/haroha'
+    | '/musicbook/marronie'
+    | '/musicbook/yangdoki'
     | '/tools/soopthumbnail/9mogu9'
     | '/tools/soopthumbnail/dlsn9911'
     | '/tools/soopthumbnail/haroha'
+    | '/musicbook/'
     | '/tools/soopthumbnail/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -193,9 +257,14 @@ export interface FileRouteTypes {
     | '/tools/soopcomment'
     | '/tools/soopup'
     | '/'
+    | '/musicbook/9mogu9'
+    | '/musicbook/haroha'
+    | '/musicbook/marronie'
+    | '/musicbook/yangdoki'
     | '/tools/soopthumbnail/9mogu9'
     | '/tools/soopthumbnail/dlsn9911'
     | '/tools/soopthumbnail/haroha'
+    | '/musicbook'
     | '/tools/soopthumbnail'
   id:
     | '__root__'
@@ -205,15 +274,21 @@ export interface FileRouteTypes {
     | '/_defaultLayout/calendar'
     | '/_defaultLayout/clipper'
     | '/_defaultLayout/live'
+    | '/_defaultLayout/musicbook'
     | '/_defaultLayout/soop'
     | '/_defaultLayout/vod'
     | '/api/cafe-articles'
     | '/tools/soopcomment'
     | '/tools/soopup'
     | '/_defaultLayout/'
+    | '/_defaultLayout/musicbook/9mogu9'
+    | '/_defaultLayout/musicbook/haroha'
+    | '/_defaultLayout/musicbook/marronie'
+    | '/_defaultLayout/musicbook/yangdoki'
     | '/tools/soopthumbnail/9mogu9'
     | '/tools/soopthumbnail/dlsn9911'
     | '/tools/soopthumbnail/haroha'
+    | '/_defaultLayout/musicbook/'
     | '/tools/soopthumbnail/'
   fileRoutesById: FileRoutesById
 }
@@ -287,6 +362,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DefaultLayoutSoopRouteImport
       parentRoute: typeof DefaultLayoutRoute
     }
+    '/_defaultLayout/musicbook': {
+      id: '/_defaultLayout/musicbook'
+      path: '/musicbook'
+      fullPath: '/musicbook'
+      preLoaderRoute: typeof DefaultLayoutMusicbookRouteImport
+      parentRoute: typeof DefaultLayoutRoute
+    }
     '/_defaultLayout/live': {
       id: '/_defaultLayout/live'
       path: '/live'
@@ -322,6 +404,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ToolsSoopthumbnailIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_defaultLayout/musicbook/': {
+      id: '/_defaultLayout/musicbook/'
+      path: '/'
+      fullPath: '/musicbook/'
+      preLoaderRoute: typeof DefaultLayoutMusicbookIndexRouteImport
+      parentRoute: typeof DefaultLayoutMusicbookRoute
+    }
     '/tools/soopthumbnail/haroha': {
       id: '/tools/soopthumbnail/haroha'
       path: '/tools/soopthumbnail/haroha'
@@ -343,14 +432,65 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ToolsSoopthumbnail9mogu9RouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_defaultLayout/musicbook/yangdoki': {
+      id: '/_defaultLayout/musicbook/yangdoki'
+      path: '/yangdoki'
+      fullPath: '/musicbook/yangdoki'
+      preLoaderRoute: typeof DefaultLayoutMusicbookYangdokiRouteImport
+      parentRoute: typeof DefaultLayoutMusicbookRoute
+    }
+    '/_defaultLayout/musicbook/marronie': {
+      id: '/_defaultLayout/musicbook/marronie'
+      path: '/marronie'
+      fullPath: '/musicbook/marronie'
+      preLoaderRoute: typeof DefaultLayoutMusicbookMarronieRouteImport
+      parentRoute: typeof DefaultLayoutMusicbookRoute
+    }
+    '/_defaultLayout/musicbook/haroha': {
+      id: '/_defaultLayout/musicbook/haroha'
+      path: '/haroha'
+      fullPath: '/musicbook/haroha'
+      preLoaderRoute: typeof DefaultLayoutMusicbookHarohaRouteImport
+      parentRoute: typeof DefaultLayoutMusicbookRoute
+    }
+    '/_defaultLayout/musicbook/9mogu9': {
+      id: '/_defaultLayout/musicbook/9mogu9'
+      path: '/9mogu9'
+      fullPath: '/musicbook/9mogu9'
+      preLoaderRoute: typeof DefaultLayoutMusicbook9mogu9RouteImport
+      parentRoute: typeof DefaultLayoutMusicbookRoute
+    }
   }
 }
+
+interface DefaultLayoutMusicbookRouteChildren {
+  DefaultLayoutMusicbook9mogu9Route: typeof DefaultLayoutMusicbook9mogu9Route
+  DefaultLayoutMusicbookHarohaRoute: typeof DefaultLayoutMusicbookHarohaRoute
+  DefaultLayoutMusicbookMarronieRoute: typeof DefaultLayoutMusicbookMarronieRoute
+  DefaultLayoutMusicbookYangdokiRoute: typeof DefaultLayoutMusicbookYangdokiRoute
+  DefaultLayoutMusicbookIndexRoute: typeof DefaultLayoutMusicbookIndexRoute
+}
+
+const DefaultLayoutMusicbookRouteChildren: DefaultLayoutMusicbookRouteChildren =
+  {
+    DefaultLayoutMusicbook9mogu9Route: DefaultLayoutMusicbook9mogu9Route,
+    DefaultLayoutMusicbookHarohaRoute: DefaultLayoutMusicbookHarohaRoute,
+    DefaultLayoutMusicbookMarronieRoute: DefaultLayoutMusicbookMarronieRoute,
+    DefaultLayoutMusicbookYangdokiRoute: DefaultLayoutMusicbookYangdokiRoute,
+    DefaultLayoutMusicbookIndexRoute: DefaultLayoutMusicbookIndexRoute,
+  }
+
+const DefaultLayoutMusicbookRouteWithChildren =
+  DefaultLayoutMusicbookRoute._addFileChildren(
+    DefaultLayoutMusicbookRouteChildren,
+  )
 
 interface DefaultLayoutRouteChildren {
   DefaultLayoutCafeRoute: typeof DefaultLayoutCafeRoute
   DefaultLayoutCalendarRoute: typeof DefaultLayoutCalendarRoute
   DefaultLayoutClipperRoute: typeof DefaultLayoutClipperRoute
   DefaultLayoutLiveRoute: typeof DefaultLayoutLiveRoute
+  DefaultLayoutMusicbookRoute: typeof DefaultLayoutMusicbookRouteWithChildren
   DefaultLayoutSoopRoute: typeof DefaultLayoutSoopRoute
   DefaultLayoutVodRoute: typeof DefaultLayoutVodRoute
   DefaultLayoutIndexRoute: typeof DefaultLayoutIndexRoute
@@ -361,6 +501,7 @@ const DefaultLayoutRouteChildren: DefaultLayoutRouteChildren = {
   DefaultLayoutCalendarRoute: DefaultLayoutCalendarRoute,
   DefaultLayoutClipperRoute: DefaultLayoutClipperRoute,
   DefaultLayoutLiveRoute: DefaultLayoutLiveRoute,
+  DefaultLayoutMusicbookRoute: DefaultLayoutMusicbookRouteWithChildren,
   DefaultLayoutSoopRoute: DefaultLayoutSoopRoute,
   DefaultLayoutVodRoute: DefaultLayoutVodRoute,
   DefaultLayoutIndexRoute: DefaultLayoutIndexRoute,
