@@ -24,7 +24,7 @@ const useCsvParse = <T>(
       download: true,
       header: true,
       dynamicTyping: false,
-      worker: true,
+      worker: false, // 프로덕션 최적화 호환 문제 있음
       skipEmptyLines: true,
       ...config,
       complete: (results) => {
