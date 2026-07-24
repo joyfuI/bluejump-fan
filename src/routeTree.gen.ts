@@ -9,36 +9,36 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as BluejumpNewsDotxmlRouteImport } from './routes/bluejump-news[.]xml'
 import { Route as DefaultLayoutRouteImport } from './routes/_defaultLayout'
+import { Route as BluejumpNewsDotxmlRouteImport } from './routes/bluejump-news[.]xml'
 import { Route as DefaultLayoutIndexRouteImport } from './routes/_defaultLayout/index'
-import { Route as ToolsSoopupRouteImport } from './routes/tools/soopup'
-import { Route as ToolsSoopcommentRouteImport } from './routes/tools/soopcomment'
-import { Route as ApiCafeArticlesRouteImport } from './routes/api/cafe-articles'
-import { Route as DefaultLayoutVodRouteImport } from './routes/_defaultLayout/vod'
-import { Route as DefaultLayoutSoopRouteImport } from './routes/_defaultLayout/soop'
-import { Route as DefaultLayoutMusicbookRouteImport } from './routes/_defaultLayout/musicbook'
-import { Route as DefaultLayoutLiveRouteImport } from './routes/_defaultLayout/live'
-import { Route as DefaultLayoutClipperRouteImport } from './routes/_defaultLayout/clipper'
-import { Route as DefaultLayoutCalendarRouteImport } from './routes/_defaultLayout/calendar'
 import { Route as DefaultLayoutCafeRouteImport } from './routes/_defaultLayout/cafe'
-import { Route as ToolsSoopthumbnailIndexRouteImport } from './routes/tools/soopthumbnail/index'
+import { Route as DefaultLayoutCalendarRouteImport } from './routes/_defaultLayout/calendar'
+import { Route as DefaultLayoutClipperRouteImport } from './routes/_defaultLayout/clipper'
+import { Route as DefaultLayoutLiveRouteImport } from './routes/_defaultLayout/live'
+import { Route as DefaultLayoutMusicbookRouteImport } from './routes/_defaultLayout/musicbook'
+import { Route as DefaultLayoutSoopRouteImport } from './routes/_defaultLayout/soop'
+import { Route as DefaultLayoutVodRouteImport } from './routes/_defaultLayout/vod'
+import { Route as ApiCafeArticlesRouteImport } from './routes/api/cafe-articles'
+import { Route as ToolsSoopcommentRouteImport } from './routes/tools/soopcomment'
+import { Route as ToolsSoopupRouteImport } from './routes/tools/soopup'
 import { Route as DefaultLayoutMusicbookIndexRouteImport } from './routes/_defaultLayout/musicbook/index'
-import { Route as ToolsSoopthumbnailHarohaRouteImport } from './routes/tools/soopthumbnail/haroha'
-import { Route as ToolsSoopthumbnailDlsn9911RouteImport } from './routes/tools/soopthumbnail/dlsn9911'
-import { Route as ToolsSoopthumbnail9mogu9RouteImport } from './routes/tools/soopthumbnail/9mogu9'
-import { Route as DefaultLayoutMusicbookYangdokiRouteImport } from './routes/_defaultLayout/musicbook/yangdoki'
-import { Route as DefaultLayoutMusicbookMarronieRouteImport } from './routes/_defaultLayout/musicbook/marronie'
-import { Route as DefaultLayoutMusicbookHarohaRouteImport } from './routes/_defaultLayout/musicbook/haroha'
 import { Route as DefaultLayoutMusicbook9mogu9RouteImport } from './routes/_defaultLayout/musicbook/9mogu9'
+import { Route as DefaultLayoutMusicbookHarohaRouteImport } from './routes/_defaultLayout/musicbook/haroha'
+import { Route as DefaultLayoutMusicbookMarronieRouteImport } from './routes/_defaultLayout/musicbook/marronie'
+import { Route as DefaultLayoutMusicbookYangdokiRouteImport } from './routes/_defaultLayout/musicbook/yangdoki'
+import { Route as ToolsSoopthumbnailIndexRouteImport } from './routes/tools/soopthumbnail/index'
+import { Route as ToolsSoopthumbnail9mogu9RouteImport } from './routes/tools/soopthumbnail/9mogu9'
+import { Route as ToolsSoopthumbnailDlsn9911RouteImport } from './routes/tools/soopthumbnail/dlsn9911'
+import { Route as ToolsSoopthumbnailHarohaRouteImport } from './routes/tools/soopthumbnail/haroha'
 
+const DefaultLayoutRoute = DefaultLayoutRouteImport.update({
+  id: '/_defaultLayout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BluejumpNewsDotxmlRoute = BluejumpNewsDotxmlRouteImport.update({
   id: '/bluejump-news.xml',
   path: '/bluejump-news.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DefaultLayoutRoute = DefaultLayoutRouteImport.update({
-  id: '/_defaultLayout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DefaultLayoutIndexRoute = DefaultLayoutIndexRouteImport.update({
@@ -46,44 +46,9 @@ const DefaultLayoutIndexRoute = DefaultLayoutIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DefaultLayoutRoute,
 } as any)
-const ToolsSoopupRoute = ToolsSoopupRouteImport.update({
-  id: '/tools/soopup',
-  path: '/tools/soopup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ToolsSoopcommentRoute = ToolsSoopcommentRouteImport.update({
-  id: '/tools/soopcomment',
-  path: '/tools/soopcomment',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiCafeArticlesRoute = ApiCafeArticlesRouteImport.update({
-  id: '/api/cafe-articles',
-  path: '/api/cafe-articles',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DefaultLayoutVodRoute = DefaultLayoutVodRouteImport.update({
-  id: '/vod',
-  path: '/vod',
-  getParentRoute: () => DefaultLayoutRoute,
-} as any)
-const DefaultLayoutSoopRoute = DefaultLayoutSoopRouteImport.update({
-  id: '/soop',
-  path: '/soop',
-  getParentRoute: () => DefaultLayoutRoute,
-} as any)
-const DefaultLayoutMusicbookRoute = DefaultLayoutMusicbookRouteImport.update({
-  id: '/musicbook',
-  path: '/musicbook',
-  getParentRoute: () => DefaultLayoutRoute,
-} as any)
-const DefaultLayoutLiveRoute = DefaultLayoutLiveRouteImport.update({
-  id: '/live',
-  path: '/live',
-  getParentRoute: () => DefaultLayoutRoute,
-} as any)
-const DefaultLayoutClipperRoute = DefaultLayoutClipperRouteImport.update({
-  id: '/clipper',
-  path: '/clipper',
+const DefaultLayoutCafeRoute = DefaultLayoutCafeRouteImport.update({
+  id: '/cafe',
+  path: '/cafe',
   getParentRoute: () => DefaultLayoutRoute,
 } as any)
 const DefaultLayoutCalendarRoute = DefaultLayoutCalendarRouteImport.update({
@@ -91,14 +56,44 @@ const DefaultLayoutCalendarRoute = DefaultLayoutCalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => DefaultLayoutRoute,
 } as any)
-const DefaultLayoutCafeRoute = DefaultLayoutCafeRouteImport.update({
-  id: '/cafe',
-  path: '/cafe',
+const DefaultLayoutClipperRoute = DefaultLayoutClipperRouteImport.update({
+  id: '/clipper',
+  path: '/clipper',
   getParentRoute: () => DefaultLayoutRoute,
 } as any)
-const ToolsSoopthumbnailIndexRoute = ToolsSoopthumbnailIndexRouteImport.update({
-  id: '/tools/soopthumbnail/',
-  path: '/tools/soopthumbnail/',
+const DefaultLayoutLiveRoute = DefaultLayoutLiveRouteImport.update({
+  id: '/live',
+  path: '/live',
+  getParentRoute: () => DefaultLayoutRoute,
+} as any)
+const DefaultLayoutMusicbookRoute = DefaultLayoutMusicbookRouteImport.update({
+  id: '/musicbook',
+  path: '/musicbook',
+  getParentRoute: () => DefaultLayoutRoute,
+} as any)
+const DefaultLayoutSoopRoute = DefaultLayoutSoopRouteImport.update({
+  id: '/soop',
+  path: '/soop',
+  getParentRoute: () => DefaultLayoutRoute,
+} as any)
+const DefaultLayoutVodRoute = DefaultLayoutVodRouteImport.update({
+  id: '/vod',
+  path: '/vod',
+  getParentRoute: () => DefaultLayoutRoute,
+} as any)
+const ApiCafeArticlesRoute = ApiCafeArticlesRouteImport.update({
+  id: '/api/cafe-articles',
+  path: '/api/cafe-articles',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsSoopcommentRoute = ToolsSoopcommentRouteImport.update({
+  id: '/tools/soopcomment',
+  path: '/tools/soopcomment',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsSoopupRoute = ToolsSoopupRouteImport.update({
+  id: '/tools/soopup',
+  path: '/tools/soopup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DefaultLayoutMusicbookIndexRoute =
@@ -107,34 +102,10 @@ const DefaultLayoutMusicbookIndexRoute =
     path: '/',
     getParentRoute: () => DefaultLayoutMusicbookRoute,
   } as any)
-const ToolsSoopthumbnailHarohaRoute =
-  ToolsSoopthumbnailHarohaRouteImport.update({
-    id: '/tools/soopthumbnail/haroha',
-    path: '/tools/soopthumbnail/haroha',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ToolsSoopthumbnailDlsn9911Route =
-  ToolsSoopthumbnailDlsn9911RouteImport.update({
-    id: '/tools/soopthumbnail/dlsn9911',
-    path: '/tools/soopthumbnail/dlsn9911',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ToolsSoopthumbnail9mogu9Route =
-  ToolsSoopthumbnail9mogu9RouteImport.update({
-    id: '/tools/soopthumbnail/9mogu9',
-    path: '/tools/soopthumbnail/9mogu9',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const DefaultLayoutMusicbookYangdokiRoute =
-  DefaultLayoutMusicbookYangdokiRouteImport.update({
-    id: '/yangdoki',
-    path: '/yangdoki',
-    getParentRoute: () => DefaultLayoutMusicbookRoute,
-  } as any)
-const DefaultLayoutMusicbookMarronieRoute =
-  DefaultLayoutMusicbookMarronieRouteImport.update({
-    id: '/marronie',
-    path: '/marronie',
+const DefaultLayoutMusicbook9mogu9Route =
+  DefaultLayoutMusicbook9mogu9RouteImport.update({
+    id: '/9mogu9',
+    path: '/9mogu9',
     getParentRoute: () => DefaultLayoutMusicbookRoute,
   } as any)
 const DefaultLayoutMusicbookHarohaRoute =
@@ -143,11 +114,40 @@ const DefaultLayoutMusicbookHarohaRoute =
     path: '/haroha',
     getParentRoute: () => DefaultLayoutMusicbookRoute,
   } as any)
-const DefaultLayoutMusicbook9mogu9Route =
-  DefaultLayoutMusicbook9mogu9RouteImport.update({
-    id: '/9mogu9',
-    path: '/9mogu9',
+const DefaultLayoutMusicbookMarronieRoute =
+  DefaultLayoutMusicbookMarronieRouteImport.update({
+    id: '/marronie',
+    path: '/marronie',
     getParentRoute: () => DefaultLayoutMusicbookRoute,
+  } as any)
+const DefaultLayoutMusicbookYangdokiRoute =
+  DefaultLayoutMusicbookYangdokiRouteImport.update({
+    id: '/yangdoki',
+    path: '/yangdoki',
+    getParentRoute: () => DefaultLayoutMusicbookRoute,
+  } as any)
+const ToolsSoopthumbnailIndexRoute = ToolsSoopthumbnailIndexRouteImport.update({
+  id: '/tools/soopthumbnail/',
+  path: '/tools/soopthumbnail/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsSoopthumbnail9mogu9Route =
+  ToolsSoopthumbnail9mogu9RouteImport.update({
+    id: '/tools/soopthumbnail/9mogu9',
+    path: '/tools/soopthumbnail/9mogu9',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ToolsSoopthumbnailDlsn9911Route =
+  ToolsSoopthumbnailDlsn9911RouteImport.update({
+    id: '/tools/soopthumbnail/dlsn9911',
+    path: '/tools/soopthumbnail/dlsn9911',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ToolsSoopthumbnailHarohaRoute =
+  ToolsSoopthumbnailHarohaRouteImport.update({
+    id: '/tools/soopthumbnail/haroha',
+    path: '/tools/soopthumbnail/haroha',
+    getParentRoute: () => rootRouteImport,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -306,18 +306,18 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/bluejump-news.xml': {
-      id: '/bluejump-news.xml'
-      path: '/bluejump-news.xml'
-      fullPath: '/bluejump-news.xml'
-      preLoaderRoute: typeof BluejumpNewsDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_defaultLayout': {
       id: '/_defaultLayout'
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof DefaultLayoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bluejump-news.xml': {
+      id: '/bluejump-news.xml'
+      path: '/bluejump-news.xml'
+      fullPath: '/bluejump-news.xml'
+      preLoaderRoute: typeof BluejumpNewsDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_defaultLayout/': {
@@ -327,60 +327,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DefaultLayoutIndexRouteImport
       parentRoute: typeof DefaultLayoutRoute
     }
-    '/tools/soopup': {
-      id: '/tools/soopup'
-      path: '/tools/soopup'
-      fullPath: '/tools/soopup'
-      preLoaderRoute: typeof ToolsSoopupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tools/soopcomment': {
-      id: '/tools/soopcomment'
-      path: '/tools/soopcomment'
-      fullPath: '/tools/soopcomment'
-      preLoaderRoute: typeof ToolsSoopcommentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/cafe-articles': {
-      id: '/api/cafe-articles'
-      path: '/api/cafe-articles'
-      fullPath: '/api/cafe-articles'
-      preLoaderRoute: typeof ApiCafeArticlesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_defaultLayout/vod': {
-      id: '/_defaultLayout/vod'
-      path: '/vod'
-      fullPath: '/vod'
-      preLoaderRoute: typeof DefaultLayoutVodRouteImport
-      parentRoute: typeof DefaultLayoutRoute
-    }
-    '/_defaultLayout/soop': {
-      id: '/_defaultLayout/soop'
-      path: '/soop'
-      fullPath: '/soop'
-      preLoaderRoute: typeof DefaultLayoutSoopRouteImport
-      parentRoute: typeof DefaultLayoutRoute
-    }
-    '/_defaultLayout/musicbook': {
-      id: '/_defaultLayout/musicbook'
-      path: '/musicbook'
-      fullPath: '/musicbook'
-      preLoaderRoute: typeof DefaultLayoutMusicbookRouteImport
-      parentRoute: typeof DefaultLayoutRoute
-    }
-    '/_defaultLayout/live': {
-      id: '/_defaultLayout/live'
-      path: '/live'
-      fullPath: '/live'
-      preLoaderRoute: typeof DefaultLayoutLiveRouteImport
-      parentRoute: typeof DefaultLayoutRoute
-    }
-    '/_defaultLayout/clipper': {
-      id: '/_defaultLayout/clipper'
-      path: '/clipper'
-      fullPath: '/clipper'
-      preLoaderRoute: typeof DefaultLayoutClipperRouteImport
+    '/_defaultLayout/cafe': {
+      id: '/_defaultLayout/cafe'
+      path: '/cafe'
+      fullPath: '/cafe'
+      preLoaderRoute: typeof DefaultLayoutCafeRouteImport
       parentRoute: typeof DefaultLayoutRoute
     }
     '/_defaultLayout/calendar': {
@@ -390,18 +341,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DefaultLayoutCalendarRouteImport
       parentRoute: typeof DefaultLayoutRoute
     }
-    '/_defaultLayout/cafe': {
-      id: '/_defaultLayout/cafe'
-      path: '/cafe'
-      fullPath: '/cafe'
-      preLoaderRoute: typeof DefaultLayoutCafeRouteImport
+    '/_defaultLayout/clipper': {
+      id: '/_defaultLayout/clipper'
+      path: '/clipper'
+      fullPath: '/clipper'
+      preLoaderRoute: typeof DefaultLayoutClipperRouteImport
       parentRoute: typeof DefaultLayoutRoute
     }
-    '/tools/soopthumbnail/': {
-      id: '/tools/soopthumbnail/'
-      path: '/tools/soopthumbnail'
-      fullPath: '/tools/soopthumbnail/'
-      preLoaderRoute: typeof ToolsSoopthumbnailIndexRouteImport
+    '/_defaultLayout/live': {
+      id: '/_defaultLayout/live'
+      path: '/live'
+      fullPath: '/live'
+      preLoaderRoute: typeof DefaultLayoutLiveRouteImport
+      parentRoute: typeof DefaultLayoutRoute
+    }
+    '/_defaultLayout/musicbook': {
+      id: '/_defaultLayout/musicbook'
+      path: '/musicbook'
+      fullPath: '/musicbook'
+      preLoaderRoute: typeof DefaultLayoutMusicbookRouteImport
+      parentRoute: typeof DefaultLayoutRoute
+    }
+    '/_defaultLayout/soop': {
+      id: '/_defaultLayout/soop'
+      path: '/soop'
+      fullPath: '/soop'
+      preLoaderRoute: typeof DefaultLayoutSoopRouteImport
+      parentRoute: typeof DefaultLayoutRoute
+    }
+    '/_defaultLayout/vod': {
+      id: '/_defaultLayout/vod'
+      path: '/vod'
+      fullPath: '/vod'
+      preLoaderRoute: typeof DefaultLayoutVodRouteImport
+      parentRoute: typeof DefaultLayoutRoute
+    }
+    '/api/cafe-articles': {
+      id: '/api/cafe-articles'
+      path: '/api/cafe-articles'
+      fullPath: '/api/cafe-articles'
+      preLoaderRoute: typeof ApiCafeArticlesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/soopcomment': {
+      id: '/tools/soopcomment'
+      path: '/tools/soopcomment'
+      fullPath: '/tools/soopcomment'
+      preLoaderRoute: typeof ToolsSoopcommentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/soopup': {
+      id: '/tools/soopup'
+      path: '/tools/soopup'
+      fullPath: '/tools/soopup'
+      preLoaderRoute: typeof ToolsSoopupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_defaultLayout/musicbook/': {
@@ -411,39 +404,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DefaultLayoutMusicbookIndexRouteImport
       parentRoute: typeof DefaultLayoutMusicbookRoute
     }
-    '/tools/soopthumbnail/haroha': {
-      id: '/tools/soopthumbnail/haroha'
-      path: '/tools/soopthumbnail/haroha'
-      fullPath: '/tools/soopthumbnail/haroha'
-      preLoaderRoute: typeof ToolsSoopthumbnailHarohaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tools/soopthumbnail/dlsn9911': {
-      id: '/tools/soopthumbnail/dlsn9911'
-      path: '/tools/soopthumbnail/dlsn9911'
-      fullPath: '/tools/soopthumbnail/dlsn9911'
-      preLoaderRoute: typeof ToolsSoopthumbnailDlsn9911RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tools/soopthumbnail/9mogu9': {
-      id: '/tools/soopthumbnail/9mogu9'
-      path: '/tools/soopthumbnail/9mogu9'
-      fullPath: '/tools/soopthumbnail/9mogu9'
-      preLoaderRoute: typeof ToolsSoopthumbnail9mogu9RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_defaultLayout/musicbook/yangdoki': {
-      id: '/_defaultLayout/musicbook/yangdoki'
-      path: '/yangdoki'
-      fullPath: '/musicbook/yangdoki'
-      preLoaderRoute: typeof DefaultLayoutMusicbookYangdokiRouteImport
-      parentRoute: typeof DefaultLayoutMusicbookRoute
-    }
-    '/_defaultLayout/musicbook/marronie': {
-      id: '/_defaultLayout/musicbook/marronie'
-      path: '/marronie'
-      fullPath: '/musicbook/marronie'
-      preLoaderRoute: typeof DefaultLayoutMusicbookMarronieRouteImport
+    '/_defaultLayout/musicbook/9mogu9': {
+      id: '/_defaultLayout/musicbook/9mogu9'
+      path: '/9mogu9'
+      fullPath: '/musicbook/9mogu9'
+      preLoaderRoute: typeof DefaultLayoutMusicbook9mogu9RouteImport
       parentRoute: typeof DefaultLayoutMusicbookRoute
     }
     '/_defaultLayout/musicbook/haroha': {
@@ -453,12 +418,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DefaultLayoutMusicbookHarohaRouteImport
       parentRoute: typeof DefaultLayoutMusicbookRoute
     }
-    '/_defaultLayout/musicbook/9mogu9': {
-      id: '/_defaultLayout/musicbook/9mogu9'
-      path: '/9mogu9'
-      fullPath: '/musicbook/9mogu9'
-      preLoaderRoute: typeof DefaultLayoutMusicbook9mogu9RouteImport
+    '/_defaultLayout/musicbook/marronie': {
+      id: '/_defaultLayout/musicbook/marronie'
+      path: '/marronie'
+      fullPath: '/musicbook/marronie'
+      preLoaderRoute: typeof DefaultLayoutMusicbookMarronieRouteImport
       parentRoute: typeof DefaultLayoutMusicbookRoute
+    }
+    '/_defaultLayout/musicbook/yangdoki': {
+      id: '/_defaultLayout/musicbook/yangdoki'
+      path: '/yangdoki'
+      fullPath: '/musicbook/yangdoki'
+      preLoaderRoute: typeof DefaultLayoutMusicbookYangdokiRouteImport
+      parentRoute: typeof DefaultLayoutMusicbookRoute
+    }
+    '/tools/soopthumbnail/': {
+      id: '/tools/soopthumbnail/'
+      path: '/tools/soopthumbnail'
+      fullPath: '/tools/soopthumbnail/'
+      preLoaderRoute: typeof ToolsSoopthumbnailIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/soopthumbnail/9mogu9': {
+      id: '/tools/soopthumbnail/9mogu9'
+      path: '/tools/soopthumbnail/9mogu9'
+      fullPath: '/tools/soopthumbnail/9mogu9'
+      preLoaderRoute: typeof ToolsSoopthumbnail9mogu9RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/soopthumbnail/dlsn9911': {
+      id: '/tools/soopthumbnail/dlsn9911'
+      path: '/tools/soopthumbnail/dlsn9911'
+      fullPath: '/tools/soopthumbnail/dlsn9911'
+      preLoaderRoute: typeof ToolsSoopthumbnailDlsn9911RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/soopthumbnail/haroha': {
+      id: '/tools/soopthumbnail/haroha'
+      path: '/tools/soopthumbnail/haroha'
+      fullPath: '/tools/soopthumbnail/haroha'
+      preLoaderRoute: typeof ToolsSoopthumbnailHarohaRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
