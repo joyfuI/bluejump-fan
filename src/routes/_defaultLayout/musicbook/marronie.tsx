@@ -1,8 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useRef } from 'react';
 
+import type { DataType } from '@/components/MusicbookTable';
+import MusicbookTable from '@/components/MusicbookTable';
+import useCsvParse from '@/hooks/useCsvParse';
+
 const RouteComponent = () => {
   const emailRef = useRef<HTMLAnchorElement>(null);
+
+  const { data, meta, isLoading } = useCsvParse<DataType>(
+    '/musicbook/marronie.csv',
+  );
 
   useEffect(() => {
     if (emailRef.current) {
@@ -31,6 +39,8 @@ const RouteComponent = () => {
         </a>
         으로 해주세요.
       </p>
+
+      <MusicbookTable data={data ?? []} isLoading={isLoading} meta={meta} />
     </>
   );
 };

@@ -26,6 +26,7 @@ import { Route as DefaultLayoutMusicbookIndexRouteImport } from './routes/_defau
 import { Route as DefaultLayoutMusicbook9mogu9RouteImport } from './routes/_defaultLayout/musicbook/9mogu9'
 import { Route as DefaultLayoutMusicbookHarohaRouteImport } from './routes/_defaultLayout/musicbook/haroha'
 import { Route as DefaultLayoutMusicbookMarronieRouteImport } from './routes/_defaultLayout/musicbook/marronie'
+import { Route as DefaultLayoutMusicbookOverlapRouteImport } from './routes/_defaultLayout/musicbook/overlap'
 import { Route as DefaultLayoutMusicbookYangdokiRouteImport } from './routes/_defaultLayout/musicbook/yangdoki'
 import { Route as ToolsSoopthumbnailIndexRouteImport } from './routes/tools/soopthumbnail/index'
 import { Route as ToolsSoopthumbnail9mogu9RouteImport } from './routes/tools/soopthumbnail/9mogu9'
@@ -120,6 +121,12 @@ const DefaultLayoutMusicbookMarronieRoute =
     path: '/marronie',
     getParentRoute: () => DefaultLayoutMusicbookRoute,
   } as any)
+const DefaultLayoutMusicbookOverlapRoute =
+  DefaultLayoutMusicbookOverlapRouteImport.update({
+    id: '/overlap',
+    path: '/overlap',
+    getParentRoute: () => DefaultLayoutMusicbookRoute,
+  } as any)
 const DefaultLayoutMusicbookYangdokiRoute =
   DefaultLayoutMusicbookYangdokiRouteImport.update({
     id: '/yangdoki',
@@ -166,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/musicbook/9mogu9': typeof DefaultLayoutMusicbook9mogu9Route
   '/musicbook/haroha': typeof DefaultLayoutMusicbookHarohaRoute
   '/musicbook/marronie': typeof DefaultLayoutMusicbookMarronieRoute
+  '/musicbook/overlap': typeof DefaultLayoutMusicbookOverlapRoute
   '/musicbook/yangdoki': typeof DefaultLayoutMusicbookYangdokiRoute
   '/tools/soopthumbnail/9mogu9': typeof ToolsSoopthumbnail9mogu9Route
   '/tools/soopthumbnail/dlsn9911': typeof ToolsSoopthumbnailDlsn9911Route
@@ -188,6 +196,7 @@ export interface FileRoutesByTo {
   '/musicbook/9mogu9': typeof DefaultLayoutMusicbook9mogu9Route
   '/musicbook/haroha': typeof DefaultLayoutMusicbookHarohaRoute
   '/musicbook/marronie': typeof DefaultLayoutMusicbookMarronieRoute
+  '/musicbook/overlap': typeof DefaultLayoutMusicbookOverlapRoute
   '/musicbook/yangdoki': typeof DefaultLayoutMusicbookYangdokiRoute
   '/tools/soopthumbnail/9mogu9': typeof ToolsSoopthumbnail9mogu9Route
   '/tools/soopthumbnail/dlsn9911': typeof ToolsSoopthumbnailDlsn9911Route
@@ -213,6 +222,7 @@ export interface FileRoutesById {
   '/_defaultLayout/musicbook/9mogu9': typeof DefaultLayoutMusicbook9mogu9Route
   '/_defaultLayout/musicbook/haroha': typeof DefaultLayoutMusicbookHarohaRoute
   '/_defaultLayout/musicbook/marronie': typeof DefaultLayoutMusicbookMarronieRoute
+  '/_defaultLayout/musicbook/overlap': typeof DefaultLayoutMusicbookOverlapRoute
   '/_defaultLayout/musicbook/yangdoki': typeof DefaultLayoutMusicbookYangdokiRoute
   '/tools/soopthumbnail/9mogu9': typeof ToolsSoopthumbnail9mogu9Route
   '/tools/soopthumbnail/dlsn9911': typeof ToolsSoopthumbnailDlsn9911Route
@@ -238,6 +248,7 @@ export interface FileRouteTypes {
     | '/musicbook/9mogu9'
     | '/musicbook/haroha'
     | '/musicbook/marronie'
+    | '/musicbook/overlap'
     | '/musicbook/yangdoki'
     | '/tools/soopthumbnail/9mogu9'
     | '/tools/soopthumbnail/dlsn9911'
@@ -260,6 +271,7 @@ export interface FileRouteTypes {
     | '/musicbook/9mogu9'
     | '/musicbook/haroha'
     | '/musicbook/marronie'
+    | '/musicbook/overlap'
     | '/musicbook/yangdoki'
     | '/tools/soopthumbnail/9mogu9'
     | '/tools/soopthumbnail/dlsn9911'
@@ -284,6 +296,7 @@ export interface FileRouteTypes {
     | '/_defaultLayout/musicbook/9mogu9'
     | '/_defaultLayout/musicbook/haroha'
     | '/_defaultLayout/musicbook/marronie'
+    | '/_defaultLayout/musicbook/overlap'
     | '/_defaultLayout/musicbook/yangdoki'
     | '/tools/soopthumbnail/9mogu9'
     | '/tools/soopthumbnail/dlsn9911'
@@ -425,6 +438,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DefaultLayoutMusicbookMarronieRouteImport
       parentRoute: typeof DefaultLayoutMusicbookRoute
     }
+    '/_defaultLayout/musicbook/overlap': {
+      id: '/_defaultLayout/musicbook/overlap'
+      path: '/overlap'
+      fullPath: '/musicbook/overlap'
+      preLoaderRoute: typeof DefaultLayoutMusicbookOverlapRouteImport
+      parentRoute: typeof DefaultLayoutMusicbookRoute
+    }
     '/_defaultLayout/musicbook/yangdoki': {
       id: '/_defaultLayout/musicbook/yangdoki'
       path: '/yangdoki'
@@ -467,6 +487,7 @@ interface DefaultLayoutMusicbookRouteChildren {
   DefaultLayoutMusicbook9mogu9Route: typeof DefaultLayoutMusicbook9mogu9Route
   DefaultLayoutMusicbookHarohaRoute: typeof DefaultLayoutMusicbookHarohaRoute
   DefaultLayoutMusicbookMarronieRoute: typeof DefaultLayoutMusicbookMarronieRoute
+  DefaultLayoutMusicbookOverlapRoute: typeof DefaultLayoutMusicbookOverlapRoute
   DefaultLayoutMusicbookYangdokiRoute: typeof DefaultLayoutMusicbookYangdokiRoute
   DefaultLayoutMusicbookIndexRoute: typeof DefaultLayoutMusicbookIndexRoute
 }
@@ -476,6 +497,7 @@ const DefaultLayoutMusicbookRouteChildren: DefaultLayoutMusicbookRouteChildren =
     DefaultLayoutMusicbook9mogu9Route: DefaultLayoutMusicbook9mogu9Route,
     DefaultLayoutMusicbookHarohaRoute: DefaultLayoutMusicbookHarohaRoute,
     DefaultLayoutMusicbookMarronieRoute: DefaultLayoutMusicbookMarronieRoute,
+    DefaultLayoutMusicbookOverlapRoute: DefaultLayoutMusicbookOverlapRoute,
     DefaultLayoutMusicbookYangdokiRoute: DefaultLayoutMusicbookYangdokiRoute,
     DefaultLayoutMusicbookIndexRoute: DefaultLayoutMusicbookIndexRoute,
   }
