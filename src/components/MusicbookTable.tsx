@@ -19,7 +19,6 @@ import Highlighter from 'react-highlight-words';
 
 import MusicbookRandomModal from '@/components/MusicbookRandomModal';
 
-type ColumnsType<T extends object = object> = TableProps<T>['columns'];
 export type DataType = {
   분류: string;
   가수: string;
@@ -145,11 +144,12 @@ const MusicbookTable = ({ data, meta, isLoading }: MusicbookTableProps) => {
     [searchText, searchedColumn, handleReset, handleSearch],
   );
 
-  const columns: ColumnsType<DataType> = useMemo(
+  const columns = useMemo<TableProps<DataType>['columns']>(
     () => [
       {
         title: '분류',
         dataIndex: '분류',
+        width: 130,
         sorter: (a, b) => a.분류.localeCompare(b.분류),
         filters: genre.map((i) => ({ text: i, value: i })),
         onFilter: (value, record) => record.분류 === value,
@@ -166,7 +166,7 @@ const MusicbookTable = ({ data, meta, isLoading }: MusicbookTableProps) => {
         sorter: (a, b) => a.제목.localeCompare(b.제목),
         ...getColumnSearchProps('제목'),
       },
-      { title: '단가', dataIndex: '단가' },
+      { title: '단가', dataIndex: '단가', width: 130 },
       { title: '비고', dataIndex: '비고' },
     ],
     [genre, getColumnSearchProps],

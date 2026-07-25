@@ -1,29 +1,43 @@
 import { createFileRoute } from '@tanstack/react-router';
-import type { TableProps } from 'antd';
-import { Checkbox, Flex, Segmented, Table, Typography } from 'antd';
-import { Check } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import type { InputRef, TableColumnType, TableProps } from 'antd';
+import {
+  Button,
+  Checkbox,
+  Flex,
+  Input,
+  Segmented,
+  Table,
+  Typography,
+} from 'antd';
+import type { FilterDropdownProps } from 'antd/es/table/interface';
+import { Check, Search } from 'lucide-react';
+import {
+  type ChangeEvent,
+  type KeyboardEvent,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import Highlighter from 'react-highlight-words';
 
 import type { DataType } from '@/components/MusicbookTable';
 import useCsvParse from '@/hooks/useCsvParse';
 
-type MusicbookId = '9mogu9' | 'haroha' | 'marronie' | 'yangdoki';
-type MatchMode = 'at-least-two' | 'all-selected';
-type Musicbook = { id: MusicbookId; label: string; path: string };
 type OverlapRow = Pick<DataType, '분류' | '가수' | '제목'> & {
   key: string;
-  musicbooks: MusicbookId[];
+  musicbooks: string[];
   overlapCount: number;
 };
 
-const MUSICBOOKS: Musicbook[] = [
+const MUSICBOOKS: { id: string; label: string; path: string }[] = [
   { id: '9mogu9', label: '모구구', path: '/musicbook/9mogu9.csv' },
   { id: 'haroha', label: '하로하', path: '/musicbook/haroha.csv' },
   { id: 'marronie', label: '마로니', path: '/musicbook/marronie.csv' },
   { id: 'yangdoki', label: '양도끼', path: '/musicbook/yangdoki.csv' },
 ];
 
-const ALL_MUSICBOOK_IDS = MUSICBOOKS.map(({ id }) => id);
+const MUSICBOOK_IDS = MUSICBOOKS.map(({ id }) => id);
 
 const normalizeText = (value: string | undefined) =>
   (value ?? '').normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
@@ -32,29 +46,32 @@ const getSongKey = (song: DataType) =>
   JSON.stringify([normalizeText(song.가수), normalizeText(song.제목)]);
 
 const RouteComponent = () => {
-  const mogu = useCsvParse<DataType>(MUSICBOOKS[0].path);
+  const [selectedMusicbooks, setSelectedMusicbooks] =
+    useState<string[]>(MUSICBOOK_IDS);
+  const [matchMode, setMatchMode] = useState('two');
+  const [searchText, setSearchText] = useState('');
+  const [searchedColumn, setSearchedColumn] = useState('');
+  const searchInput = useRef<InputRef>(null);
+
+  const mogugu = useCsvParse<DataType>(MUSICBOOKS[0].path);
   const haroha = useCsvParse<DataType>(MUSICBOOKS[1].path);
   const marronie = useCsvParse<DataType>(MUSICBOOKS[2].path);
   const yangdoki = useCsvParse<DataType>(MUSICBOOKS[3].path);
 
-  const [selectedMusicbooks, setSelectedMusicbooks] =
-    useState<MusicbookId[]>(ALL_MUSICBOOK_IDS);
-  const [matchMode, setMatchMode] = useState<MatchMode>('at-least-two');
-
   const musicbookData = useMemo(
     () => [
-      { id: '9mogu9' as const, data: mogu.data },
-      { id: 'haroha' as const, data: haroha.data },
-      { id: 'marronie' as const, data: marronie.data },
-      { id: 'yangdoki' as const, data: yangdoki.data },
+      { id: '9mogu9', data: mogugu.data },
+      { id: 'haroha', data: haroha.data },
+      { id: 'marronie', data: marronie.data },
+      { id: 'yangdoki', data: yangdoki.data },
     ],
-    [mogu.data, haroha.data, marronie.data, yangdoki.data],
+    [mogugu.data, haroha.data, marronie.data, yangdoki.data],
   );
 
   const groupedSongs = useMemo(() => {
     const groups = new Map<
       string,
-      { song: DataType; musicbooks: Set<MusicbookId> }
+      { song: DataType; musicbooks: Set<string> }
     >();
 
     for (const { id, data } of musicbookData) {
@@ -96,7 +113,7 @@ const RouteComponent = () => {
         ).length,
       }))
       .filter((song) =>
-        matchMode === 'all-selected'
+        matchMode === 'all'
           ? song.overlapCount === selectedMusicbooks.length
           : song.overlapCount >= 2,
       )
@@ -108,23 +125,135 @@ const RouteComponent = () => {
       );
   }, [groupedSongs, matchMode, selectedMusicbooks]);
 
+  const genre = useMemo(
+    () => [...new Set(matchedRows.map((i) => i.분류))],
+    [matchedRows],
+  );
+
+  const handleReset = useCallback((clearFilters: () => void) => {
+    clearFilters();
+    setSearchText('');
+  }, []);
+
+  const handleSearch = useCallback(
+    (
+      selectedKeys: string[],
+      confirm: FilterDropdownProps['confirm'],
+      dataIndex: keyof OverlapRow,
+    ) => {
+      confirm();
+      setSearchText(selectedKeys[0]);
+      setSearchedColumn(dataIndex);
+    },
+    [],
+  );
+
+  const getColumnSearchProps = useCallback(
+    (dataIndex: keyof OverlapRow): TableColumnType<OverlapRow> => {
+      const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+        e.stopPropagation();
+      };
+
+      return {
+        filterDropdown: ({
+          setSelectedKeys,
+          selectedKeys,
+          confirm,
+          clearFilters,
+        }) => {
+          const handleChange = (
+            e: ChangeEvent<HTMLInputElement, HTMLInputElement>,
+          ) => {
+            setSelectedKeys(e.target.value ? [e.target.value] : []);
+          };
+
+          const handlePressEnter = () => {
+            handleSearch(selectedKeys as string[], confirm, dataIndex);
+          };
+
+          const handleResetClick = () => {
+            if (clearFilters) {
+              handleReset(clearFilters);
+            }
+          };
+
+          const handleSearchClick = () => {
+            handleSearch(selectedKeys as string[], confirm, dataIndex);
+          };
+
+          return (
+            <div className="p-2" onKeyDown={handleKeyDown} role="dialog">
+              <Input
+                className="block mb-2"
+                onChange={handleChange}
+                onPressEnter={handlePressEnter}
+                placeholder={`${dataIndex} 검색`}
+                ref={searchInput}
+                value={selectedKeys[0]}
+              />
+              <Flex justify="space-between">
+                <Button onClick={handleResetClick} size="small" type="link">
+                  초기화
+                </Button>
+                <Button onClick={handleSearchClick} size="small" type="primary">
+                  검색
+                </Button>
+              </Flex>
+            </div>
+          );
+        },
+        filterIcon: (filtered: boolean) => (
+          <Search color={filtered ? '#1677ff' : undefined} size={16} />
+        ),
+        onFilter: (value, record) =>
+          record[dataIndex]
+            .toString()
+            .toLowerCase()
+            .includes((value as string).toLowerCase()),
+        filterDropdownProps: {
+          onOpenChange(open) {
+            if (open) {
+              setTimeout(() => searchInput.current?.select(), 100);
+            }
+          },
+        },
+        render: (text) =>
+          searchedColumn === dataIndex ? (
+            <Highlighter
+              autoEscape
+              highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
+              searchWords={[searchText]}
+              textToHighlight={text ? text.toString() : ''}
+            />
+          ) : (
+            text
+          ),
+      };
+    },
+    [searchText, searchedColumn, handleReset, handleSearch],
+  );
+
   const columns = useMemo<TableProps<OverlapRow>['columns']>(
     () => [
       {
         title: '분류',
         dataIndex: '분류',
         width: 130,
-        sorter: (a, b) => a.분류.localeCompare(b.분류, 'ko'),
+        sorter: (a, b) => a.분류.localeCompare(b.분류),
+        filters: genre.map((i) => ({ text: i, value: i })),
+        onFilter: (value, record) => record.분류 === value,
       },
       {
         title: '가수',
         dataIndex: '가수',
-        sorter: (a, b) => a.가수.localeCompare(b.가수, 'ko'),
+        sorter: (a, b) => a.가수.localeCompare(b.가수),
+        ...getColumnSearchProps('가수'),
       },
       {
         title: '제목',
         dataIndex: '제목',
-        sorter: (a, b) => a.제목.localeCompare(b.제목, 'ko'),
+        sorter: (a, b) => a.제목.localeCompare(b.제목),
+        ...getColumnSearchProps('제목'),
       },
       {
         title: '선택한 노래책',
@@ -133,9 +262,9 @@ const RouteComponent = () => {
         ).map(({ id, label }) => ({
           title: label,
           key: id,
-          align: 'center' as const,
+          align: 'center',
           width: 90,
-          render: (_value: unknown, record: OverlapRow) =>
+          render: (_value, record: OverlapRow) =>
             record.musicbooks.includes(id) ? (
               <Check
                 aria-label={`${label} 노래책에 포함`}
@@ -161,27 +290,22 @@ const RouteComponent = () => {
         render: (count: number) => `${count}곳`,
       },
     ],
-    [selectedMusicbooks],
+    [genre, getColumnSearchProps, selectedMusicbooks],
   );
 
   const isLoading =
-    mogu.isLoading ||
+    mogugu.isLoading ||
     haroha.isLoading ||
     marronie.isLoading ||
     yangdoki.isLoading;
 
-  const handleMusicbookChange = useCallback(
-    (values: Array<string | number>) => {
-      const selectedValues = new Set(values as MusicbookId[]);
-      setSelectedMusicbooks(
-        ALL_MUSICBOOK_IDS.filter((id) => selectedValues.has(id)),
-      );
-    },
-    [],
-  );
+  const handleMusicbookChange = useCallback((values: string[]) => {
+    const selectedValues = new Set(values);
+    setSelectedMusicbooks(MUSICBOOK_IDS.filter((id) => selectedValues.has(id)));
+  }, []);
 
-  const handleMatchModeChange = useCallback((value: string | number) => {
-    setMatchMode(value as MatchMode);
+  const handleMatchModeChange = useCallback((value: string) => {
+    setMatchMode(value);
   }, []);
 
   const emptyText =
@@ -202,8 +326,8 @@ const RouteComponent = () => {
         <Segmented
           onChange={handleMatchModeChange}
           options={[
-            { label: '2개 이상', value: 'at-least-two' },
-            { label: '선택한 모두', value: 'all-selected' },
+            { label: '2개 이상', value: 'two' },
+            { label: '선택한 모두', value: 'all' },
           ]}
           value={matchMode}
         />
