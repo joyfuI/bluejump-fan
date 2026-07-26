@@ -1,8 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { Flex } from 'antd';
+import { Button, Flex } from 'antd';
+import { ExternalLink } from 'lucide-react';
 
 import LiveCard from '@/components/LiveCard';
-import MultiViewButton from '@/components/MultiViewButton';
+import { MEMBERS } from '@/data/constants';
 import useLiveQuery from '@/hooks/query/useLiveQuery';
 
 const RouteComponent = () => {
@@ -10,12 +11,21 @@ const RouteComponent = () => {
 
   return (
     <>
+      <Button
+        className="mb-4"
+        href={`https://soop-multi-view.netlify.app/${MEMBERS.map((member) => member.id).join('/')}`}
+        rel="noreferrer"
+        size="large"
+        target="_blank"
+        type="primary"
+      >
+        멀티뷰 열기 <ExternalLink size={16} />
+      </Button>
       <Flex gap="small" wrap>
         {data.map((item, index) => (
           <LiveCard data={item} key={item.station?.stationNo ?? index} />
         ))}
       </Flex>
-      <MultiViewButton data={data} />
     </>
   );
 };
