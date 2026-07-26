@@ -96,6 +96,7 @@ export const MEMBERS: readonly Member[] = [
       name: '마로니 공원',
       menus: [{ id: 17, name: '마로니 일상' }],
     },
+    color: '#d1f0cc',
   },
   {
     id: 'yangdoki',
@@ -112,6 +113,7 @@ export const MEMBERS: readonly Member[] = [
         { id: 73, name: '비밀방' },
       ],
     },
+    color: '#c8f4d3',
   },
 ];
 
