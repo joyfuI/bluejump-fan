@@ -3,6 +3,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools';
 import type { QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools';
 import {
+  ClientOnly,
   createRootRouteWithContext,
   HeadContent,
   Scripts,
@@ -15,6 +16,7 @@ import type { ReactNode } from 'react';
 
 import appCss from '@/styles.css?url';
 import '@/lib/dayjs';
+import NotificationMonitor from '@/components/NotificationMonitor';
 
 type RouterContext = { queryClient: QueryClient };
 
@@ -33,6 +35,9 @@ const RootDocument = ({ children }: { children: ReactNode }) => {
             <NuqsAdapter>{children}</NuqsAdapter>
           </ConfigProvider>
         </StyleProvider>
+        <ClientOnly fallback={null}>
+          <NotificationMonitor />
+        </ClientOnly>
         <TanStackDevtools
           plugins={[
             {

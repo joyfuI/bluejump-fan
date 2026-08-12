@@ -1,5 +1,3 @@
-import fetchJson from '@/utils/fetchJson';
-
 export type GetHomeBroadResponse = {
   broadNo: number; // 290080510
   broadCateNo: number; // 810000
@@ -23,9 +21,22 @@ export type GetHomeBroadResponse = {
 // 1분
 export const REVALIDATE = 60;
 
-const getHomeBroad = (userId: string) =>
-  fetchJson<GetHomeBroadResponse>(
+const getHomeBroad = async (userId: string) => {
+  const response = await fetch(
     `https://api-channel.sooplive.com/v1.1/channel/${userId}/home/section/broad`,
-  ).catch(() => Promise.resolve(null));
+  );
+  if (!response.ok) {
+    throw new Error(response.statusText, { cause: response });
+  }
+
+  const body = await response.text();
+
+  // 정상 응답이지만 본문이 없으면 방송 중이 아님
+  if (!body.trim()) {
+    return null;
+  }
+
+  return JSON.parse(body) as GetHomeBroadResponse;
+};
 
 export default getHomeBroad;
