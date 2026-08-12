@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { ClientOnly, createFileRoute } from '@tanstack/react-router';
 import type { CalendarMode, CalendarProps } from 'antd';
 import { Badge, Calendar, Modal } from 'antd';
 import type { Dayjs } from 'dayjs';
@@ -9,7 +9,6 @@ import { useMemo, useState } from 'react';
 import type { GetCalendarResponse } from '@/api/getCalendar';
 import type { MEMBERS } from '@/data/constants';
 import useCalendarQuery from '@/hooks/query/useCalendarQuery';
-import isServer from '@/utils/isServer';
 
 const badgeColor = {
   방송시작: '#7f7fff',
@@ -105,12 +104,8 @@ const RouteComponent = () => {
     setOpen(false);
   };
 
-  if (isServer()) {
-    return null;
-  }
-
   return (
-    <>
+    <ClientOnly>
       <Calendar
         cellRender={cellRender}
         className="-mb-24"
@@ -130,7 +125,7 @@ const RouteComponent = () => {
       >
         {dateCellRender(day)}
       </Modal>
-    </>
+    </ClientOnly>
   );
 };
 

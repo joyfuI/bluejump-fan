@@ -35,7 +35,7 @@ const RootDocument = ({ children }: { children: ReactNode }) => {
             <NuqsAdapter>{children}</NuqsAdapter>
           </ConfigProvider>
         </StyleProvider>
-        <ClientOnly fallback={null}>
+        <ClientOnly>
           <NotificationMonitor />
         </ClientOnly>
         <TanStackDevtools
