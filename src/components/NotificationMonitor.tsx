@@ -38,13 +38,17 @@ const showNotificationOnce = async (
       timestamp: new Date(broad.broadStart).getTime(),
     } satisfies ExtendedNotificationOptions;
     const notification = new Notification(`${nick}님 방송 시작`, options);
-    notification.onclick = () => {
+    notification.onclick = (e) => {
       notification.close();
-      window.open(
-        `https://play.sooplive.com/${broad.userId}`,
-        '_blank',
-        'noreferrer',
-      );
+      const url = `https://play.sooplive.com/${broad.userId}`;
+      const opened = window.open(url, '_blank');
+      if (opened) {
+        e.preventDefault();
+        opened.opener = null;
+      } else {
+        // 만약 open 실패 시 현재 페이지로 오픈
+        window.location.assign(url);
+      }
     };
 
     localStorage.setItem(lockName, broadNo);
