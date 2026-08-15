@@ -6,7 +6,7 @@ import type { GetVodsReviewResponse } from '@/api/getVodsReview';
 import useIntersectionObserver from '@/hooks/useIntersectionObserver';
 import durationHumanize from '@/utils/durationHumanize';
 
-export type VodCardProps = { data: GetVodsReviewResponse['data'][0] };
+export type VodCardProps = { data: GetVodsReviewResponse['data'][number] };
 
 const VodCard = ({ data }: VodCardProps) => {
   const ref = useRef<HTMLDivElement>(null);

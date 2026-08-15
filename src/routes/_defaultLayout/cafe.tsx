@@ -9,7 +9,7 @@ import FilterButton from '@/components/FilterButton';
 import { MEMBERS } from '@/data/constants';
 import useCafeQuery from '@/hooks/query/useCafeQuery';
 
-const cafeIdMap = MEMBERS.reduce<Record<number, (typeof MEMBERS)[0]>>(
+const cafeIdMap = MEMBERS.reduce<Record<number, (typeof MEMBERS)[number]>>(
   (acc, member) => {
     if (member.cafe) {
       acc[member.cafe.id] = member;
@@ -30,7 +30,7 @@ const RouteComponent = () => {
   const { data } = useCafeQuery();
 
   const renderItem = (
-    item: GetCafeArticlesResponse['result']['articleList'][0],
+    item: GetCafeArticlesResponse['result']['articleList'][number],
   ) => (
     <List.Item
       extra={

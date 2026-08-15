@@ -14,7 +14,7 @@ import FilterButton from '@/components/FilterButton';
 import { MEMBERS } from '@/data/constants';
 import useSoopQuery from '@/hooks/query/useSoopQuery';
 
-const stationNoMap = MEMBERS.reduce<Record<number, (typeof MEMBERS)[0]>>(
+const stationNoMap = MEMBERS.reduce<Record<number, (typeof MEMBERS)[number]>>(
   (acc, member) => {
     acc[member.stationNo] = member;
     return acc;
@@ -40,7 +40,7 @@ const RouteComponent = () => {
     setOnlyMember(checked);
   };
 
-  const renderItem = (item: GetBoardResponse['data'][0]) => (
+  const renderItem = (item: GetBoardResponse['data'][number]) => (
     <List.Item
       extra={
         item.photos?.length || item.ucc?.thumb ? (

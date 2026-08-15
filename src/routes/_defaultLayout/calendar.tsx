@@ -36,7 +36,8 @@ const RouteComponent = () => {
   const listData = useMemo(() => {
     const map = Map.groupBy<
       string,
-      GetCalendarResponse['days'][0]['events'][0] & (typeof MEMBERS)[0]
+      GetCalendarResponse['days'][number]['events'][number] &
+        (typeof MEMBERS)[number]
     >(data, (item) => item.eventDate);
     map.forEach((value, key, map) => {
       const newValue = value.toSorted((a, b) =>

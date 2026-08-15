@@ -5,6 +5,7 @@ import '@tanstack/react-router';
 declare module '@tanstack/react-router' {
   interface StaticDataRouteOption {
     selectedKey?: string;
+    clip?: string;
     musicbook?: string;
   }
 }

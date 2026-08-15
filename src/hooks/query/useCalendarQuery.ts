@@ -15,7 +15,8 @@ const useCalendarQuery = (params: GetCalendarParams) => {
     combine: (results) => ({
       ...results[0],
       data: results.reduce<
-        (GetCalendarResponse['days'][0]['events'][0] & (typeof MEMBERS)[0])[]
+        (GetCalendarResponse['days'][number]['events'][number] &
+          (typeof MEMBERS)[number])[]
       >(
         (prev, curr, index) =>
           curr.data

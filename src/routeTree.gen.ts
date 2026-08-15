@@ -14,14 +14,25 @@ import { Route as BluejumpNewsDotxmlRouteImport } from './routes/bluejump-news[.
 import { Route as DefaultLayoutIndexRouteImport } from './routes/_defaultLayout/index'
 import { Route as DefaultLayoutCafeRouteImport } from './routes/_defaultLayout/cafe'
 import { Route as DefaultLayoutCalendarRouteImport } from './routes/_defaultLayout/calendar'
+import { Route as DefaultLayoutClipRouteImport } from './routes/_defaultLayout/clip'
 import { Route as DefaultLayoutClipperRouteImport } from './routes/_defaultLayout/clipper'
 import { Route as DefaultLayoutLiveRouteImport } from './routes/_defaultLayout/live'
 import { Route as DefaultLayoutMusicbookRouteImport } from './routes/_defaultLayout/musicbook'
 import { Route as DefaultLayoutSoopRouteImport } from './routes/_defaultLayout/soop'
 import { Route as DefaultLayoutVodRouteImport } from './routes/_defaultLayout/vod'
 import { Route as ApiCafeArticlesRouteImport } from './routes/api/cafe-articles'
+import { Route as ApiVodSearchRouteImport } from './routes/api/vod-search'
 import { Route as ToolsSoopcommentRouteImport } from './routes/tools/soopcomment'
 import { Route as ToolsSoopupRouteImport } from './routes/tools/soopup'
+import { Route as DefaultLayoutClipIndexRouteImport } from './routes/_defaultLayout/clip/index'
+import { Route as DefaultLayoutClip9mogu9RouteImport } from './routes/_defaultLayout/clip/9mogu9'
+import { Route as DefaultLayoutClipBluejumpRouteImport } from './routes/_defaultLayout/clip/bluejump'
+import { Route as DefaultLayoutClipDlsn9911RouteImport } from './routes/_defaultLayout/clip/dlsn9911'
+import { Route as DefaultLayoutClipHarohaRouteImport } from './routes/_defaultLayout/clip/haroha'
+import { Route as DefaultLayoutClipKgoyangyeeeeRouteImport } from './routes/_defaultLayout/clip/kgoyangyeeee'
+import { Route as DefaultLayoutClipMarronieRouteImport } from './routes/_defaultLayout/clip/marronie'
+import { Route as DefaultLayoutClipWjdfogur98RouteImport } from './routes/_defaultLayout/clip/wjdfogur98'
+import { Route as DefaultLayoutClipYangdokiRouteImport } from './routes/_defaultLayout/clip/yangdoki'
 import { Route as DefaultLayoutMusicbookIndexRouteImport } from './routes/_defaultLayout/musicbook/index'
 import { Route as DefaultLayoutMusicbook9mogu9RouteImport } from './routes/_defaultLayout/musicbook/9mogu9'
 import { Route as DefaultLayoutMusicbookHarohaRouteImport } from './routes/_defaultLayout/musicbook/haroha'
@@ -57,6 +68,11 @@ const DefaultLayoutCalendarRoute = DefaultLayoutCalendarRouteImport.update({
   path: '/calendar',
   getParentRoute: () => DefaultLayoutRoute,
 } as any)
+const DefaultLayoutClipRoute = DefaultLayoutClipRouteImport.update({
+  id: '/clip',
+  path: '/clip',
+  getParentRoute: () => DefaultLayoutRoute,
+} as any)
 const DefaultLayoutClipperRoute = DefaultLayoutClipperRouteImport.update({
   id: '/clipper',
   path: '/clipper',
@@ -87,6 +103,11 @@ const ApiCafeArticlesRoute = ApiCafeArticlesRouteImport.update({
   path: '/api/cafe-articles',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiVodSearchRoute = ApiVodSearchRouteImport.update({
+  id: '/api/vod-search',
+  path: '/api/vod-search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ToolsSoopcommentRoute = ToolsSoopcommentRouteImport.update({
   id: '/tools/soopcomment',
   path: '/tools/soopcomment',
@@ -97,6 +118,57 @@ const ToolsSoopupRoute = ToolsSoopupRouteImport.update({
   path: '/tools/soopup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DefaultLayoutClipIndexRoute = DefaultLayoutClipIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DefaultLayoutClipRoute,
+} as any)
+const DefaultLayoutClip9mogu9Route = DefaultLayoutClip9mogu9RouteImport.update({
+  id: '/9mogu9',
+  path: '/9mogu9',
+  getParentRoute: () => DefaultLayoutClipRoute,
+} as any)
+const DefaultLayoutClipBluejumpRoute =
+  DefaultLayoutClipBluejumpRouteImport.update({
+    id: '/bluejump',
+    path: '/bluejump',
+    getParentRoute: () => DefaultLayoutClipRoute,
+  } as any)
+const DefaultLayoutClipDlsn9911Route =
+  DefaultLayoutClipDlsn9911RouteImport.update({
+    id: '/dlsn9911',
+    path: '/dlsn9911',
+    getParentRoute: () => DefaultLayoutClipRoute,
+  } as any)
+const DefaultLayoutClipHarohaRoute = DefaultLayoutClipHarohaRouteImport.update({
+  id: '/haroha',
+  path: '/haroha',
+  getParentRoute: () => DefaultLayoutClipRoute,
+} as any)
+const DefaultLayoutClipKgoyangyeeeeRoute =
+  DefaultLayoutClipKgoyangyeeeeRouteImport.update({
+    id: '/kgoyangyeeee',
+    path: '/kgoyangyeeee',
+    getParentRoute: () => DefaultLayoutClipRoute,
+  } as any)
+const DefaultLayoutClipMarronieRoute =
+  DefaultLayoutClipMarronieRouteImport.update({
+    id: '/marronie',
+    path: '/marronie',
+    getParentRoute: () => DefaultLayoutClipRoute,
+  } as any)
+const DefaultLayoutClipWjdfogur98Route =
+  DefaultLayoutClipWjdfogur98RouteImport.update({
+    id: '/wjdfogur98',
+    path: '/wjdfogur98',
+    getParentRoute: () => DefaultLayoutClipRoute,
+  } as any)
+const DefaultLayoutClipYangdokiRoute =
+  DefaultLayoutClipYangdokiRouteImport.update({
+    id: '/yangdoki',
+    path: '/yangdoki',
+    getParentRoute: () => DefaultLayoutClipRoute,
+  } as any)
 const DefaultLayoutMusicbookIndexRoute =
   DefaultLayoutMusicbookIndexRouteImport.update({
     id: '/',
@@ -162,14 +234,24 @@ export interface FileRoutesByFullPath {
   '/bluejump-news.xml': typeof BluejumpNewsDotxmlRoute
   '/cafe': typeof DefaultLayoutCafeRoute
   '/calendar': typeof DefaultLayoutCalendarRoute
+  '/clip': typeof DefaultLayoutClipRouteWithChildren
   '/clipper': typeof DefaultLayoutClipperRoute
   '/live': typeof DefaultLayoutLiveRoute
   '/musicbook': typeof DefaultLayoutMusicbookRouteWithChildren
   '/soop': typeof DefaultLayoutSoopRoute
   '/vod': typeof DefaultLayoutVodRoute
   '/api/cafe-articles': typeof ApiCafeArticlesRoute
+  '/api/vod-search': typeof ApiVodSearchRoute
   '/tools/soopcomment': typeof ToolsSoopcommentRoute
   '/tools/soopup': typeof ToolsSoopupRoute
+  '/clip/9mogu9': typeof DefaultLayoutClip9mogu9Route
+  '/clip/bluejump': typeof DefaultLayoutClipBluejumpRoute
+  '/clip/dlsn9911': typeof DefaultLayoutClipDlsn9911Route
+  '/clip/haroha': typeof DefaultLayoutClipHarohaRoute
+  '/clip/kgoyangyeeee': typeof DefaultLayoutClipKgoyangyeeeeRoute
+  '/clip/marronie': typeof DefaultLayoutClipMarronieRoute
+  '/clip/wjdfogur98': typeof DefaultLayoutClipWjdfogur98Route
+  '/clip/yangdoki': typeof DefaultLayoutClipYangdokiRoute
   '/musicbook/9mogu9': typeof DefaultLayoutMusicbook9mogu9Route
   '/musicbook/haroha': typeof DefaultLayoutMusicbookHarohaRoute
   '/musicbook/marronie': typeof DefaultLayoutMusicbookMarronieRoute
@@ -178,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/tools/soopthumbnail/9mogu9': typeof ToolsSoopthumbnail9mogu9Route
   '/tools/soopthumbnail/dlsn9911': typeof ToolsSoopthumbnailDlsn9911Route
   '/tools/soopthumbnail/haroha': typeof ToolsSoopthumbnailHarohaRoute
+  '/clip/': typeof DefaultLayoutClipIndexRoute
   '/musicbook/': typeof DefaultLayoutMusicbookIndexRoute
   '/tools/soopthumbnail/': typeof ToolsSoopthumbnailIndexRoute
 }
@@ -190,9 +273,18 @@ export interface FileRoutesByTo {
   '/soop': typeof DefaultLayoutSoopRoute
   '/vod': typeof DefaultLayoutVodRoute
   '/api/cafe-articles': typeof ApiCafeArticlesRoute
+  '/api/vod-search': typeof ApiVodSearchRoute
   '/tools/soopcomment': typeof ToolsSoopcommentRoute
   '/tools/soopup': typeof ToolsSoopupRoute
   '/': typeof DefaultLayoutIndexRoute
+  '/clip/9mogu9': typeof DefaultLayoutClip9mogu9Route
+  '/clip/bluejump': typeof DefaultLayoutClipBluejumpRoute
+  '/clip/dlsn9911': typeof DefaultLayoutClipDlsn9911Route
+  '/clip/haroha': typeof DefaultLayoutClipHarohaRoute
+  '/clip/kgoyangyeeee': typeof DefaultLayoutClipKgoyangyeeeeRoute
+  '/clip/marronie': typeof DefaultLayoutClipMarronieRoute
+  '/clip/wjdfogur98': typeof DefaultLayoutClipWjdfogur98Route
+  '/clip/yangdoki': typeof DefaultLayoutClipYangdokiRoute
   '/musicbook/9mogu9': typeof DefaultLayoutMusicbook9mogu9Route
   '/musicbook/haroha': typeof DefaultLayoutMusicbookHarohaRoute
   '/musicbook/marronie': typeof DefaultLayoutMusicbookMarronieRoute
@@ -201,6 +293,7 @@ export interface FileRoutesByTo {
   '/tools/soopthumbnail/9mogu9': typeof ToolsSoopthumbnail9mogu9Route
   '/tools/soopthumbnail/dlsn9911': typeof ToolsSoopthumbnailDlsn9911Route
   '/tools/soopthumbnail/haroha': typeof ToolsSoopthumbnailHarohaRoute
+  '/clip': typeof DefaultLayoutClipIndexRoute
   '/musicbook': typeof DefaultLayoutMusicbookIndexRoute
   '/tools/soopthumbnail': typeof ToolsSoopthumbnailIndexRoute
 }
@@ -210,15 +303,25 @@ export interface FileRoutesById {
   '/bluejump-news.xml': typeof BluejumpNewsDotxmlRoute
   '/_defaultLayout/cafe': typeof DefaultLayoutCafeRoute
   '/_defaultLayout/calendar': typeof DefaultLayoutCalendarRoute
+  '/_defaultLayout/clip': typeof DefaultLayoutClipRouteWithChildren
   '/_defaultLayout/clipper': typeof DefaultLayoutClipperRoute
   '/_defaultLayout/live': typeof DefaultLayoutLiveRoute
   '/_defaultLayout/musicbook': typeof DefaultLayoutMusicbookRouteWithChildren
   '/_defaultLayout/soop': typeof DefaultLayoutSoopRoute
   '/_defaultLayout/vod': typeof DefaultLayoutVodRoute
   '/api/cafe-articles': typeof ApiCafeArticlesRoute
+  '/api/vod-search': typeof ApiVodSearchRoute
   '/tools/soopcomment': typeof ToolsSoopcommentRoute
   '/tools/soopup': typeof ToolsSoopupRoute
   '/_defaultLayout/': typeof DefaultLayoutIndexRoute
+  '/_defaultLayout/clip/9mogu9': typeof DefaultLayoutClip9mogu9Route
+  '/_defaultLayout/clip/bluejump': typeof DefaultLayoutClipBluejumpRoute
+  '/_defaultLayout/clip/dlsn9911': typeof DefaultLayoutClipDlsn9911Route
+  '/_defaultLayout/clip/haroha': typeof DefaultLayoutClipHarohaRoute
+  '/_defaultLayout/clip/kgoyangyeeee': typeof DefaultLayoutClipKgoyangyeeeeRoute
+  '/_defaultLayout/clip/marronie': typeof DefaultLayoutClipMarronieRoute
+  '/_defaultLayout/clip/wjdfogur98': typeof DefaultLayoutClipWjdfogur98Route
+  '/_defaultLayout/clip/yangdoki': typeof DefaultLayoutClipYangdokiRoute
   '/_defaultLayout/musicbook/9mogu9': typeof DefaultLayoutMusicbook9mogu9Route
   '/_defaultLayout/musicbook/haroha': typeof DefaultLayoutMusicbookHarohaRoute
   '/_defaultLayout/musicbook/marronie': typeof DefaultLayoutMusicbookMarronieRoute
@@ -227,6 +330,7 @@ export interface FileRoutesById {
   '/tools/soopthumbnail/9mogu9': typeof ToolsSoopthumbnail9mogu9Route
   '/tools/soopthumbnail/dlsn9911': typeof ToolsSoopthumbnailDlsn9911Route
   '/tools/soopthumbnail/haroha': typeof ToolsSoopthumbnailHarohaRoute
+  '/_defaultLayout/clip/': typeof DefaultLayoutClipIndexRoute
   '/_defaultLayout/musicbook/': typeof DefaultLayoutMusicbookIndexRoute
   '/tools/soopthumbnail/': typeof ToolsSoopthumbnailIndexRoute
 }
@@ -237,14 +341,24 @@ export interface FileRouteTypes {
     | '/bluejump-news.xml'
     | '/cafe'
     | '/calendar'
+    | '/clip'
     | '/clipper'
     | '/live'
     | '/musicbook'
     | '/soop'
     | '/vod'
     | '/api/cafe-articles'
+    | '/api/vod-search'
     | '/tools/soopcomment'
     | '/tools/soopup'
+    | '/clip/9mogu9'
+    | '/clip/bluejump'
+    | '/clip/dlsn9911'
+    | '/clip/haroha'
+    | '/clip/kgoyangyeeee'
+    | '/clip/marronie'
+    | '/clip/wjdfogur98'
+    | '/clip/yangdoki'
     | '/musicbook/9mogu9'
     | '/musicbook/haroha'
     | '/musicbook/marronie'
@@ -253,6 +367,7 @@ export interface FileRouteTypes {
     | '/tools/soopthumbnail/9mogu9'
     | '/tools/soopthumbnail/dlsn9911'
     | '/tools/soopthumbnail/haroha'
+    | '/clip/'
     | '/musicbook/'
     | '/tools/soopthumbnail/'
   fileRoutesByTo: FileRoutesByTo
@@ -265,9 +380,18 @@ export interface FileRouteTypes {
     | '/soop'
     | '/vod'
     | '/api/cafe-articles'
+    | '/api/vod-search'
     | '/tools/soopcomment'
     | '/tools/soopup'
     | '/'
+    | '/clip/9mogu9'
+    | '/clip/bluejump'
+    | '/clip/dlsn9911'
+    | '/clip/haroha'
+    | '/clip/kgoyangyeeee'
+    | '/clip/marronie'
+    | '/clip/wjdfogur98'
+    | '/clip/yangdoki'
     | '/musicbook/9mogu9'
     | '/musicbook/haroha'
     | '/musicbook/marronie'
@@ -276,6 +400,7 @@ export interface FileRouteTypes {
     | '/tools/soopthumbnail/9mogu9'
     | '/tools/soopthumbnail/dlsn9911'
     | '/tools/soopthumbnail/haroha'
+    | '/clip'
     | '/musicbook'
     | '/tools/soopthumbnail'
   id:
@@ -284,15 +409,25 @@ export interface FileRouteTypes {
     | '/bluejump-news.xml'
     | '/_defaultLayout/cafe'
     | '/_defaultLayout/calendar'
+    | '/_defaultLayout/clip'
     | '/_defaultLayout/clipper'
     | '/_defaultLayout/live'
     | '/_defaultLayout/musicbook'
     | '/_defaultLayout/soop'
     | '/_defaultLayout/vod'
     | '/api/cafe-articles'
+    | '/api/vod-search'
     | '/tools/soopcomment'
     | '/tools/soopup'
     | '/_defaultLayout/'
+    | '/_defaultLayout/clip/9mogu9'
+    | '/_defaultLayout/clip/bluejump'
+    | '/_defaultLayout/clip/dlsn9911'
+    | '/_defaultLayout/clip/haroha'
+    | '/_defaultLayout/clip/kgoyangyeeee'
+    | '/_defaultLayout/clip/marronie'
+    | '/_defaultLayout/clip/wjdfogur98'
+    | '/_defaultLayout/clip/yangdoki'
     | '/_defaultLayout/musicbook/9mogu9'
     | '/_defaultLayout/musicbook/haroha'
     | '/_defaultLayout/musicbook/marronie'
@@ -301,6 +436,7 @@ export interface FileRouteTypes {
     | '/tools/soopthumbnail/9mogu9'
     | '/tools/soopthumbnail/dlsn9911'
     | '/tools/soopthumbnail/haroha'
+    | '/_defaultLayout/clip/'
     | '/_defaultLayout/musicbook/'
     | '/tools/soopthumbnail/'
   fileRoutesById: FileRoutesById
@@ -309,6 +445,7 @@ export interface RootRouteChildren {
   DefaultLayoutRoute: typeof DefaultLayoutRouteWithChildren
   BluejumpNewsDotxmlRoute: typeof BluejumpNewsDotxmlRoute
   ApiCafeArticlesRoute: typeof ApiCafeArticlesRoute
+  ApiVodSearchRoute: typeof ApiVodSearchRoute
   ToolsSoopcommentRoute: typeof ToolsSoopcommentRoute
   ToolsSoopupRoute: typeof ToolsSoopupRoute
   ToolsSoopthumbnail9mogu9Route: typeof ToolsSoopthumbnail9mogu9Route
@@ -354,6 +491,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DefaultLayoutCalendarRouteImport
       parentRoute: typeof DefaultLayoutRoute
     }
+    '/_defaultLayout/clip': {
+      id: '/_defaultLayout/clip'
+      path: '/clip'
+      fullPath: '/clip'
+      preLoaderRoute: typeof DefaultLayoutClipRouteImport
+      parentRoute: typeof DefaultLayoutRoute
+    }
     '/_defaultLayout/clipper': {
       id: '/_defaultLayout/clipper'
       path: '/clipper'
@@ -396,6 +540,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCafeArticlesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/vod-search': {
+      id: '/api/vod-search'
+      path: '/api/vod-search'
+      fullPath: '/api/vod-search'
+      preLoaderRoute: typeof ApiVodSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tools/soopcomment': {
       id: '/tools/soopcomment'
       path: '/tools/soopcomment'
@@ -409,6 +560,69 @@ declare module '@tanstack/react-router' {
       fullPath: '/tools/soopup'
       preLoaderRoute: typeof ToolsSoopupRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_defaultLayout/clip/': {
+      id: '/_defaultLayout/clip/'
+      path: '/'
+      fullPath: '/clip/'
+      preLoaderRoute: typeof DefaultLayoutClipIndexRouteImport
+      parentRoute: typeof DefaultLayoutClipRoute
+    }
+    '/_defaultLayout/clip/9mogu9': {
+      id: '/_defaultLayout/clip/9mogu9'
+      path: '/9mogu9'
+      fullPath: '/clip/9mogu9'
+      preLoaderRoute: typeof DefaultLayoutClip9mogu9RouteImport
+      parentRoute: typeof DefaultLayoutClipRoute
+    }
+    '/_defaultLayout/clip/bluejump': {
+      id: '/_defaultLayout/clip/bluejump'
+      path: '/bluejump'
+      fullPath: '/clip/bluejump'
+      preLoaderRoute: typeof DefaultLayoutClipBluejumpRouteImport
+      parentRoute: typeof DefaultLayoutClipRoute
+    }
+    '/_defaultLayout/clip/dlsn9911': {
+      id: '/_defaultLayout/clip/dlsn9911'
+      path: '/dlsn9911'
+      fullPath: '/clip/dlsn9911'
+      preLoaderRoute: typeof DefaultLayoutClipDlsn9911RouteImport
+      parentRoute: typeof DefaultLayoutClipRoute
+    }
+    '/_defaultLayout/clip/haroha': {
+      id: '/_defaultLayout/clip/haroha'
+      path: '/haroha'
+      fullPath: '/clip/haroha'
+      preLoaderRoute: typeof DefaultLayoutClipHarohaRouteImport
+      parentRoute: typeof DefaultLayoutClipRoute
+    }
+    '/_defaultLayout/clip/kgoyangyeeee': {
+      id: '/_defaultLayout/clip/kgoyangyeeee'
+      path: '/kgoyangyeeee'
+      fullPath: '/clip/kgoyangyeeee'
+      preLoaderRoute: typeof DefaultLayoutClipKgoyangyeeeeRouteImport
+      parentRoute: typeof DefaultLayoutClipRoute
+    }
+    '/_defaultLayout/clip/marronie': {
+      id: '/_defaultLayout/clip/marronie'
+      path: '/marronie'
+      fullPath: '/clip/marronie'
+      preLoaderRoute: typeof DefaultLayoutClipMarronieRouteImport
+      parentRoute: typeof DefaultLayoutClipRoute
+    }
+    '/_defaultLayout/clip/wjdfogur98': {
+      id: '/_defaultLayout/clip/wjdfogur98'
+      path: '/wjdfogur98'
+      fullPath: '/clip/wjdfogur98'
+      preLoaderRoute: typeof DefaultLayoutClipWjdfogur98RouteImport
+      parentRoute: typeof DefaultLayoutClipRoute
+    }
+    '/_defaultLayout/clip/yangdoki': {
+      id: '/_defaultLayout/clip/yangdoki'
+      path: '/yangdoki'
+      fullPath: '/clip/yangdoki'
+      preLoaderRoute: typeof DefaultLayoutClipYangdokiRouteImport
+      parentRoute: typeof DefaultLayoutClipRoute
     }
     '/_defaultLayout/musicbook/': {
       id: '/_defaultLayout/musicbook/'
@@ -483,6 +697,33 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface DefaultLayoutClipRouteChildren {
+  DefaultLayoutClip9mogu9Route: typeof DefaultLayoutClip9mogu9Route
+  DefaultLayoutClipBluejumpRoute: typeof DefaultLayoutClipBluejumpRoute
+  DefaultLayoutClipDlsn9911Route: typeof DefaultLayoutClipDlsn9911Route
+  DefaultLayoutClipHarohaRoute: typeof DefaultLayoutClipHarohaRoute
+  DefaultLayoutClipKgoyangyeeeeRoute: typeof DefaultLayoutClipKgoyangyeeeeRoute
+  DefaultLayoutClipMarronieRoute: typeof DefaultLayoutClipMarronieRoute
+  DefaultLayoutClipWjdfogur98Route: typeof DefaultLayoutClipWjdfogur98Route
+  DefaultLayoutClipYangdokiRoute: typeof DefaultLayoutClipYangdokiRoute
+  DefaultLayoutClipIndexRoute: typeof DefaultLayoutClipIndexRoute
+}
+
+const DefaultLayoutClipRouteChildren: DefaultLayoutClipRouteChildren = {
+  DefaultLayoutClip9mogu9Route: DefaultLayoutClip9mogu9Route,
+  DefaultLayoutClipBluejumpRoute: DefaultLayoutClipBluejumpRoute,
+  DefaultLayoutClipDlsn9911Route: DefaultLayoutClipDlsn9911Route,
+  DefaultLayoutClipHarohaRoute: DefaultLayoutClipHarohaRoute,
+  DefaultLayoutClipKgoyangyeeeeRoute: DefaultLayoutClipKgoyangyeeeeRoute,
+  DefaultLayoutClipMarronieRoute: DefaultLayoutClipMarronieRoute,
+  DefaultLayoutClipWjdfogur98Route: DefaultLayoutClipWjdfogur98Route,
+  DefaultLayoutClipYangdokiRoute: DefaultLayoutClipYangdokiRoute,
+  DefaultLayoutClipIndexRoute: DefaultLayoutClipIndexRoute,
+}
+
+const DefaultLayoutClipRouteWithChildren =
+  DefaultLayoutClipRoute._addFileChildren(DefaultLayoutClipRouteChildren)
+
 interface DefaultLayoutMusicbookRouteChildren {
   DefaultLayoutMusicbook9mogu9Route: typeof DefaultLayoutMusicbook9mogu9Route
   DefaultLayoutMusicbookHarohaRoute: typeof DefaultLayoutMusicbookHarohaRoute
@@ -510,6 +751,7 @@ const DefaultLayoutMusicbookRouteWithChildren =
 interface DefaultLayoutRouteChildren {
   DefaultLayoutCafeRoute: typeof DefaultLayoutCafeRoute
   DefaultLayoutCalendarRoute: typeof DefaultLayoutCalendarRoute
+  DefaultLayoutClipRoute: typeof DefaultLayoutClipRouteWithChildren
   DefaultLayoutClipperRoute: typeof DefaultLayoutClipperRoute
   DefaultLayoutLiveRoute: typeof DefaultLayoutLiveRoute
   DefaultLayoutMusicbookRoute: typeof DefaultLayoutMusicbookRouteWithChildren
@@ -521,6 +763,7 @@ interface DefaultLayoutRouteChildren {
 const DefaultLayoutRouteChildren: DefaultLayoutRouteChildren = {
   DefaultLayoutCafeRoute: DefaultLayoutCafeRoute,
   DefaultLayoutCalendarRoute: DefaultLayoutCalendarRoute,
+  DefaultLayoutClipRoute: DefaultLayoutClipRouteWithChildren,
   DefaultLayoutClipperRoute: DefaultLayoutClipperRoute,
   DefaultLayoutLiveRoute: DefaultLayoutLiveRoute,
   DefaultLayoutMusicbookRoute: DefaultLayoutMusicbookRouteWithChildren,
@@ -537,6 +780,7 @@ const rootRouteChildren: RootRouteChildren = {
   DefaultLayoutRoute: DefaultLayoutRouteWithChildren,
   BluejumpNewsDotxmlRoute: BluejumpNewsDotxmlRoute,
   ApiCafeArticlesRoute: ApiCafeArticlesRoute,
+  ApiVodSearchRoute: ApiVodSearchRoute,
   ToolsSoopcommentRoute: ToolsSoopcommentRoute,
   ToolsSoopupRoute: ToolsSoopupRoute,
   ToolsSoopthumbnail9mogu9Route: ToolsSoopthumbnail9mogu9Route,

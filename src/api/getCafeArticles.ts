@@ -59,19 +59,14 @@ export type GetCafeArticlesResponse = {
   };
 };
 export type GetCafeArticlesParams = { page?: number; pageSize?: number };
-type GetCafeArticlesInput = {
-  cafeId: number;
-  menuId: number;
-  params?: GetCafeArticlesParams;
-};
 
 // 10분
 export const REVALIDATE = 600;
 
 const getCafeArticles = (
-  cafeId: GetCafeArticlesInput['cafeId'],
-  menuId: GetCafeArticlesInput['menuId'],
-  params?: GetCafeArticlesInput['params'],
+  cafeId: number,
+  menuId: number,
+  params?: GetCafeArticlesParams,
 ) =>
   fetchJson<GetCafeArticlesResponse>(
     `/api/cafe-articles?cafeId=${cafeId}&menuId=${menuId}&page=${params?.page ?? 1}&pageSize=${params?.pageSize ?? 20}`,

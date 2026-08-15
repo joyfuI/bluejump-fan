@@ -38,6 +38,7 @@ const items = [
   //     </a>
   //   ),
   // },
+  { key: 'clip', label: <Link to="/clip">클립 검색기</Link> },
   { key: 'musicbook', label: <Link to="/musicbook">노래책</Link> },
   { key: 'clipper', label: <Link to="/clipper">키리누키 목록</Link> },
   {
