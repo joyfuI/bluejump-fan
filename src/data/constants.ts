@@ -11,7 +11,7 @@ type Member = {
   readonly color?: string;
 };
 
-export const MEMBERS: readonly Member[] = [
+export const MEMBERS = [
   {
     id: 'wjdfogur98',
     nick: '대월향',
@@ -115,7 +115,7 @@ export const MEMBERS: readonly Member[] = [
     },
     color: '#c8f4d3',
   },
-];
+] as const satisfies readonly Member[];
 
 export const CLIPPERS: readonly string[] = [
   'UCbr8po8y2zkvya5qcGQL4jA', // 블점코인
