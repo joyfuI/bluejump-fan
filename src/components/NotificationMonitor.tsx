@@ -25,31 +25,35 @@ const showNotificationOnce = async (
   const lockName = `notification:${broad.userId}`;
   const broadNo = broad.broadNo.toString();
 
-  const notify = () => {
+  const notify = async () => {
     if (localStorage.getItem(lockName) === broadNo) {
       return;
     }
 
+    const url = `https://play.sooplive.com/${broad.userId}`;
+    const title = `${nick}님 방송 시작`;
     const options = {
       body: broad.broadTitle,
+      data: { url },
       renotify: true,
       requireInteraction: true,
       tag: broad.userId,
       timestamp: new Date(broad.broadStart).getTime(),
     } satisfies ExtendedNotificationOptions;
-    const notification = new Notification(`${nick}님 방송 시작`, options);
-    notification.onclick = (e) => {
-      notification.close();
-      const url = `https://play.sooplive.com/${broad.userId}`;
-      const opened = window.open(url, '_blank');
-      if (opened) {
+
+    const registration =
+      'serviceWorker' in navigator
+        ? await navigator.serviceWorker.getRegistration()
+        : undefined;
+    if (registration?.active) {
+      await registration.showNotification(title, options);
+    } else {
+      const notification = new Notification(title, options);
+      notification.onclick = (e) => {
         e.preventDefault();
-        opened.opener = null;
-      } else {
-        // 만약 open 실패 시 현재 페이지로 오픈
-        window.location.assign(url);
-      }
-    };
+        notification.close();
+      };
+    }
 
     localStorage.setItem(lockName, broadNo);
   };
@@ -58,7 +62,7 @@ const showNotificationOnce = async (
     await navigator.locks.request(lockName, notify);
   } else {
     // locks 미지원 브라우저
-    notify();
+    await notify();
   }
 };
 
@@ -89,6 +93,14 @@ const NotificationMonitor = () => {
         // 권한 거부
         setEnabled(false);
         return;
+      }
+
+      if ('serviceWorker' in navigator) {
+        try {
+          await navigator.serviceWorker.register('/sw.js');
+        } catch (error) {
+          console.error('서비스 워커 등록 실패:', error);
+        }
       }
       setEnabled(true);
     })();
