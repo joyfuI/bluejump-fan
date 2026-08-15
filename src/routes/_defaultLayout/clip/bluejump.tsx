@@ -28,7 +28,6 @@ const getFrontier = (
 
 const RouteComponent = () => {
   const ref = useRef<HTMLDivElement>(null);
-  const requestedMoreRef = useRef(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const queryClient = useQueryClient();
   const queryCache = queryClient.getQueryCache();
@@ -102,21 +101,30 @@ const RouteComponent = () => {
   const isIntersecting = useIntersectionObserver(ref);
 
   useEffect(() => {
-    if (!isIntersecting) {
-      requestedMoreRef.current = false;
+    if (!hasNextPage || !isIntersecting || safeData.length < visibleCount) {
       return;
     }
 
-    if (!requestedMoreRef.current) {
-      requestedMoreRef.current = true;
+    const frameId = requestAnimationFrame(() => {
+      const rect = ref.current?.getBoundingClientRect();
 
-      if (safeData.length >= visibleCount) {
+      if (
+        rect &&
+        rect.top < window.innerHeight &&
+        rect.bottom > 0 &&
+        rect.left < window.innerWidth &&
+        rect.right > 0
+      ) {
         setVisibleCount((count) => count + PAGE_SIZE);
-        return;
       }
-    }
+    });
 
+    return () => cancelAnimationFrame(frameId);
+  }, [hasNextPage, isIntersecting, safeData.length, visibleCount]);
+
+  useEffect(() => {
     if (
+      !isIntersecting ||
       safeData.length >= visibleCount ||
       isFetchingNextPage ||
       isFetchNextPageError ||
