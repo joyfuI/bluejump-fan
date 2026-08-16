@@ -11,7 +11,7 @@ const RouteComponent = () => {
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useClipQuery(
     '금자',
-    ['보금자리'],
+    ['보금자리', '조금자고'],
     ['dlsn9911'],
   );
 
