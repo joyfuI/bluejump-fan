@@ -11,14 +11,9 @@ import {
 } from 'antd';
 import type { FilterDropdownProps } from 'antd/es/table/interface';
 import { Check, Search } from 'lucide-react';
-import {
-  type ChangeEvent,
-  type KeyboardEvent,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { parseAsArrayOf, parseAsString, useQueryState } from 'nuqs';
+import type { ChangeEvent, KeyboardEvent } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import Highlighter from 'react-highlight-words';
 
 import type { DataType } from '@/components/MusicbookTable';
@@ -46,12 +41,17 @@ const getSongKey = (song: DataType) =>
   JSON.stringify([normalizeText(song.가수), normalizeText(song.제목)]);
 
 const RouteComponent = () => {
-  const [selectedMusicbooks, setSelectedMusicbooks] =
-    useState<string[]>(MUSICBOOK_IDS);
-  const [matchMode, setMatchMode] = useState('two');
   const [searchText, setSearchText] = useState('');
   const [searchedColumn, setSearchedColumn] = useState('');
   const searchInput = useRef<InputRef>(null);
+  const [selectedMusicbooks, setSelectedMusicbooks] = useQueryState(
+    'userId',
+    parseAsArrayOf(parseAsString).withDefault(MUSICBOOK_IDS),
+  );
+  const [matchMode, setMatchMode] = useQueryState(
+    'match',
+    parseAsString.withDefault('two'),
+  );
 
   const mogugu = useCsvParse<DataType>(MUSICBOOKS[0].path);
   const haroha = useCsvParse<DataType>(MUSICBOOKS[1].path);
@@ -299,14 +299,22 @@ const RouteComponent = () => {
     marronie.isLoading ||
     yangdoki.isLoading;
 
-  const handleMusicbookChange = useCallback((values: string[]) => {
-    const selectedValues = new Set(values);
-    setSelectedMusicbooks(MUSICBOOK_IDS.filter((id) => selectedValues.has(id)));
-  }, []);
+  const handleMusicbookChange = useCallback(
+    (values: string[]) => {
+      const selectedValues = new Set(values);
+      setSelectedMusicbooks(
+        MUSICBOOK_IDS.filter((id) => selectedValues.has(id)),
+      );
+    },
+    [setSelectedMusicbooks],
+  );
 
-  const handleMatchModeChange = useCallback((value: string) => {
-    setMatchMode(value);
-  }, []);
+  const handleMatchModeChange = useCallback(
+    (value: string) => {
+      setMatchMode(value);
+    },
+    [setMatchMode],
+  );
 
   const emptyText =
     selectedMusicbooks.length < 2
