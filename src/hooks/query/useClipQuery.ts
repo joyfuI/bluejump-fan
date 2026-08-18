@@ -7,7 +7,7 @@ import getVodSearch from '@/api/getVodSearch';
 
 const useClipQuery = (
   keyword: string,
-  ignoreKeywords: string[] = [],
+  ignoreKeywords: (string | RegExp)[] = [],
   ignoreUserIds: string[] = [],
 ) => {
   const select = useCallback(
@@ -28,8 +28,8 @@ const useClipQuery = (
             return false;
           }
 
-          const masked = ignoreKeywords.reduce(
-            (acc, cur) => acc.replaceAll(cur, '\0'.repeat(cur.length)),
+          const masked = ignoreKeywords.reduce<string>(
+            (acc, cur) => acc.replaceAll(cur, '\0'),
             item.title,
           );
           if (!masked.includes(keyword)) {
