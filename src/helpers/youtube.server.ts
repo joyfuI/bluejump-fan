@@ -96,7 +96,7 @@ const getPlaylistItems = (apiKey: string, playlistId: string) => {
 };
 
 const getYoutubeChannelCards = async (
-  channelIds: string[],
+  channelIds: readonly string[],
 ): Promise<YoutubeChannelCard[]> => {
   const apiKey = process.env.YOUTUBE_DATA_API_KEY;
   if (!apiKey) {

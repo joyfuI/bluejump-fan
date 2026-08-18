@@ -25,7 +25,7 @@ export const Route = createFileRoute('/api/cafe-articles')({
             'Content-Type':
               res.headers.get('Content-Type') ?? 'application/json',
             'Cache-Control':
-              'public, s-maxage=600, stale-while-revalidate=36000',
+              'public, max-age=120, s-maxage=600, stale-while-revalidate=36000',
           },
         });
       },

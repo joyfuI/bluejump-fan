@@ -40,7 +40,7 @@ ${data
           headers: {
             'Content-Type': 'application/rss+xml; charset=UTF-8',
             'Cache-Control':
-              'public, s-maxage=600, stale-while-revalidate=36000',
+              'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400',
           },
         });
       },

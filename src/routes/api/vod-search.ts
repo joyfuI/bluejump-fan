@@ -24,7 +24,8 @@ export const Route = createFileRoute('/api/vod-search')({
           headers: {
             'Content-Type':
               res.headers.get('Content-Type') ?? 'application/json',
-            'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=60',
+            'Cache-Control':
+              'public, max-age=60, s-maxage=300, stale-while-revalidate=3600',
           },
         });
       },
