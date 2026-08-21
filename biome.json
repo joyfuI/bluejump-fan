@@ -76,6 +76,7 @@
   "html": {
     "experimentalFullSupportEnabled": true,
     "formatter": { "enabled": true },
-    "linter": { "enabled": true }
+    "linter": { "enabled": true },
+    "assist": { "enabled": true }
   }
 }
