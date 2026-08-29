@@ -120,6 +120,27 @@ const items = [
           },
         ],
       },
+      {
+        key: 'tools-content',
+        label: '콘텐츠 도우미',
+        type: 'group',
+        children: [
+          {
+            key: 'tools-content-gamepinball',
+            label: (
+              <a
+                className="inline-flex items-center"
+                href="https://soop-gamepinball-helper.netlify.app/"
+                rel="noopener"
+                target="_blank"
+              >
+                SOOP 종겜핀볼 도우미
+                <ExternalLink className="ml-1" size={16} />
+              </a>
+            ),
+          },
+        ],
+      },
     ],
   },
 ];
