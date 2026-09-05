@@ -126,4 +126,5 @@ export const CLIPPERS: readonly string[] = [
   'UC87cvDeTygkdQZmeOaaefCA', // 츄블링
   'UCkkFUaMD94pzaE9ajLQ3w-A', // 헤일로 Haleo
   'UCafk8p2dKUNRgH9Xd9trR2A', // 위로
+  'UCmQoNrWrYlvr2OtTdz7C5Fw', // 쌀먹누렁이
 ];
