@@ -8,10 +8,11 @@ export const Route = createFileRoute('/api/vod-search')({
         const keyword = requestUrl.searchParams.get('keyword');
         const page = requestUrl.searchParams.get('page');
         const limit = requestUrl.searchParams.get('limit');
+        const scope = requestUrl.searchParams.get('scope');
         const term = requestUrl.searchParams.get('term');
 
         const res = await fetch(
-          `https://sch.sooplive.com/api.php?l=DF&m=vodSearch&w=webk&isMobile=0&szType=json&c=UTF-8&v=5.0&szKeyword=${keyword}&nPageNo=${page}&nListCnt=${limit}&szOrder=reg_date&szSearchScope=title&szContentAttr=all&nIncludeTranslationMatch=0&szFileType=ALL&szTerm=${term}&tab=vod&location=total_search&isHashSearch=0`,
+          `https://sch.sooplive.com/api.php?l=DF&m=vodSearch&w=webk&isMobile=0&szType=json&c=UTF-8&v=5.0&szKeyword=${keyword}&nPageNo=${page}&nListCnt=${limit}&szOrder=reg_date&szSearchScope=${scope}&szContentAttr=all&nIncludeTranslationMatch=0&szFileType=ALL&szTerm=${term}&tab=vod&location=total_search&isHashSearch=0`,
         );
         const text = await res.text();
 

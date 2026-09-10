@@ -27,7 +27,7 @@ const RouteComponent = () => {
     <>
       <Alert
         className="mb-6"
-        title="최근 1개월까지만 검색합니다. 본인 방송국 클립은 제외합니다."
+        title="제목에 월향이 포함된 클립 목록입니다. 대월향 방송국 클립은 제외합니다. 최근 1개월까지만 검색합니다."
         type="info"
       />
       <Flex gap="small" wrap>

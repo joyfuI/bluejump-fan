@@ -3,17 +3,14 @@ import { Alert, Flex } from 'antd';
 import { useEffect, useRef } from 'react';
 
 import ClipCard from '@/components/ClipCard';
-import useClipQuery from '@/hooks/query/useClipQuery';
+import useTagClipQuery from '@/hooks/query/useTagClipQuery';
 import useIntersectionObserver from '@/hooks/useIntersectionObserver';
 
 const RouteComponent = () => {
   const ref = useRef<HTMLDivElement>(null);
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useClipQuery(
-    '금자',
-    ['보금자리', '조금자고'],
-    ['dlsn9911'],
-  );
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useTagClipQuery('블루점프');
 
   const isIntersecting = useIntersectionObserver(ref);
 
@@ -27,7 +24,7 @@ const RouteComponent = () => {
     <>
       <Alert
         className="mb-6"
-        title="제목에 금자가 포함된 클립 목록입니다. 제갈금자 방송국 클립은 제외합니다. 최근 1개월까지만 검색합니다."
+        title="블루점프 태그가 달린 클립(=멤버 클립) 목록입니다. 최근 1개월까지만 검색합니다."
         type="info"
       />
       <Flex gap="small" wrap>
@@ -40,8 +37,8 @@ const RouteComponent = () => {
   );
 };
 
-export const Route = createFileRoute('/_defaultLayout/clip/dlsn9911')({
-  staticData: { clip: 'dlsn9911' },
+export const Route = createFileRoute('/_defaultLayout/clip/all')({
+  staticData: { clip: 'all' },
   component: RouteComponent,
   headers: () => ({
     'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',

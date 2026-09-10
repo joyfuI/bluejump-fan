@@ -9,11 +9,12 @@ import { Menu } from 'antd';
 import { MEMBERS } from '@/data/constants';
 
 const items = [
-  { key: 'bluejump', label: <Link to="/clip/bluejump">블루점프</Link> },
+  { key: 'bluejump', label: <Link to="/clip/bluejump">블루점프 언급</Link> },
   ...MEMBERS.map((member) => ({
     key: member.id,
-    label: <Link to={`/clip/${member.id}`}>{member.nick}</Link>,
+    label: <Link to={`/clip/${member.id}`}>{member.nick} 언급</Link>,
   })),
+  { key: 'all', label: <Link to="/clip/all">블루점프 태그</Link> },
 ];
 
 const RouteComponent = () => {

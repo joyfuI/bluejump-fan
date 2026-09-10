@@ -26,6 +26,7 @@ import { Route as ToolsSoopcommentRouteImport } from './routes/tools/soopcomment
 import { Route as ToolsSoopupRouteImport } from './routes/tools/soopup'
 import { Route as DefaultLayoutClipIndexRouteImport } from './routes/_defaultLayout/clip/index'
 import { Route as DefaultLayoutClip9mogu9RouteImport } from './routes/_defaultLayout/clip/9mogu9'
+import { Route as DefaultLayoutClipAllRouteImport } from './routes/_defaultLayout/clip/all'
 import { Route as DefaultLayoutClipBluejumpRouteImport } from './routes/_defaultLayout/clip/bluejump'
 import { Route as DefaultLayoutClipDlsn9911RouteImport } from './routes/_defaultLayout/clip/dlsn9911'
 import { Route as DefaultLayoutClipHarohaRouteImport } from './routes/_defaultLayout/clip/haroha'
@@ -126,6 +127,11 @@ const DefaultLayoutClipIndexRoute = DefaultLayoutClipIndexRouteImport.update({
 const DefaultLayoutClip9mogu9Route = DefaultLayoutClip9mogu9RouteImport.update({
   id: '/9mogu9',
   path: '/9mogu9',
+  getParentRoute: () => DefaultLayoutClipRoute,
+} as any)
+const DefaultLayoutClipAllRoute = DefaultLayoutClipAllRouteImport.update({
+  id: '/all',
+  path: '/all',
   getParentRoute: () => DefaultLayoutClipRoute,
 } as any)
 const DefaultLayoutClipBluejumpRoute =
@@ -245,6 +251,7 @@ export interface FileRoutesByFullPath {
   '/tools/soopcomment': typeof ToolsSoopcommentRoute
   '/tools/soopup': typeof ToolsSoopupRoute
   '/clip/9mogu9': typeof DefaultLayoutClip9mogu9Route
+  '/clip/all': typeof DefaultLayoutClipAllRoute
   '/clip/bluejump': typeof DefaultLayoutClipBluejumpRoute
   '/clip/dlsn9911': typeof DefaultLayoutClipDlsn9911Route
   '/clip/haroha': typeof DefaultLayoutClipHarohaRoute
@@ -278,6 +285,7 @@ export interface FileRoutesByTo {
   '/tools/soopup': typeof ToolsSoopupRoute
   '/': typeof DefaultLayoutIndexRoute
   '/clip/9mogu9': typeof DefaultLayoutClip9mogu9Route
+  '/clip/all': typeof DefaultLayoutClipAllRoute
   '/clip/bluejump': typeof DefaultLayoutClipBluejumpRoute
   '/clip/dlsn9911': typeof DefaultLayoutClipDlsn9911Route
   '/clip/haroha': typeof DefaultLayoutClipHarohaRoute
@@ -315,6 +323,7 @@ export interface FileRoutesById {
   '/tools/soopup': typeof ToolsSoopupRoute
   '/_defaultLayout/': typeof DefaultLayoutIndexRoute
   '/_defaultLayout/clip/9mogu9': typeof DefaultLayoutClip9mogu9Route
+  '/_defaultLayout/clip/all': typeof DefaultLayoutClipAllRoute
   '/_defaultLayout/clip/bluejump': typeof DefaultLayoutClipBluejumpRoute
   '/_defaultLayout/clip/dlsn9911': typeof DefaultLayoutClipDlsn9911Route
   '/_defaultLayout/clip/haroha': typeof DefaultLayoutClipHarohaRoute
@@ -352,6 +361,7 @@ export interface FileRouteTypes {
     | '/tools/soopcomment'
     | '/tools/soopup'
     | '/clip/9mogu9'
+    | '/clip/all'
     | '/clip/bluejump'
     | '/clip/dlsn9911'
     | '/clip/haroha'
@@ -385,6 +395,7 @@ export interface FileRouteTypes {
     | '/tools/soopup'
     | '/'
     | '/clip/9mogu9'
+    | '/clip/all'
     | '/clip/bluejump'
     | '/clip/dlsn9911'
     | '/clip/haroha'
@@ -421,6 +432,7 @@ export interface FileRouteTypes {
     | '/tools/soopup'
     | '/_defaultLayout/'
     | '/_defaultLayout/clip/9mogu9'
+    | '/_defaultLayout/clip/all'
     | '/_defaultLayout/clip/bluejump'
     | '/_defaultLayout/clip/dlsn9911'
     | '/_defaultLayout/clip/haroha'
@@ -575,6 +587,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DefaultLayoutClip9mogu9RouteImport
       parentRoute: typeof DefaultLayoutClipRoute
     }
+    '/_defaultLayout/clip/all': {
+      id: '/_defaultLayout/clip/all'
+      path: '/all'
+      fullPath: '/clip/all'
+      preLoaderRoute: typeof DefaultLayoutClipAllRouteImport
+      parentRoute: typeof DefaultLayoutClipRoute
+    }
     '/_defaultLayout/clip/bluejump': {
       id: '/_defaultLayout/clip/bluejump'
       path: '/bluejump'
@@ -699,6 +718,7 @@ declare module '@tanstack/react-router' {
 
 interface DefaultLayoutClipRouteChildren {
   DefaultLayoutClip9mogu9Route: typeof DefaultLayoutClip9mogu9Route
+  DefaultLayoutClipAllRoute: typeof DefaultLayoutClipAllRoute
   DefaultLayoutClipBluejumpRoute: typeof DefaultLayoutClipBluejumpRoute
   DefaultLayoutClipDlsn9911Route: typeof DefaultLayoutClipDlsn9911Route
   DefaultLayoutClipHarohaRoute: typeof DefaultLayoutClipHarohaRoute
@@ -711,6 +731,7 @@ interface DefaultLayoutClipRouteChildren {
 
 const DefaultLayoutClipRouteChildren: DefaultLayoutClipRouteChildren = {
   DefaultLayoutClip9mogu9Route: DefaultLayoutClip9mogu9Route,
+  DefaultLayoutClipAllRoute: DefaultLayoutClipAllRoute,
   DefaultLayoutClipBluejumpRoute: DefaultLayoutClipBluejumpRoute,
   DefaultLayoutClipDlsn9911Route: DefaultLayoutClipDlsn9911Route,
   DefaultLayoutClipHarohaRoute: DefaultLayoutClipHarohaRoute,

@@ -85,6 +85,7 @@ export type GetVodSearchParams = {
   keyword: string;
   page?: number;
   limit?: number;
+  scope?: string;
   term?: 'all' | '1day' | '1week' | '1month' | '1year';
 };
 
@@ -93,7 +94,7 @@ export const REVALIDATE = 60;
 
 const getVodSearch = (params?: GetVodSearchParams) =>
   fetchJson<GetVodSearchResponse>(
-    `/api/vod-search?keyword=${encodeURIComponent(params?.keyword ?? '')}&page=${params?.page ?? 1}&limit=${params?.limit ?? 100}&term=${params?.term ?? '1month'}`,
+    `/api/vod-search?keyword=${encodeURIComponent(params?.keyword ?? '')}&page=${params?.page ?? 1}&limit=${params?.limit ?? 100}&scope=${params?.scope ?? 'title'}&term=${params?.term ?? '1month'}`,
   );
 
 export default getVodSearch;
