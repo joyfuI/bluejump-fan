@@ -33,6 +33,7 @@ const useClipQuery = (
             item.title,
           );
           if (!masked.includes(keyword)) {
+            console.log(`${item.title}: ${item.url}`);
             return false;
           }
 
