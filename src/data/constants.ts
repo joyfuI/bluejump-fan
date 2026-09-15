@@ -128,4 +128,5 @@ export const CLIPPERS: readonly string[] = [
   'UCafk8p2dKUNRgH9Xd9trR2A', // 위로
   'UCmQoNrWrYlvr2OtTdz7C5Fw', // 쌀먹누렁이
   'UCv_jCOKX5IeIi7TpE1t-yaQ', // 마로니사랑단
+  'UCpcgX-Ug4wqkAk2Or31IZ1Q', // 누렁빛깔누눙지
 ];
