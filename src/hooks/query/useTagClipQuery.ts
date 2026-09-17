@@ -36,7 +36,7 @@ const useTagClipQuery = (keyword: string, ignoreUserIds: string[] = []) => {
   );
 
   return useInfiniteQuery({
-    queryKey: ['getVodSearch', keyword],
+    queryKey: ['getVodSearchTag', keyword],
     queryFn: ({ pageParam }) =>
       getVodSearch({ keyword, page: pageParam, scope: 'tag' }),
     initialPageParam: 1,
