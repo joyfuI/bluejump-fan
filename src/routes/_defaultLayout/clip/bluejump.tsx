@@ -65,7 +65,7 @@ const RouteComponent = () => {
     hasNextPage: hasNextPage2,
     isFetchNextPageError: isFetchNextPageError2,
     isFetchingNextPage: isFetchingNextPage2,
-  } = useClipQuery('블점', ['더블점프']);
+  } = useClipQuery('블점', ['더블점프', '더블점수']);
 
   const rawData1 = useSyncExternalStore(subscribe, getRawData1, getRawData1);
   const rawData2 = useSyncExternalStore(subscribe, getRawData2, getRawData2);
