@@ -24,7 +24,7 @@
     "@tanstack/react-start": "^1.168.58",
     "antd": "^6.6.5",
     "dayjs": "^1.11.23",
-    "lucide-react": "^1.47.0",
+    "lucide-react": "^1.48.0",
     "nitro": "3.0.260903-beta",
     "nuqs": "^2.10.1",
     "papaparse": "^5.7.0",
