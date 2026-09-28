@@ -1,6 +1,6 @@
 import { Badge, Card, Image } from 'antd';
 import dayjs from 'dayjs';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 import type { GetVodSearchResponse } from '@/api/getVodSearch';
 import useIntersectionObserver from '@/hooks/useIntersectionObserver';
@@ -8,11 +8,20 @@ import useIntersectionObserver from '@/hooks/useIntersectionObserver';
 export type ClipCardProps = { data: GetVodSearchResponse['DATA'][number] };
 
 const ClipCard = ({ data }: ClipCardProps) => {
+  const [hover, setHover] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   const isIntersecting = useIntersectionObserver(ref);
 
   const day = dayjs(data.reg_date);
+
+  const handlePointerEnter = () => {
+    setHover(true);
+  };
+
+  const handlePointerLeave = () => {
+    setHover(false);
+  };
 
   return (
     <div className="flex w-75 min-h-76" ref={ref}>
@@ -30,7 +39,9 @@ const ClipCard = ({ data }: ClipCardProps) => {
                 className="block aspect-video"
                 loading="lazy"
                 preview={false}
-                src={data.thumbnail_path}
+                src={
+                  hover && data.webp_path ? data.webp_path : data.thumbnail_path
+                }
                 width={300}
               />
               <Badge
@@ -51,6 +62,8 @@ const ClipCard = ({ data }: ClipCardProps) => {
               ) : null}
             </a>
           }
+          onPointerEnter={handlePointerEnter}
+          onPointerLeave={handlePointerLeave}
           styles={{
             root: { display: 'flex', width: 300, flexDirection: 'column' },
             actions: { marginTop: 'auto' },
