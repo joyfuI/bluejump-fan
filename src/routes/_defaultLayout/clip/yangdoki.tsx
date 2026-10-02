@@ -11,7 +11,15 @@ const RouteComponent = () => {
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useClipQuery(
     '도끼',
-    ['도끼던지', '풍도끼', '돌도끼', '도리도끼', '히든도끼', /도끼\s?살인마/g],
+    [
+      '도끼던지',
+      '풍도끼',
+      '돌도끼',
+      /다이아\s?도끼/g,
+      '도리도끼',
+      '히든도끼',
+      /도끼\s?살인마/g,
+    ],
     ['yangdoki'],
   );
 
