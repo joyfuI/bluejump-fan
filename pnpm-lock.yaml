@@ -220,6 +220,9 @@ importers:
       react-highlight-words:
         specifier: ^0.21.0
         version: 0.21.0(react@19.3.0)
+      soop-chat:
+        specifier: ^0.6.0
+        version: 0.6.0
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
@@ -2411,6 +2414,10 @@ packages:
     engines: {node: '>=18.0.0', pnpm: '>=8.6.0'}
     peerDependencies:
       solid-js: ^1.6.12
+
+  soop-chat@0.6.0:
+    resolution: {integrity: sha512-ci80kllot40ulCFw7cD/bzucm4fB+nGLiFWeJGFoBPzQQtDXxgXgy2tJhgjG1BiOl1wxy0gcZOruitGkCqgSAw==}
+    engines: {node: '>=24'}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -4697,6 +4704,13 @@ snapshots:
       '@solid-primitives/refs': 1.1.4(solid-js@1.9.15)
       '@solid-primitives/transition-group': 1.1.2(solid-js@1.9.15)
       solid-js: 1.9.15
+
+  soop-chat@0.6.0:
+    dependencies:
+      ws: 8.21.3
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   source-map-js@1.2.1: {}
 
