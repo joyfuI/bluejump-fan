@@ -1,27 +1,17 @@
 /**
- * SOOP Thumbnail tool context (update this block whenever behavior changes):
- * - This route renders the browser-only canvas editor for the `모구구`
- *   template at `/tools/soopthumbnail/9mogu9`.
- * - Shared navigation, default redirect, date formatting, font/image loading,
- *   shared form controls/download/preview UI, background upload, character
- *   upload/drag/resize/delete, cover-crop drawing, and stroked text drawing
- *   live in sibling `index.tsx`; keep repeated editor mechanics there instead
- *   of re-copying them into template files.
- * - The source PSD for the `모구구` template is 1920x1080 and is intentionally
- *   not parsed at runtime. Only `/assets/9mogu9/frame.png` is loaded as
- *   template art; the other PSD raster assets are intentionally not rendered.
- * - Keep the PSD's pale-yellow outer template/border area from `frame.png`.
- *   Only the inner frame background is white when the user has not uploaded a
- *   background image.
- * - Text effects follow the PSD layer styles: title text uses a light yellow
- *   drop shadow, subtle dark inner shadow, and outside black stroke; date text
- *   keeps its PSD drop shadow disabled and uses only the black stroke plus
- *   weak inner shadow. Canvas cannot express Photoshop choke directly, so the
- *   title drop shadow is approximated with a shifted hard text layer using
- *   the PSD shadow size instead of the black stroke width.
- * - Font policy is strict: text rendering must use `/fonts/jalnan2.otf` through
- *   the `FontFace` API. There is no fallback font path; if the font fails to
- *   load, preview/download stay disabled.
+ * SOOP 모구구 썸네일 맥락 (관련 동작을 바꾸면 이 주석도 갱신):
+ * - /tools/soopthumbnail/9mogu9의 브라우저 Canvas 편집기다. 공통 편집·로딩·
+ *   미리보기·다운로드는 형제 index.tsx를 사용하고 PSD별 좌표·문자 효과·그리기 순서는 여기 둔다.
+ * - 1920×1080 PSD를 기준으로 하며 런타임에는 /assets/9mogu9/frame.png만
+ *   템플릿 그림으로 쓴다. 다른 PSD 이미지 레이어는 넣지 않고 배경·캐릭터는 사용자 업로드로 받는다.
+ * - frame.png의 연노랑 외곽은 유지하고 배경 미업로드 시 내부 영역만 흰색으로 채운다.
+ *   배경·캐릭터를 둥근 내부 영역에 잘라 그린 뒤 프레임, 날짜, 두 제목을 겹친다.
+ * - PSD 문자 효과를 근사한다. 제목은 연노랑 드롭 섀도·약한 내부 그림자·검정 외곽선,
+ *   날짜는 드롭 섀도 없이 검정 외곽선·약한 내부 그림자를 쓴다.
+ *   Photoshop의 choke 효과는 Canvas에서 직접 지원하지 않아, 제목 그림자를
+ *   블러 없는 이동된 문자 레이어로 그린다. 이때 외곽선 폭은 검정 테두리 대신 PSD 그림자 크기를 쓴다.
+ * - /fonts/jalnan2.otf를 FontFace로 로드하며 대체 폰트를 쓰지 않는다.
+ *   폰트나 프레임 로딩 실패 시 미리보기·다운로드를 막는다. 캐릭터 테두리·그림자는 기본 해제다.
  */
 
 import { createFileRoute } from '@tanstack/react-router';

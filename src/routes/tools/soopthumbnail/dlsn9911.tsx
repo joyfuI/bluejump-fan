@@ -1,50 +1,32 @@
 /**
- * SOOP Thumbnail tool context (update this block whenever behavior changes):
- * - This route renders the browser-only canvas editor for the `제갈금자`
- *   template at `/tools/soopthumbnail/dlsn9911`.
- * - Shared editor mechanics and form/download/preview UI live in sibling
- *   `index.tsx`; keep this file focused on PSD-specific constants, title
- *   wrapping, and draw order.
- * - The source PSD and verification PNGs are 1365x768. Runtime rendering uses
- *   `/assets/dlsn9911/frame.png` for `일반` and
- *   `/assets/dlsn9911/frame_plus.png` for `구플`; these frame overlays are the
- *   source of truth for the outer border/date-tab art.
- * - PSD text layer references: `제목(일반)` bounds are approximately
- *   70,637..697,730; `제목(구플)` bounds are approximately 74,630..608,728;
- *   `날짜` bounds are approximately 985,29..1288,81. Its PSD text data uses
- *   FontSize 65, FauxBold, HorizontalScale 0.9, Tracking -10, and an `FrFX`
- *   outside/solid/normal stroke at 100% opacity, 5px, RGB(18,14,14). Canvas text
- *   cannot reproduce Photoshop's exact text engine, so this file uses a PSD-ish
- *   local text runner with x/y scaling, tracking, and a visually matched
- *   centered stroke. Browser-level synthetic bold was too heavy against the
- *   flattened verification PNG, so the date uses regular fill with a thicker
- *   outline. Date text is left-anchored inside the date tab so edits grow to
- *   the right instead of expanding around the center.
- * - `제목(일반)` uses PSD-like black outside stroke plus Hard Light outer glow.
- *   The small red offset text is drawn as filled text because it is visible as
- *   a filled shadow mass in the flattened verification PNG after the frame and
- *   gradient composite. `제목(구플)` instead follows the PSD Drop Shadow source
- *   (normal, RGB(240,255,0), 100%, angle 136, distance 12, size 16) plus the
- *   same Hard Light outer glow; the canvas paint color/opacity/blur are
- *   perceptually tuned because Photoshop layer effects do not map 1:1 to canvas
- *   compositing.
- * - Title text uses `/fonts/hakgyoansim_allimjang-b.otf`; date text uses
- *   `/fonts/hakgyoansim_byeoljari-l.otf`. Preview/download stay disabled if
- *   either font fails to load.
- * - The blank inner template background is white, matching the existing
- *   `모구구` empty-state policy. Uploaded backgrounds are centered cover-crops
- *   inside the rounded frame area. The background upload control stays above
- *   the `일반`/`구플` type selector in this template's control panel.
- * - Title input is a single multiline textarea. Only explicit user newlines
- *   create multiple title lines; long unbroken lines shrink instead of
- *   auto-wrapping. The title still renders at most two lines inside the
- *   lower-left PSD title area, and a cleared/blank title intentionally renders
- *   no title text.
- * - Blurred title shadows/glows are rendered on a temporary layer with the
- *   final text shape knocked out before compositing, so the diffusion remains
- *   underneath/outside the glyphs instead of tinting the white title fill.
- *   Multi-line titles are also painted in two passes: all shadow layers first,
- *   then all foreground strokes/fills.
+ * SOOP 제갈금자 썸네일 맥락 (관련 동작을 바꾸면 이 주석도 갱신):
+ * - /tools/soopthumbnail/dlsn9911의 브라우저 Canvas 편집기다. 공통 편집·로딩·
+ *   미리보기·다운로드는 형제 index.tsx를 사용하고 PSD별 좌표·문자 효과·줄 배치는 여기 둔다.
+ * - 1365×768 PSD를 기준으로 일반은 /assets/dlsn9911/frame.png,
+ *   구플은 /assets/dlsn9911/frame_plus.png를 쓴다. 테두리·날짜 탭은 이 PNG가 기준이며
+ *   Canvas 도형으로 재현하지 않는다. 원본 PSD·검증 PNG는 저장소 외부 자료다.
+ * - 기존 PSD 대조 기록: 제목(일반) 영역은 약 (70,637)~(697,730),
+ *   제목(구플)은 (74,630)~(608,728), 날짜는 (985,29)~(1288,81)이다.
+ *   원본 날짜는 FontSize 65, FauxBold, HorizontalScale 0.9, Tracking -10,
+ *   FrFX 외곽선(outside/solid/normal, 100%, 5px, RGB(18,14,14))이었다.
+ *   실제 Canvas 값은 검증 PNG에 맞춘 보정값이다. 합성 볼드가 너무 두꺼워 날짜는
+ *   일반 채움·두꺼운 중앙 외곽선을 쓰며, 날짜 탭 왼쪽에 고정해 입력이 오른쪽으로 늘어나게 한다.
+ * - 일반 제목은 검정 외곽선·Hard Light 외부 광선과 빨간 오프셋 문자를 쓴다.
+ *   빨간 문자는 검증 PNG의 채워진 그림자 덩어리를 재현하려고 외곽선만이 아닌 채움으로 그린다.
+ *   구플 제목 그림자의 원본은 normal, RGB(240,255,0), 100%, 각도 136,
+ *   거리 12, 크기 16이었다. Canvas의 색·불투명도·블러는 시각적으로 보정했으므로
+ *   PSD 수치로 단순 치환하지 않는다. 구플에도 Hard Light 외부 광선을 적용한다.
+ * - 제목 폰트는 /fonts/hakgyoansim_allimjang-b.otf, 날짜는
+ *   /fonts/hakgyoansim_byeoljari-l.otf다. 두 폰트와 두 프레임을 모두 로드해야
+ *   미리보기·다운로드를 허용한다. 캐릭터 그림자는 기본 적용, 테두리는 기본 해제다.
+ * - 배경 미업로드 시 내부는 흰색이며 업로드 배경은 둥근 내부 영역에 중앙 cover로 채운다.
+ *   배경·캐릭터 → 프레임 → 모든 제목 그림자 → 모든 제목 외곽선·채움 → 날짜 순서로 그린다.
+ * - 제목은 명시한 줄바꿈만 사용하며 자동 줄바꿈하지 않는다. 빈 줄은 버리고,
+ *   3줄 이상이면 첫 줄을 유지하고 나머지를 구분자 없이 둘째 줄에 이어 붙인다.
+ *   긴 줄은 최소 글꼴 크기까지 축소하며, 그 이후에도 넘치면 추가 압축·자르기는 하지 않는다.
+ *   빈 제목은 표시하지 않는다.
+ * - 제목의 블러 그림자·광선은 임시 레이어에서 최종 글자·외곽선 영역을 제거한 뒤 합성한다.
+ *   흰색 글자 안이 물들지 않도록 전체 줄의 그림자를 먼저, 외곽선·채움을 나중에 그린다.
  */
 
 import { createFileRoute } from '@tanstack/react-router';

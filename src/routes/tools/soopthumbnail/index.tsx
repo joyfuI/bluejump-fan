@@ -1,22 +1,24 @@
 /**
- * SOOP Thumbnail directory context (update this block whenever behavior changes):
- * - This directory owns the `/tools/soopthumbnail` thumbnail maker family.
- * - `index.tsx` keeps the shared route shell, template tab metadata, base
- *   redirect, and browser-only helpers that are reused by individual template
- *   routes: font/asset loading, image uploads, date formatting, cover-crop
- *   drawing, optional character outline/shadow rendering scaled from PSD
- *   reference canvases, stroked/PSD-style text helpers, shared form
- *   controls/download/preview UI, full-canvas overlay drawing, and interactive
- *   character placement with partial outside-bounds movement/rotation.
- * - The current template tabs are `제갈금자`, `모구구`, and `하로하`; each
- *   template route owns its PSD-specific asset/font constants and draw order.
- * - `/tools/soopthumbnail` redirects to `/tools/soopthumbnail/dlsn9911`
- *   because `제갈금자` is the first template tab.
- * - Template route files should keep PSD-specific constants and render order
- *   local, then render through `SoopThumbnailToolLayout`.
- * - Keep this context block current whenever shared behavior or template
- *   routing changes so future agents do not have to reverse-engineer intent
- *   from canvas code alone.
+ * SOOP 썸네일 공통 편집기 맥락 (관련 동작을 바꾸면 이 주석도 갱신):
+ * - /tools/soopthumbnail의 제갈금자·모구구·하로하 템플릿이 공유하는 편집기다.
+ *   기본 경로는 첫 탭인 /tools/soopthumbnail/dlsn9911로 리다이렉트한다.
+ *   공통 편집·로딩·미리보기·다운로드는 여기 두고, PSD별 에셋·좌표·문자 효과·그리기 순서는
+ *   각 템플릿 파일에서 관리하며 SoopThumbnailToolLayout으로 화면을 구성한다.
+ * - PSD를 런타임에 해석하지 않는다. 템플릿 PNG·지정 폰트와 업로드 이미지를
+ *   브라우저 Canvas로 합성하고 PNG로 내려받는다. 업로드는 서버로 전송하지 않고,
+ *   편집 상태는 메모리에만 있으므로 템플릿 이동·새로고침 시 초기화한다.
+ * - 지정 폰트와 템플릿 이미지가 모두 로드되어야 렌더링·다운로드를 허용한다.
+ *   대체 폰트는 쓰지 않는다. 훅의 의존성인 fonts/sources는 안정된 참조의 상수로 전달한다.
+ * - 기본 날짜는 마운트 후 브라우저 현지 날짜(YYYY.MM.DD)로 채운다.
+ *   파일명 날짜는 입력의 숫자만 사용하며 숫자가 없으면 date로 대체한다.
+ * - 배경은 내부 영역에 중앙 cover 방식으로 채우며 미업로드 시 내부만 흰색이다.
+ *   이미지 레이어는 배경 → 캐릭터 그림자·광선 → 테두리 → 캐릭터 순서다.
+ *   템플릿 프레임과 문자는 각 템플릿이 그 위에 그린다.
+ * - 캐릭터 테두리 폭은 1920×1080, 그림자 거리·블러·광선 크기는 1365×768 기준으로
+ *   출력 캔버스에 비례한다. Photoshop 효과와 Canvas 합성은 같지 않으므로 보정값을 유지한다.
+ * - 캐릭터는 종횡비를 유지하고 최초에 내부 영역의 오른쪽 아래에 맞춘다.
+ *   일부 영역 밖 이동과 중심 회전을 허용하며 이동·크기 제한은 회전 전 사각형 기준이다.
+ *   선택 핸들은 캔버스의 잘림 영역 밖에서도 조작할 수 있도록 별도 오버레이에 둔다.
  */
 
 import { createFileRoute, Link } from '@tanstack/react-router';

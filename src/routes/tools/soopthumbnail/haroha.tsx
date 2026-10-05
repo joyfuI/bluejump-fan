@@ -1,38 +1,25 @@
 /**
- * SOOP Thumbnail tool context (update this block whenever behavior changes):
- * - This route renders the browser-only canvas editor for the `하로하`
- *   template at `/tools/soopthumbnail/haroha`.
- * - Shared editor mechanics and form/download/preview UI live in sibling
- *   `index.tsx`; keep this file focused on PSD-specific constants, text
- *   fitting, and draw order.
- * - The source PSD and verification PNG are 1920x1080. Runtime rendering uses
- *   `/assets/haroha/frame.png` as the full-canvas overlay for the outer brown
- *   frame, upper-right date tab, and lower dark gradient. The overlay is the
- *   source of truth for frame art; do not recreate those shapes in canvas.
- * - The PSD's example character layer is treated as verification-only art.
- *   Background and character images remain user uploads, matching the existing
- *   `모구구` interaction model.
- * - Date text uses `/fonts/s-core_dream8.otf` (`S-CoreDream-8Heavy` in the
- *   PSD). Title and side-tag text use `/fonts/s-core_dream9.otf`
- *   (`S-CoreDream-9Black` in the PSD). Preview/download stay disabled if either
- *   font or the frame overlay fails to load.
- * - Text placement is manually matched to the PSD: date text is right-anchored
- *   to the date tab, first and second title lines sit at the lower-left, and
- *   optional third/fourth tag lines render inside yellow rounded pills beside
- *   the first title line. The first title can run much wider than the original
- *   PSD sample before shrinking; the tag group x-position follows the measured
- *   width of that first title text. The PSD title layer uses an outside stroke
- *   of 10px, converted for canvas's centered strokeText rendering and the
- *   title's 0.9 horizontal scale. Tag pills allow moderately wider labels than
- *   the PSD sample, are nudged slightly left from the measured title edge, and
- *   measure the current text plus horizontal padding instead of using a fixed
- *   width. Their height follows the PSD rounded-rectangle vector shape at
- *   78px, and the radius uses the maximum canvas capsule value of 39px.
- *   Photoshop Tracking -10 is converted from thousandths-of-em into canvas
- *   pixels at the final fitted font size. Blank tag values intentionally render
- *   no pill and no text.
- * - Use `C:/Users/jong9/Desktop/썸네일/로하/하로하 썸네일 템플릿.png` as the visual
- *   verification target when tuning coordinates.
+ * SOOP 하로하 썸네일 맥락 (관련 동작을 바꾸면 이 주석도 갱신):
+ * - /tools/soopthumbnail/haroha의 브라우저 Canvas 편집기다. 공통 편집·로딩·
+ *   미리보기·다운로드는 형제 index.tsx를 사용하고 PSD별 좌표·문자 효과·그리기 순서는 여기 둔다.
+ * - 1920×1080 PSD를 기준으로 한다. /assets/haroha/frame.png가 갈색 외곽,
+ *   오른쪽 위 날짜 탭, 아래쪽 어두운 그라데이션의 기준이며 Canvas 도형으로 재현하지 않는다.
+ *   PSD의 예시 캐릭터는 검증용일 뿐 출력에 넣지 않는다. 배경·캐릭터는 사용자 업로드로 받는다.
+ * - 날짜는 /fonts/s-core_dream8.otf(PSD의 S-CoreDream-8Heavy),
+ *   제목·태그는 /fonts/s-core_dream9.otf(S-CoreDream-9Black)를 쓴다.
+ *   두 폰트나 프레임 로딩 실패 시 미리보기·다운로드를 막는다.
+ *   캐릭터 테두리는 갈색으로 기본 적용하며 그림자는 기본 해제다.
+ * - 배경·캐릭터 → 프레임 → 날짜 → 첫 제목·태그 → 둘째 제목 순서로 그린다.
+ *   날짜는 탭 오른쪽 기준, 제목 두 개는 왼쪽 아래 기준이다. 첫 제목은 PSD 예시보다
+ *   넓은 폭까지 허용하고, 태그는 축소 후 측정한 제목 폭·외곽선 바깥에 간격을 두고 오른쪽에 배치한다.
+ * - 기존 PSD 대조 기록의 제목 외곽선은 바깥쪽 10px이다. Canvas 중앙 외곽선과
+ *   가로 배율 0.9를 고려해 strokeText 폭을 10×2/0.9로 변환한다.
+ * - 셋째·넷째 텍스트는 노란 캡슐 태그다. 폭은 글자 폭+좌우 여백을 최소·최대 폭으로
+ *   제한하며, 높이 78px·반지름 39px는 PSD 도형 기준이다. Tracking -10은
+ *   최종 글꼴 크기에서 1/1000 em을 px로 환산한다. 빈 태그는 도형·문자 모두 생략한다.
+ *   최소 글꼴 크기에서도 넘치는 태그 글자를 캡슐 폭으로 자르거나 압축하지 않는다.
+ * - 좌표 보정의 원본 검증 이미지는 '하로하 썸네일 템플릿.png'다.
+ *   원본 PSD·검증 PNG는 저장소 외부 자료이므로 재조정 시 별도로 확보해 대조한다.
  */
 
 import { createFileRoute } from '@tanstack/react-router';

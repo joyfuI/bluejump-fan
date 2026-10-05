@@ -1,28 +1,21 @@
 /**
- * SOOP Comment Link Generator context (update this block whenever behavior changes):
- * - Single-screen tool with submit-based search.
- * - URL state policy (nuqs):
- *   - querystring keeps `url` and `targets` for shareable/reload-safe state.
- *   - when querystring has valid values, the page auto-runs the search.
- *   - submitted targets are normalized into comma-separated lowercase terms (trim + dedupe).
- * - Input contract:
- *   - post URL display format: https://www.sooplive.com/station/{userId}/post/{postId}
- *   - accepted input hosts: sooplive.com / sooplive.co.kr (with or without www)
- *   - targets: comma-separated search terms
- *   - default targets input: MEMBERS[].id joined by comma when query `targets` is empty
- * - Match policy:
- *   - userId: exact match
- *   - userNick: partial match
- * - Fetch policy:
- *   - request page 1, then request all remaining pages in parallel
- *   - SOOP comment API may return either old meta (lastPage) or new meta (totalPages)
- *   - derive page count from lastPage/totalPages with a minimum fallback of 1
- *   - merge pages and dedupe by pCommentNo
- * - Result policy:
- *   - sort by regDate desc, tie-break by pCommentNo desc
- *   - profile image normalizes protocol-relative URLs and falls back to default avatar
- * - Copy button uses `copyText` utility and writes display-domain comment URL:
- *   https://www.sooplive.com/station/{userId}/post/{postId}#comment_noti{pCommentNo}
+ * SOOP 댓글 링크 생성기 맥락 (관련 동작을 바꾸면 이 주석도 갱신):
+ * - 입력 초안과 조회 조건을 분리한다. 제출한 url/targets는 nuqs 쿼리에 저장하고,
+ *   유효한 쿼리로 진입하면 자동 조회한다. 같은 조건의 연속 자동 조회는 막지만
+ *   제출 버튼으로 다시 조회할 수 있다. 결과 링크는 입력 초안이 아닌 조회한 게시글 기준이다.
+ * - 게시글 입력은 sooplive.com/sooplive.co.kr(www 유무 모두)를 허용하며,
+ *   표시·공유·복사 URL은 https://www.sooplive.com/station/{userId}/post/{postId}로 통일한다.
+ * - 제출할 검색어는 쉼표로 구분하고 공백 제거·소문자화·중복 제거 후 쿼리에 저장한다.
+ *   ID는 완전 일치, 닉네임은 부분 일치 중 하나만 만족하면 포함하며 대소문자는 구분하지 않는다.
+ * - targets 쿼리가 없으면 MEMBERS[].id가 기본 검색어다. 명시적으로 빈 targets는
+ *   입력칸만 기본 검색어로 채우고 자동 조회하지 않는다.
+ * - 1페이지 조회 후 나머지 페이지를 병렬 조회한다. SOOP API의 구형 lastPage와
+ *   신형 totalPages를 모두 지원하며 페이지 수가 잘못되면 1로 취급한다.
+ *   부모 댓글 번호(pCommentNo)로 중복을 제거하며 자동 주기 갱신은 하지 않는다.
+ * - 결과는 regDate 내림차순, 동률이면 pCommentNo 내림차순이다.
+ *   프로필 URL의 //는 https:로 보정하고 빈 URL만 기본 아바타로 대체한다.
+ * - 댓글 이동에는 SOOP의 #comment_noti{pCommentNo} 앵커가 필요하다.
+ *   copyText로 위 게시글 URL에 이 앵커를 붙인 링크를 복사한다.
  */
 
 import { useMutation } from '@tanstack/react-query';
@@ -445,8 +438,8 @@ const RouteComponent = () => {
 };
 
 export const Route = createFileRoute('/tools/soopcomment')({
-  validateSearch: createStandardSchemaV1(searchParams, { partialOutput: true }),
   component: RouteComponent,
+  validateSearch: createStandardSchemaV1(searchParams, { partialOutput: true }),
   headers: () => ({
     'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',
   }),

@@ -1,38 +1,24 @@
 ﻿/**
- * SOOPUP page context (update this block whenever behavior changes):
- * - Route mode split:
- *   - querystring has userId+postId => ranking screen
- *   - otherwise => input screen
- * - URL state policy:
- *   - querystring: userId, postId, cutline (shareable state)
- *   - hash: highlight target only (#<userId>) for scroll-target semantics
- *   - domain policy: display/share URLs use sooplive.com, but sooplive.co.kr input is also accepted
- * - Pagination race mitigation:
- *   - fetch page 1 -> fetch remaining pages in parallel -> re-fetch page 1
- *   - SOOP comment API may return either old meta (lastPage) or new meta (totalPages)
- *   - derive page count from lastPage/totalPages with a minimum fallback of 1
- *   - if page count increased after the page 1 re-fetch, fetch extra pages
- *   - merge and dedupe by pCommentNo
- * - Ranking policy:
- *   - sort by likeCnt desc
- *   - tie-break by regDate asc (earlier comment first), then pCommentNo asc
- *   - display uses competition ranking (e.g. 1,2,2,4)
- * - Cutline policy:
- *   - cutline means rank threshold (not row index)
- *   - separator appears at pass/fail boundary
- *   - cutoff rank badge is highlighted in red
- * - Motion/scroll policy:
- *   - like count animates numerically
- *   - rank movement animates with FLIP
- *   - highlight follow-scroll keeps target near viewport center
- * - Settings button behavior:
- *   - top-right floating button clears querystring and returns to input view
- *   - current URL/cutline are copied to local inputs for quick edit
- * - Input form is intentionally vertical (URL, cutline, highlight).
- * - Right-side like badge opens the source comment in a new tab:
+ * SOOP 댓글 실시간 업순 맥락 (관련 동작을 바꾸면 이 주석도 갱신):
+ * - nuqs 쿼리의 userId/postId로 게시글을 식별할 수 있으면 순위 화면을 표시한다.
+ *   userId/postId/cutline은 공유할 조회·표시 조건이고, 하이라이트 ID만 해시(#<userId>)에 둔다.
+ *   설정 버튼은 이 세 쿼리를 지우고 현재 게시글 URL·커트라인을 입력칸에 남긴다. 해시는 유지한다.
+ * - 게시글 입력은 sooplive.com/sooplive.co.kr(www 유무 모두)를 허용하며,
+ *   표시·공유 URL은 https://www.sooplive.com/station/{userId}/post/{postId}로 통일한다.
+ * - 조회 중 댓글 추가로 페이지 경계가 바뀌는 문제를 완화하려고 1페이지 → 나머지 병렬 조회
+ *   → 1페이지 재조회 순서를 쓴다. 페이지 수가 늘면 추가 페이지도 조회한다.
+ *   SOOP API의 구형 lastPage와 신형 totalPages를 지원하며 잘못된 페이지 수는 1로 취급한다.
+ *   pCommentNo로 중복을 제거하고 likeCnt가 달라졌을 때만 후속 응답으로 교체한다.
+ *   모든 페이지가 같은 시점의 데이터임을 보장하지는 않는다.
+ * - 정렬은 likeCnt 내림차순, 동률이면 regDate·pCommentNo 오름차순이다.
+ *   동점 댓글의 순위는 같고 다음 순위는 건너뛴다(예: 1,2,2,4).
+ * - cutline은 행 개수가 아닌 순위 기준이다. 동점자는 함께 통과하고 통과/탈락 경계에 선을 표시한다.
+ *   빨간 배지는 실제 마지막 통과 순위 전체에 적용한다(위 예에서 cutline=3이면 2위 배지들).
+ * - 업 수는 숫자 애니메이션, 순위 이동은 FLIP을 사용한다. 하이라이트는 ID의 대소문자를
+ *   구분하지 않으며 해당 ID의 모든 댓글을 강조하되 스크롤은 가장 상위 댓글을 중앙으로 따라간다.
+ * - 업 수 배지는 SOOP의 댓글 이동 앵커를 붙인 원본 링크를 새 탭으로 연다:
  *   https://www.sooplive.com/station/{userId}/post/{postId}#comment_noti{pCommentNo}
- * - Dev-only bottom-left button mutates cache for rank-change testing.
- * - Refresh interval is fixed to 10s.
+ * - 10초 간격으로 재조회하도록 설정한다. 개발 모드의 순위 변동 버튼은 API 대신 조회 캐시를 바꾼다.
  */
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
