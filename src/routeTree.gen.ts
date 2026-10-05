@@ -24,6 +24,7 @@ import { Route as ApiCafeArticlesRouteImport } from './routes/api/cafe-articles'
 import { Route as ApiVodSearchRouteImport } from './routes/api/vod-search'
 import { Route as ToolsSoopcommentRouteImport } from './routes/tools/soopcomment'
 import { Route as ToolsSoopupRouteImport } from './routes/tools/soopup'
+import { Route as ToolsTopfanattendanceRouteImport } from './routes/tools/topfanattendance'
 import { Route as DefaultLayoutClipIndexRouteImport } from './routes/_defaultLayout/clip/index'
 import { Route as DefaultLayoutClip9mogu9RouteImport } from './routes/_defaultLayout/clip/9mogu9'
 import { Route as DefaultLayoutClipAllRouteImport } from './routes/_defaultLayout/clip/all'
@@ -117,6 +118,11 @@ const ToolsSoopcommentRoute = ToolsSoopcommentRouteImport.update({
 const ToolsSoopupRoute = ToolsSoopupRouteImport.update({
   id: '/tools/soopup',
   path: '/tools/soopup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsTopfanattendanceRoute = ToolsTopfanattendanceRouteImport.update({
+  id: '/tools/topfanattendance',
+  path: '/tools/topfanattendance',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DefaultLayoutClipIndexRoute = DefaultLayoutClipIndexRouteImport.update({
@@ -250,6 +256,7 @@ export interface FileRoutesByFullPath {
   '/api/vod-search': typeof ApiVodSearchRoute
   '/tools/soopcomment': typeof ToolsSoopcommentRoute
   '/tools/soopup': typeof ToolsSoopupRoute
+  '/tools/topfanattendance': typeof ToolsTopfanattendanceRoute
   '/clip/9mogu9': typeof DefaultLayoutClip9mogu9Route
   '/clip/all': typeof DefaultLayoutClipAllRoute
   '/clip/bluejump': typeof DefaultLayoutClipBluejumpRoute
@@ -283,6 +290,7 @@ export interface FileRoutesByTo {
   '/api/vod-search': typeof ApiVodSearchRoute
   '/tools/soopcomment': typeof ToolsSoopcommentRoute
   '/tools/soopup': typeof ToolsSoopupRoute
+  '/tools/topfanattendance': typeof ToolsTopfanattendanceRoute
   '/': typeof DefaultLayoutIndexRoute
   '/clip/9mogu9': typeof DefaultLayoutClip9mogu9Route
   '/clip/all': typeof DefaultLayoutClipAllRoute
@@ -321,6 +329,7 @@ export interface FileRoutesById {
   '/api/vod-search': typeof ApiVodSearchRoute
   '/tools/soopcomment': typeof ToolsSoopcommentRoute
   '/tools/soopup': typeof ToolsSoopupRoute
+  '/tools/topfanattendance': typeof ToolsTopfanattendanceRoute
   '/_defaultLayout/': typeof DefaultLayoutIndexRoute
   '/_defaultLayout/clip/9mogu9': typeof DefaultLayoutClip9mogu9Route
   '/_defaultLayout/clip/all': typeof DefaultLayoutClipAllRoute
@@ -360,6 +369,7 @@ export interface FileRouteTypes {
     | '/api/vod-search'
     | '/tools/soopcomment'
     | '/tools/soopup'
+    | '/tools/topfanattendance'
     | '/clip/9mogu9'
     | '/clip/all'
     | '/clip/bluejump'
@@ -393,6 +403,7 @@ export interface FileRouteTypes {
     | '/api/vod-search'
     | '/tools/soopcomment'
     | '/tools/soopup'
+    | '/tools/topfanattendance'
     | '/'
     | '/clip/9mogu9'
     | '/clip/all'
@@ -430,6 +441,7 @@ export interface FileRouteTypes {
     | '/api/vod-search'
     | '/tools/soopcomment'
     | '/tools/soopup'
+    | '/tools/topfanattendance'
     | '/_defaultLayout/'
     | '/_defaultLayout/clip/9mogu9'
     | '/_defaultLayout/clip/all'
@@ -460,6 +472,7 @@ export interface RootRouteChildren {
   ApiVodSearchRoute: typeof ApiVodSearchRoute
   ToolsSoopcommentRoute: typeof ToolsSoopcommentRoute
   ToolsSoopupRoute: typeof ToolsSoopupRoute
+  ToolsTopfanattendanceRoute: typeof ToolsTopfanattendanceRoute
   ToolsSoopthumbnail9mogu9Route: typeof ToolsSoopthumbnail9mogu9Route
   ToolsSoopthumbnailDlsn9911Route: typeof ToolsSoopthumbnailDlsn9911Route
   ToolsSoopthumbnailHarohaRoute: typeof ToolsSoopthumbnailHarohaRoute
@@ -571,6 +584,13 @@ declare module '@tanstack/react-router' {
       path: '/tools/soopup'
       fullPath: '/tools/soopup'
       preLoaderRoute: typeof ToolsSoopupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/topfanattendance': {
+      id: '/tools/topfanattendance'
+      path: '/tools/topfanattendance'
+      fullPath: '/tools/topfanattendance'
+      preLoaderRoute: typeof ToolsTopfanattendanceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_defaultLayout/clip/': {
@@ -804,6 +824,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiVodSearchRoute: ApiVodSearchRoute,
   ToolsSoopcommentRoute: ToolsSoopcommentRoute,
   ToolsSoopupRoute: ToolsSoopupRoute,
+  ToolsTopfanattendanceRoute: ToolsTopfanattendanceRoute,
   ToolsSoopthumbnail9mogu9Route: ToolsSoopthumbnail9mogu9Route,
   ToolsSoopthumbnailDlsn9911Route: ToolsSoopthumbnailDlsn9911Route,
   ToolsSoopthumbnailHarohaRoute: ToolsSoopthumbnailHarohaRoute,

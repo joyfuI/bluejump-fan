@@ -98,6 +98,19 @@ const items = [
               </Link>
             ),
           },
+          {
+            key: 'tools-soop-topfanattendance',
+            label: (
+              <Link
+                className="inline-flex items-center"
+                target="_blank"
+                to="/tools/topfanattendance"
+              >
+                열혈팬 출석체크
+                <ExternalLink className="ml-1" size={16} />
+              </Link>
+            ),
+          },
         ],
       },
       {
