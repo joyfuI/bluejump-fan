@@ -22,6 +22,7 @@ import { Route as DefaultLayoutSoopRouteImport } from './routes/_defaultLayout/s
 import { Route as DefaultLayoutVodRouteImport } from './routes/_defaultLayout/vod'
 import { Route as ApiCafeArticlesRouteImport } from './routes/api/cafe-articles'
 import { Route as ApiVodSearchRouteImport } from './routes/api/vod-search'
+import { Route as ToolsSoopVodPlaybackInfoPopupRouteImport } from './routes/tools/soop-vod-playback-info-popup'
 import { Route as ToolsSoopcommentRouteImport } from './routes/tools/soopcomment'
 import { Route as ToolsSoopupRouteImport } from './routes/tools/soopup'
 import { Route as ToolsTopfanattendanceRouteImport } from './routes/tools/topfanattendance'
@@ -110,6 +111,12 @@ const ApiVodSearchRoute = ApiVodSearchRouteImport.update({
   path: '/api/vod-search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ToolsSoopVodPlaybackInfoPopupRoute =
+  ToolsSoopVodPlaybackInfoPopupRouteImport.update({
+    id: '/tools/soop-vod-playback-info-popup',
+    path: '/tools/soop-vod-playback-info-popup',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ToolsSoopcommentRoute = ToolsSoopcommentRouteImport.update({
   id: '/tools/soopcomment',
   path: '/tools/soopcomment',
@@ -254,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/vod': typeof DefaultLayoutVodRoute
   '/api/cafe-articles': typeof ApiCafeArticlesRoute
   '/api/vod-search': typeof ApiVodSearchRoute
+  '/tools/soop-vod-playback-info-popup': typeof ToolsSoopVodPlaybackInfoPopupRoute
   '/tools/soopcomment': typeof ToolsSoopcommentRoute
   '/tools/soopup': typeof ToolsSoopupRoute
   '/tools/topfanattendance': typeof ToolsTopfanattendanceRoute
@@ -288,6 +296,7 @@ export interface FileRoutesByTo {
   '/vod': typeof DefaultLayoutVodRoute
   '/api/cafe-articles': typeof ApiCafeArticlesRoute
   '/api/vod-search': typeof ApiVodSearchRoute
+  '/tools/soop-vod-playback-info-popup': typeof ToolsSoopVodPlaybackInfoPopupRoute
   '/tools/soopcomment': typeof ToolsSoopcommentRoute
   '/tools/soopup': typeof ToolsSoopupRoute
   '/tools/topfanattendance': typeof ToolsTopfanattendanceRoute
@@ -327,6 +336,7 @@ export interface FileRoutesById {
   '/_defaultLayout/vod': typeof DefaultLayoutVodRoute
   '/api/cafe-articles': typeof ApiCafeArticlesRoute
   '/api/vod-search': typeof ApiVodSearchRoute
+  '/tools/soop-vod-playback-info-popup': typeof ToolsSoopVodPlaybackInfoPopupRoute
   '/tools/soopcomment': typeof ToolsSoopcommentRoute
   '/tools/soopup': typeof ToolsSoopupRoute
   '/tools/topfanattendance': typeof ToolsTopfanattendanceRoute
@@ -367,6 +377,7 @@ export interface FileRouteTypes {
     | '/vod'
     | '/api/cafe-articles'
     | '/api/vod-search'
+    | '/tools/soop-vod-playback-info-popup'
     | '/tools/soopcomment'
     | '/tools/soopup'
     | '/tools/topfanattendance'
@@ -401,6 +412,7 @@ export interface FileRouteTypes {
     | '/vod'
     | '/api/cafe-articles'
     | '/api/vod-search'
+    | '/tools/soop-vod-playback-info-popup'
     | '/tools/soopcomment'
     | '/tools/soopup'
     | '/tools/topfanattendance'
@@ -439,6 +451,7 @@ export interface FileRouteTypes {
     | '/_defaultLayout/vod'
     | '/api/cafe-articles'
     | '/api/vod-search'
+    | '/tools/soop-vod-playback-info-popup'
     | '/tools/soopcomment'
     | '/tools/soopup'
     | '/tools/topfanattendance'
@@ -470,6 +483,7 @@ export interface RootRouteChildren {
   BluejumpNewsDotxmlRoute: typeof BluejumpNewsDotxmlRoute
   ApiCafeArticlesRoute: typeof ApiCafeArticlesRoute
   ApiVodSearchRoute: typeof ApiVodSearchRoute
+  ToolsSoopVodPlaybackInfoPopupRoute: typeof ToolsSoopVodPlaybackInfoPopupRoute
   ToolsSoopcommentRoute: typeof ToolsSoopcommentRoute
   ToolsSoopupRoute: typeof ToolsSoopupRoute
   ToolsTopfanattendanceRoute: typeof ToolsTopfanattendanceRoute
@@ -570,6 +584,13 @@ declare module '@tanstack/react-router' {
       path: '/api/vod-search'
       fullPath: '/api/vod-search'
       preLoaderRoute: typeof ApiVodSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools/soop-vod-playback-info-popup': {
+      id: '/tools/soop-vod-playback-info-popup'
+      path: '/tools/soop-vod-playback-info-popup'
+      fullPath: '/tools/soop-vod-playback-info-popup'
+      preLoaderRoute: typeof ToolsSoopVodPlaybackInfoPopupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tools/soopcomment': {
@@ -822,6 +843,7 @@ const rootRouteChildren: RootRouteChildren = {
   BluejumpNewsDotxmlRoute: BluejumpNewsDotxmlRoute,
   ApiCafeArticlesRoute: ApiCafeArticlesRoute,
   ApiVodSearchRoute: ApiVodSearchRoute,
+  ToolsSoopVodPlaybackInfoPopupRoute: ToolsSoopVodPlaybackInfoPopupRoute,
   ToolsSoopcommentRoute: ToolsSoopcommentRoute,
   ToolsSoopupRoute: ToolsSoopupRoute,
   ToolsTopfanattendanceRoute: ToolsTopfanattendanceRoute,

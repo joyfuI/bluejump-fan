@@ -154,6 +154,26 @@ const items = [
           },
         ],
       },
+      {
+        key: 'tools-userscript',
+        label: '유저 스크립트',
+        type: 'group',
+        children: [
+          {
+            key: 'tools-userscript-soopvodplaybackinfopopup',
+            label: (
+              <Link
+                className="inline-flex items-center"
+                target="_blank"
+                to="/tools/soop-vod-playback-info-popup"
+              >
+                SOOP VOD 재생정보 팝업
+                <ExternalLink className="ml-1" size={16} />
+              </Link>
+            ),
+          },
+        ],
+      },
     ],
   },
 ];
