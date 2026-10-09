@@ -392,13 +392,21 @@ const ConnectionForm = () => {
         <a
           className="mt-4 inline-flex rounded-lg border border-zinc-600 px-3 py-2 text-sm hover:bg-zinc-800"
           href="/userscript/soop-vod-playback-info-popup.user.js"
-          rel="noopener noreferrer"
+          rel="noreferrer"
           target="_blank"
         >
           유저 스크립트 설치
         </a>
         <p className="mt-2 text-xs text-zinc-400">
-          Tampermonkey 등 유저 스크립트 관리자가 필요합니다.
+          <a
+            className="underline underline-offset-2 hover:text-zinc-200"
+            href="https://www.tampermonkey.net/"
+            rel="noreferrer"
+            target="_blank"
+          >
+            Tampermonkey
+          </a>{' '}
+          등 유저 스크립트 관리자가 필요합니다.
         </p>
         <form className="mt-6 flex flex-col gap-3" onSubmit={handleSubmit}>
           <label className="text-sm font-medium" htmlFor={codeId}>

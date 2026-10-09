@@ -621,7 +621,7 @@
     const win = pageWindow.open(
       '',
       'soopVodExternalConnection',
-      'width=400,height=210,resizable=yes,scrollbars=no',
+      'width=380,height=200,resizable=yes,scrollbars=no',
     );
     if (!win) {
       alert(
@@ -635,7 +635,7 @@
             <meta charset="UTF-8">
             <style>
                 * { box-sizing: border-box; }
-                body { margin: 0; padding: 22px; background: #17181c; color: #f5f5f5;
+                body { margin: 0; padding: 14px; background: #17181c; color: #f5f5f5;
                     font: 14px/1.5 Pretendard, "Noto Sans KR", sans-serif; }
                 label { display: block; margin-bottom: 8px; font-weight: 600; }
                 .code-row { display: flex; gap: 8px; }
