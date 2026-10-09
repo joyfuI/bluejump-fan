@@ -24,9 +24,9 @@
     "@tanstack/react-start": "^1.168.60",
     "antd": "^6.6.5",
     "dayjs": "^1.11.23",
-    "lucide-react": "^1.52.0",
+    "lucide-react": "^1.53.0",
     "nitro": "3.0.260903-beta",
-    "nuqs": "^2.10.1",
+    "nuqs": "^2.10.2",
     "papaparse": "^5.7.0",
     "peerjs": "^1.5.5",
     "react": "^19.3.0",
@@ -49,7 +49,7 @@
     "@vitejs/plugin-react": "^6.1.2",
     "babel-plugin-react-compiler": "^1.0.0",
     "typescript": "^7.0.2",
-    "vite": "^8.3.3"
+    "vite": "^8.3.4"
   },
   "packageManager": "pnpm@12.10.1+sha512.ba40a37eb1a370d60fea8c4cf1d364c13bcccef518e98ad2bcee954f539d38da37458e58261a3fa55e06523450ea0ffff9f497b135be41f2c15c1642bacace6c"
 }
