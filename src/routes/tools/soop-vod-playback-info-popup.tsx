@@ -391,7 +391,7 @@ const ConnectionForm = () => {
         </p>
         <a
           className="mt-4 inline-flex rounded-lg border border-zinc-600 px-3 py-2 text-sm hover:bg-zinc-800"
-          href="/userscript/soop-vod-playback-info-popup.user.js"
+          href="https://gist.github.com/joyfuI/5898be2770fb1eac003f9abb164b7a08/raw/soop-vod-playback-info-popup.user.js"
           rel="noreferrer"
           target="_blank"
         >

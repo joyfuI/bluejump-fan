@@ -5,8 +5,8 @@
 // @author       joyfuI
 // @description  SOOP VOD 제목, 재생시간, 진행률을 별도 창에 표시하는 버튼을 추가합니다.
 // @homepageURL  https://bluejump-fan.vercel.app/tools/soop-vod-playback-info-popup
-// @downloadURL  https://bluejump-fan.vercel.app/userscript/soop-vod-playback-info-popup.user.js
-// @updateURL    https://bluejump-fan.vercel.app/userscript/soop-vod-playback-info-popup.user.js
+// @downloadURL  https://gist.github.com/joyfuI/5898be2770fb1eac003f9abb164b7a08/raw/soop-vod-playback-info-popup.user.js
+// @updateURL    https://gist.github.com/joyfuI/5898be2770fb1eac003f9abb164b7a08/raw/soop-vod-playback-info-popup.user.js
 // @require      https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js
 // @match        https://vod.sooplive.com/player/*
 // @run-at       document-end
