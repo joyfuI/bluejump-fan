@@ -40,7 +40,10 @@ const ClipCard = ({ data }: ClipCardProps) => {
                 loading="lazy"
                 preview={false}
                 src={
-                  hover && data.webp_path ? data.webp_path : data.thumbnail_path
+                  (hover && data.webp_path
+                    ? data.webp_path
+                    : data.thumbnail_path
+                  ).replace(/^http:/, '') // thumbnail_path가 http로 와서 Mixed 문제 해결
                 }
                 width={300}
               />
