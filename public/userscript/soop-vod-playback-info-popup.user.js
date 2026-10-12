@@ -182,7 +182,7 @@
 
     updateInfo();
 
-    updateTimer = setInterval(updateInfo, 200);
+    updateTimer = setInterval(updateInfo, 500);
   }
 
   function stopUpdate() {
@@ -705,7 +705,7 @@
       },
       { once: true },
     );
-    sendTimer = setInterval(sendPlaybackInfo, 200);
+    sendTimer = setInterval(sendPlaybackInfo, 500);
     void startExternalConnection();
   }
 
