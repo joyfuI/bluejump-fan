@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SOOP VOD 재생정보 팝업
 // @namespace    https://blog.joyfui.com/
-// @version      3
+// @version      4
 // @author       joyfuI
 // @description  SOOP VOD 제목, 재생시간, 진행률을 별도 창에 표시하는 버튼을 추가합니다.
 // @homepageURL  https://bluejump-fan.vercel.app/tools/soop-vod-playback-info-popup
@@ -623,9 +623,7 @@
       };
       room.onPeerLeave = () => {
         if (externalRoom !== room) return;
-        if (Object.keys(room.getPeers()).length === 0)
-          retryExternalConnection('연결 끊김 · 재연결 중');
-        else updateConnectionStatus();
+        updateConnectionStatus();
       };
       updateConnectionStatus();
     } catch (error) {

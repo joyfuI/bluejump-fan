@@ -4,6 +4,7 @@
  *   npm 모듈을 공유하지 않으므로 송수신 메시지와 표시 디자인은 두 파일을 함께 맞춘다.
  * - 송신 관리 창을 닫으면 송신도 종료하지만, 같은 VOD 문서에서는 연결코드를 유지한다.
  *   관리 창을 다시 열면 기존 OBS URL로 재연결되며, VOD 새로고침 후에는 URL을 갱신해야 한다.
+ *   수신기가 모두 나가도 관리 창이 열려 있으면 송신 방을 유지하며 연결 대기한다.
  * - Trystero 0.26의 Nostr 방을 사용한다. 두 파일의 appId·액션 이름·버전을 함께 맞춘다.
  *   연결코드는 roomId로 전달하며, 수신기는 passive로 참여해 송신기에만 연결한다.
  * - 사이트의 TURN 주소는 빌드 시 VITE_SOOP_CHAT_API_URL에 /turn을 붙여 결정한다.
@@ -132,7 +133,8 @@ const PlaybackInfoReceiver = ({ roomId }: { roomId: string }) => {
       if (stopped) return;
       const currentGeneration = ++generation;
       clearAttempt();
-      attemptTimer = setTimeout(disconnect, 10000);
+      // Nostr의 재공지 간격이 60초이므로 초기 방 탐색과 연결에는 90초를 허용한다.
+      attemptTimer = setTimeout(disconnect, 90000);
       const controller = new AbortController();
       turnRequest = controller;
       try {
