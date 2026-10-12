@@ -4,20 +4,22 @@
  *   npm 모듈을 공유하지 않으므로 송수신 메시지와 표시 디자인은 두 파일을 함께 맞춘다.
  * - 송신 관리 창을 닫으면 송신도 종료하지만, 같은 VOD 문서에서는 연결코드를 유지한다.
  *   관리 창을 다시 열면 기존 OBS URL로 재연결되며, VOD 새로고침 후에는 URL을 갱신해야 한다.
- *   수신기가 모두 나가도 관리 창이 열려 있으면 송신 방을 유지하며 연결 대기한다.
- * - Trystero 0.26의 Nostr 방을 사용한다. 두 파일의 appId·액션 이름·버전을 함께 맞춘다.
- *   연결코드는 roomId로 전달하며, 수신기는 passive로 참여해 송신기에만 연결한다.
+ *   수신기가 모두 나가도 관리 창이 열려 있으면 송신 Peer를 유지하며 연결 대기한다.
+ * - PeerJS 1.5.5 공개 서버에 송신자의 연결코드를 peerId로 등록한다.
+ *   수신자는 이 ID로 직접 연결하므로 수신자끼리 연결되지 않는다.
  * - 사이트의 TURN 주소는 빌드 시 VITE_SOOP_CHAT_API_URL에 /turn을 붙여 결정한다.
  *   TURN API는 { iceServers }를 반환한다. 사이트에서는 fetch, 유저 스크립트에서는
- *   GM.xmlHttpRequest로 호출하며, 재접속마다 새 자격증명을 발급받아 방에 다시 참여한다.
- *   Nostr와 Cloudflare TURN을 사용하므로 인터넷이 필요하며 LAN으로 접속을 제한하지 않는다.
+ *   GM.xmlHttpRequest로 호출하며, 데이터 연결 실패 후 재접속할 때 새 자격증명을 발급받는다.
+ *   시그널링만 끊기면 살아 있는 데이터 연결은 유지하면서 서버에 재접속한다.
+ *   PeerJS와 Cloudflare TURN을 사용하므로 인터넷이 필요하며 LAN으로 접속을 제한하지 않는다.
  * - Document PiP는 URL로 이동할 수 없어 수신 컴포넌트를 portal로 렌더링한다.
- *   ?roomId URL은 일반 팝업·OBS가 직접 사용하는 표시 전용 페이지이며 자동 PiP를 열지 않는다.
+ *   ?peerId URL은 일반 팝업·OBS가 직접 사용하는 표시 전용 페이지이며 자동 PiP를 열지 않는다.
  * - OBS 화면을 가리지 않도록 정상 연결 상태는 숨기고 연결 중·끊김만 작게 표시한다.
  */
 
 import { createFileRoute } from '@tanstack/react-router';
 import { createStandardSchemaV1, parseAsString } from 'nuqs';
+import type { DataConnection, Peer } from 'peerjs';
 import {
   type ChangeEvent,
   type SubmitEvent,
@@ -27,14 +29,12 @@ import {
   useState,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { joinRoom, type Room } from 'trystero';
 
-const searchParams = { roomId: parseAsString };
-const TRYSTERO_APP_ID = 'soop-vod-playback-info-popup';
+const searchParams = { peerId: parseAsString };
 
 type PlaybackInfo = { title: string; currentTime: number; duration: number };
 type ConnectionStatus = 'connecting' | 'connected' | 'disconnected';
-type Popup = { win: Window; roomId: string; kind: 'pip' | 'normal' };
+type Popup = { win: Window; peerId: string; kind: 'pip' | 'normal' };
 type WindowWithDocumentPip = Window & {
   documentPictureInPicture?: {
     requestWindow: (options: {
@@ -89,15 +89,15 @@ const isIceServers = (value: unknown): value is RTCIceServer[] =>
     );
   });
 
-const PlaybackInfoReceiver = ({ roomId }: { roomId: string }) => {
+const PlaybackInfoReceiver = ({ peerId }: { peerId: string }) => {
   const [info, setInfo] = useState<PlaybackInfo | null>(null);
   const [status, setStatus] = useState<ConnectionStatus>('connecting');
 
   useEffect(() => {
     let stopped = false;
-    let room: Room | null = null;
+    let peer: Peer | null = null;
+    let connection: DataConnection | null = null;
     let turnRequest: AbortController | null = null;
-    let leaving = Promise.resolve();
     let generation = 0;
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
     let attemptTimer: ReturnType<typeof setTimeout> | undefined;
@@ -117,69 +117,94 @@ const PlaybackInfoReceiver = ({ roomId }: { roomId: string }) => {
       if (stopped) return;
       generation++;
       clearAttempt();
+      clearTimeout(retryTimer);
+      retryTimer = undefined;
       turnRequest?.abort();
       turnRequest = null;
-      const previous = room;
-      room = null;
-      if (previous) {
-        leaving = previous.leave().catch((error) => {
-          console.warn('[SOOP VOD INFO] 수신 방 종료 실패', error);
-        });
-      }
+      const previous = peer;
+      peer = null;
+      connection = null;
+      previous?.destroy();
       setStatus('disconnected');
       retry();
     };
     async function start() {
       if (stopped) return;
+      // 서버 단절만으로 정상 송수신 중인 RTC 연결을 다시 만들지 않는다.
+      if (connection?.open && peer) {
+        try {
+          if (peer.disconnected) peer.reconnect();
+        } catch (error) {
+          console.warn('[SOOP VOD INFO] 시그널링 재연결 실패', error);
+        }
+        if (!peer.open) retry();
+        return;
+      }
       const currentGeneration = ++generation;
       clearAttempt();
-      // Nostr의 재공지 간격이 60초이므로 초기 방 탐색과 연결에는 90초를 허용한다.
-      attemptTimer = setTimeout(disconnect, 90000);
+      attemptTimer = setTimeout(disconnect, 10000);
       const controller = new AbortController();
       turnRequest = controller;
       try {
         const baseUrl = import.meta.env.VITE_SOOP_CHAT_API_URL?.trim();
         if (!baseUrl)
           throw new Error('VITE_SOOP_CHAT_API_URL 환경변수를 설정해 주세요.');
-        await leaving;
-        if (stopped || generation !== currentGeneration) return;
-        const response = await fetch(`${baseUrl.replace(/\/+$/, '')}/turn`, {
-          cache: 'no-store',
-          signal: controller.signal,
-        });
+        // PeerJS의 Node 진입점은 CJS이므로 SSR에서는 로드하지 않는다.
+        const [{ Peer }, response] = await Promise.all([
+          import('peerjs'),
+          fetch(`${baseUrl.replace(/\/+$/, '')}/turn`, {
+            cache: 'no-store',
+            signal: controller.signal,
+          }),
+        ]);
         if (!response.ok) throw new Error('TURN 발급 요청 실패');
         const data = await response.json();
         if (!isIceServers(data?.iceServers))
           throw new Error('TURN 서버 응답 형식 오류');
         if (stopped || generation !== currentGeneration) return;
         turnRequest = null;
-        const next = joinRoom(
-          {
-            appId: TRYSTERO_APP_ID,
-            passive: true,
-            rtcConfig: { iceServers: data.iceServers },
-          },
-          roomId,
-          {
-            onJoinError: ({ error }) => {
-              if (stopped || room !== next) return;
-              console.warn('[SOOP VOD INFO] 수신 연결 오류', error);
-              disconnect();
-            },
-          },
-        );
-        room = next;
-        next.makeAction('playback').onMessage = (data: unknown) => {
-          if (stopped || room !== next || !isPlaybackInfo(data)) return;
-          clearAttempt();
-          // 모바일 연결이 조용히 끊긴 경우에도 새 TURN 정보로 복구한다.
-          attemptTimer = setTimeout(disconnect, 10000);
-          setInfo(data);
-          setStatus('connected');
-        };
-        next.onPeerLeave = () => {
-          if (!stopped && room === next) disconnect();
-        };
+        const next = new Peer({ config: { iceServers: data.iceServers } });
+        peer = next;
+        next.on('open', () => {
+          if (stopped || peer !== next) return;
+          clearTimeout(retryTimer);
+          retryTimer = undefined;
+          if (connection) return;
+          const channel = next.connect(peerId, {
+            reliable: true,
+            serialization: 'json',
+          });
+          connection = channel;
+          channel.on('data', (data: unknown) => {
+            if (stopped || connection !== channel || !isPlaybackInfo(data))
+              return;
+            clearAttempt();
+            // 모바일 연결이 조용히 끊긴 경우에도 새 TURN 정보로 복구한다.
+            attemptTimer = setTimeout(disconnect, 10000);
+            setInfo(data);
+            setStatus('connected');
+          });
+          channel.on('close', () => {
+            if (connection === channel) disconnect();
+          });
+          channel.on('error', () => {
+            if (connection === channel) disconnect();
+          });
+        });
+        next.on('disconnected', () => {
+          if (stopped || peer !== next) return;
+          if (connection?.open) retry();
+          else disconnect();
+        });
+        next.on('error', (error) => {
+          if (stopped || peer !== next) return;
+          console.warn('[SOOP VOD INFO] 수신 연결 오류', error);
+          if (connection?.open) retry();
+          else disconnect();
+        });
+        next.on('close', () => {
+          if (!stopped && peer === next) disconnect();
+        });
       } catch (error) {
         if (stopped || generation !== currentGeneration) return;
         console.warn('[SOOP VOD INFO] 수신 연결 준비 실패', error);
@@ -187,20 +212,27 @@ const PlaybackInfoReceiver = ({ roomId }: { roomId: string }) => {
       }
     }
 
-    void start();
-    return () => {
+    const cleanup = () => {
       stopped = true;
       generation++;
       clearTimeout(retryTimer);
       clearAttempt();
       turnRequest?.abort();
-      const previous = room;
-      room = null;
-      void previous?.leave().catch((error) => {
-        console.warn('[SOOP VOD INFO] 수신 방 종료 실패', error);
-      });
+      const previous = peer;
+      const channel = connection;
+      peer = null;
+      connection = null;
+      if (channel?.open) channel.close({ flush: true });
+      previous?.destroy();
     };
-  }, [roomId]);
+    // 일반 팝업·OBS의 페이지 종료에는 React unmount가 보장되지 않는다.
+    window.addEventListener('pagehide', cleanup);
+    void start();
+    return () => {
+      window.removeEventListener('pagehide', cleanup);
+      cleanup();
+    };
+  }, [peerId]);
 
   const progress =
     info && info.duration > 0
@@ -272,10 +304,10 @@ const ConnectionForm = () => {
   const [pipPopup, setPipPopup] = useState<Popup | null>(null);
   const popupRef = useRef<Popup | null>(null);
   const disposed = useRef(false);
-  const roomId = code.trim();
+  const peerId = code.trim();
   const popupUrl =
-    roomId && typeof window !== 'undefined'
-      ? `${window.location.origin}/tools/soop-vod-playback-info-popup?roomId=${encodeURIComponent(roomId)}`
+    peerId && typeof window !== 'undefined'
+      ? `${window.location.origin}/tools/soop-vod-playback-info-popup?peerId=${encodeURIComponent(peerId)}`
       : '';
 
   useEffect(() => {
@@ -287,12 +319,12 @@ const ConnectionForm = () => {
   }, []);
 
   const openPopup = async () => {
-    if (!roomId || opening) return;
+    if (!peerId || opening) return;
     setMessage('');
     const existing = popupRef.current;
     if (existing && !existing.win.closed) {
-      if (existing.roomId !== roomId) {
-        const updated = { ...existing, roomId };
+      if (existing.peerId !== peerId) {
+        const updated = { ...existing, peerId };
         popupRef.current = updated;
         if (existing.kind === 'pip') setPipPopup(updated);
         else existing.win.location.href = popupUrl;
@@ -320,7 +352,7 @@ const ConnectionForm = () => {
           )) {
             win.document.head.appendChild(node.cloneNode(true));
           }
-          const popup: Popup = { win, roomId, kind: 'pip' };
+          const popup: Popup = { win, peerId, kind: 'pip' };
           popupRef.current = popup;
           setPipPopup(popup);
           win.addEventListener(
@@ -349,7 +381,7 @@ const ConnectionForm = () => {
         );
         return;
       }
-      popupRef.current = { win, roomId, kind: 'normal' };
+      popupRef.current = { win, peerId, kind: 'normal' };
     } catch (error) {
       console.warn('[SOOP VOD INFO] 팝업 열기 실패', error);
       setMessage(
@@ -431,7 +463,7 @@ const ConnectionForm = () => {
           />
           <button
             className="rounded-lg bg-sky-500 px-4 py-2 font-semibold text-zinc-950 hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
-            disabled={!roomId || opening}
+            disabled={!peerId || opening}
             type="submit"
           >
             {opening ? '팝업 여는 중...' : '팝업 열기'}
@@ -472,8 +504,8 @@ const ConnectionForm = () => {
       {pipPopup
         ? createPortal(
             <PlaybackInfoReceiver
-              key={pipPopup.roomId}
-              roomId={pipPopup.roomId}
+              key={pipPopup.peerId}
+              peerId={pipPopup.peerId}
             />,
             pipPopup.win.document.body,
           )
@@ -483,9 +515,9 @@ const ConnectionForm = () => {
 };
 
 const RouteComponent = () => {
-  const roomId = Route.useSearch().roomId?.trim();
-  return roomId ? (
-    <PlaybackInfoReceiver key={roomId} roomId={roomId} />
+  const peerId = Route.useSearch().peerId?.trim();
+  return peerId ? (
+    <PlaybackInfoReceiver key={peerId} peerId={peerId} />
   ) : (
     <ConnectionForm />
   );
