@@ -218,8 +218,8 @@ importers:
         specifier: ^19.3.0
         version: 19.3.0(react@19.3.0)
       react-highlight-words:
-        specifier: ^0.21.0
-        version: 0.21.0(react@19.3.0)
+        specifier: ^1.0.0
+        version: 1.0.0(react@19.3.0)
       soop-chat:
         specifier: ^0.6.0
         version: 0.6.0
@@ -257,9 +257,6 @@ importers:
       '@types/react-dom':
         specifier: ^19.3.0
         version: 19.3.0(@types/react@19.3.0)
-      '@types/react-highlight-words':
-        specifier: ^0.20.1
-        version: 0.20.1
       '@vitejs/plugin-react':
         specifier: ^6.1.2
         version: 6.1.2(@rolldown/plugin-babel@0.2.4(@babel/core@8.0.7)(@babel/runtime@8.0.0)(rolldown@1.2.13)(vite@8.3.4(@types/node@26.6.5)(jiti@2.7.0)))(babel-plugin-react-compiler@1.0.0)(vite@8.3.4(@types/node@26.6.5)(jiti@2.7.0))
@@ -1707,9 +1704,6 @@ packages:
     peerDependencies:
       '@types/react': ^19.3.0
 
-  '@types/react-highlight-words@0.20.1':
-    resolution: {integrity: sha512-EgF6RaoibBurIhxk3X3d5xL0uMqjD7KtShvZ8S+d7/o6xZ+mQ4rct1a2E49vWA9r63OzrHCIyghqvQHASb/ERw==}
-
   '@types/react@19.3.0':
     resolution: {integrity: sha512-N0rFCuH9YoxG9/m61l9MfpJKfmLOVU0em7ipIz6TRgSSkvReLB9vL85GB+yr8Bs5leqpvg96JSwF4ZS1s4viQg==}
 
@@ -2022,8 +2016,8 @@ packages:
       ocache:
         optional: true
 
-  highlight-words-core@1.2.3:
-    resolution: {integrity: sha512-m1O9HW3/GNHxzSIXWw1wCNXXsgLlxrP0OI6+ycGUhiUHkikqW3OrwVHz+lxeNBe5yqLESdIcj8PowHQ2zLvUvQ==}
+  highlight-words-core@2.0.0:
+    resolution: {integrity: sha512-dKFj8EZQ8yvU9b/88WGZGwsFC0wmKk5wEVOL4D4POzASma8Gct9LvWax6gPpIzBIF+z8N0si3t1mxyYxOHmjhw==}
 
   hookable@6.1.1:
     resolution: {integrity: sha512-U9LYDy1CwhMCnprUfeAZWZGByVbhd54hwepegYTK7Pi5NvqEj63ifz5z+xukznehT7i6NIZRu89Ay1AZmRsLEQ==}
@@ -2234,9 +2228,6 @@ packages:
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
-  memoize-one@4.0.3:
-    resolution: {integrity: sha512-QmpUu4KqDmX0plH4u+tf0riMc1KHE1+lw95cMrLlXQAFOx/xnBtwhZ52XJxd9X2O6kwKBqX32kmhbhlobD0cuw==}
-
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
@@ -2320,10 +2311,10 @@ packages:
     peerDependencies:
       react: ^19.3.0
 
-  react-highlight-words@0.21.0:
-    resolution: {integrity: sha512-SdWEeU9fIINArEPO1rO5OxPyuhdEKZQhHzZZP1ie6UeXQf+CjycT1kWaB+9bwGcVbR0NowuHK3RqgqNg6bgBDQ==}
+  react-highlight-words@1.0.0:
+    resolution: {integrity: sha512-783Dim5Q6X51x4yGlU2+XDr5L3r9P+3iI1zuRx4khbjqNOZObUoGOtZ5V7UdN8zrpz/IUo+cAdSoYJu4Y0Vo1w==}
     peerDependencies:
-      react: ^0.14.0 || ^15.0.0 || ^16.0.0-0 || ^17.0.0-0 || ^18.0.0-0 || ^19.0.0-0
+      react: ^16.3.0 || ^17.0.0-0 || ^18.0.0-0 || ^19.0.0-0
 
   react-is@18.3.1:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
@@ -4110,10 +4101,6 @@ snapshots:
     dependencies:
       '@types/react': 19.3.0
 
-  '@types/react-highlight-words@0.20.1':
-    dependencies:
-      '@types/react': 19.3.0
-
   '@types/react@19.3.0':
     dependencies:
       csstype: 3.2.3
@@ -4362,7 +4349,7 @@ snapshots:
       crossws: 0.4.12(srvx@1.0.3)
       ocache: 0.3.0
 
-  highlight-words-core@1.2.3: {}
+  highlight-words-core@2.0.0: {}
 
   hookable@6.1.1: {}
 
@@ -4509,8 +4496,6 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  memoize-one@4.0.3: {}
-
   ms@2.1.3: {}
 
   nanoid@3.3.20: {}
@@ -4597,10 +4582,9 @@ snapshots:
       react: 19.3.0
       scheduler: 0.28.0
 
-  react-highlight-words@0.21.0(react@19.3.0):
+  react-highlight-words@1.0.0(react@19.3.0):
     dependencies:
-      highlight-words-core: 1.2.3
-      memoize-one: 4.0.3
+      highlight-words-core: 2.0.0
       react: 19.3.0
 
   react-is@18.3.1: {}
