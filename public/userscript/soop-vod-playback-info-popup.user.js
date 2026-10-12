@@ -1,16 +1,17 @@
 // ==UserScript==
 // @name         SOOP VOD 재생정보 팝업
 // @namespace    https://blog.joyfui.com/
-// @version      2
+// @version      3
 // @author       joyfuI
 // @description  SOOP VOD 제목, 재생시간, 진행률을 별도 창에 표시하는 버튼을 추가합니다.
 // @homepageURL  https://bluejump-fan.vercel.app/tools/soop-vod-playback-info-popup
 // @downloadURL  https://gist.github.com/joyfuI/5898be2770fb1eac003f9abb164b7a08/raw/soop-vod-playback-info-popup.user.js
 // @updateURL    https://gist.github.com/joyfuI/5898be2770fb1eac003f9abb164b7a08/raw/soop-vod-playback-info-popup.user.js
-// @require      https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js
 // @match        https://vod.sooplive.com/player/*
 // @run-at       document-end
 // @grant        unsafeWindow
+// @grant        GM.xmlHttpRequest
+// @connect      soop-chat-api.joyfui.workers.dev
 // ==/UserScript==
 
 (() => {
@@ -23,13 +24,20 @@
   let updateTimer = null;
 
   // 관리 창은 닫혀도 같은 VOD 문서에서는 OBS URL을 계속 재사용한다.
-  const externalPeerId = crypto.randomUUID();
+  const externalRoomId = crypto.randomUUID();
+  // 수신 페이지와 Trystero 버전·appId·playback 액션 이름을 함께 맞춘다.
+  const trysteroUrl = 'https://esm.run/trystero@0.26.0';
+  const appId = 'soop-vod-playback-info-popup';
+  const turnApi = 'https://soop-chat-api.joyfui.workers.dev/turn';
   let connectionWindow = null;
-  let externalPeer = null;
+  let externalRoom = null;
+  let playbackAction = null;
   let sendTimer = null;
   let retryTimer = null;
-  let registrationTimer = null;
-  const externalConnections = new Set();
+  let turnRequest = null;
+  let connectionGeneration = 0;
+  let leaving = Promise.resolve();
+  let trysteroPromise = null;
 
   // ============================================================
   // VOD 제목 가져오기
@@ -476,140 +484,155 @@
 
   function updateConnectionStatus(message) {
     if (!connectionWindow || connectionWindow.closed) return;
-    const count = [...externalConnections].filter((conn) => conn.open).length;
+    const count = externalRoom
+      ? Object.keys(externalRoom.getPeers()).length
+      : 0;
     connectionWindow.document.querySelector('#connection-status').textContent =
       message ||
-      (externalPeer?.open
+      (externalRoom
         ? count
           ? `연결됨 (${count}개)`
           : '연결 대기 중'
         : '연결 준비 중...');
     connectionWindow.document.querySelector('#copy-code').disabled =
-      !externalPeer?.open;
+      !externalRoom;
+  }
+
+  function leaveExternalRoom() {
+    connectionGeneration++;
+    clearTimeout(retryTimer);
+    retryTimer = null;
+    turnRequest?.abort();
+    turnRequest = null;
+    const room = externalRoom;
+    externalRoom = playbackAction = null;
+    if (room) {
+      leaving = room.leave().catch((error) => {
+        console.warn('[SOOP VOD INFO] 송신 방 종료 실패', error);
+      });
+    }
   }
 
   function stopExternalConnection() {
     clearInterval(sendTimer);
-    clearTimeout(retryTimer);
-    clearTimeout(registrationTimer);
-    sendTimer = retryTimer = registrationTimer = null;
-    const peer = externalPeer;
-    externalPeer = null;
-    externalConnections.clear();
-    peer?.destroy();
+    sendTimer = null;
+    leaveExternalRoom();
   }
 
   function retryExternalConnection(message) {
     if (!connectionWindow || connectionWindow.closed) return;
-    updateConnectionStatus(message);
     if (retryTimer !== null) return;
+    leaveExternalRoom();
+    updateConnectionStatus(message);
     retryTimer = setTimeout(() => {
       retryTimer = null;
-      startExternalConnection();
+      void startExternalConnection();
     }, 3000);
   }
 
-  function waitForRegistration(peer) {
-    clearTimeout(registrationTimer);
-    registrationTimer = setTimeout(() => {
-      registrationTimer = null;
-      if (externalPeer !== peer || peer.open) return;
-      if ([...externalConnections].some((conn) => conn.open)) {
-        peer.disconnect();
-      } else {
-        peer.destroy();
-      }
-      retryExternalConnection('연결 시간 초과 · 재연결 중');
-    }, 10000);
-  }
-
-  function sendPlaybackInfo() {
+  function sendPlaybackInfo(target) {
     if (!connectionWindow || connectionWindow.closed) {
       stopExternalConnection();
       connectionWindow = null;
       return;
     }
-    const info = getPlaybackInfo();
-    for (const conn of externalConnections) {
-      if (!conn.open) continue;
-      try {
-        conn.send(info);
-      } catch (error) {
+    const room = externalRoom;
+    if (!room || !playbackAction) return;
+    void playbackAction
+      .send(getPlaybackInfo(), target ? { target } : undefined)
+      .catch((error) => {
+        if (externalRoom !== room) return;
         console.warn('[SOOP VOD INFO] 재생정보 송신 실패', error);
-        conn.close();
-      }
-    }
+        retryExternalConnection('송신 오류 · 재연결 중');
+      });
   }
 
-  function startExternalConnection() {
-    if (!connectionWindow || connectionWindow.closed) return;
-    if (externalPeer && !externalPeer.destroyed) {
-      if (externalPeer.disconnected) {
-        externalPeer.reconnect();
-        waitForRegistration(externalPeer);
-      }
-      return;
-    }
-    const peer = new window.peerjs.Peer(externalPeerId);
-    externalPeer = peer;
-    waitForRegistration(peer);
+  function isIceServers(value) {
+    return (
+      Array.isArray(value) &&
+      value.length > 0 &&
+      value.every((server) => {
+        if (typeof server !== 'object' || server === null) return false;
+        const urls =
+          typeof server.urls === 'string' ? [server.urls] : server.urls;
+        return (
+          Array.isArray(urls) &&
+          urls.length > 0 &&
+          urls.every(
+            (url) =>
+              typeof url === 'string' &&
+              /^(stun|stuns|turn|turns):\S+$/.test(url),
+          ) &&
+          (!urls.some((url) => /^turns?:/.test(url)) ||
+            (typeof server.username === 'string' &&
+              server.username.length > 0 &&
+              typeof server.credential === 'string' &&
+              server.credential.length > 0))
+        );
+      })
+    );
+  }
 
-    peer.on('open', () => {
-      if (externalPeer !== peer) return;
-      clearTimeout(registrationTimer);
-      clearTimeout(retryTimer);
-      registrationTimer = retryTimer = null;
-      updateConnectionStatus();
-    });
-    peer.on('connection', (conn) => {
-      if (
-        externalPeer !== peer ||
-        !connectionWindow ||
-        connectionWindow.closed
-      ) {
-        conn.close();
-        return;
-      }
-      externalConnections.add(conn);
-      conn.on('open', () => {
-        if (externalPeer !== peer) return;
-        sendPlaybackInfo();
-        updateConnectionStatus();
+  async function startExternalConnection() {
+    if (!connectionWindow || connectionWindow.closed || externalRoom) return;
+    const generation = ++connectionGeneration;
+    updateConnectionStatus('연결 준비 중...');
+    try {
+      await leaving;
+      if (generation !== connectionGeneration) return;
+      trysteroPromise ??= import(trysteroUrl).catch((error) => {
+        trysteroPromise = null;
+        throw error;
       });
-      conn.on('close', () => {
-        externalConnections.delete(conn);
-        if (externalPeer === peer) updateConnectionStatus();
+      // SOOP의 Origin은 TURN API의 CORS 허용 대상이 아니므로 GM 요청을 사용한다.
+      const request = GM.xmlHttpRequest({
+        method: 'GET',
+        url: turnApi,
+        responseType: 'json',
+        timeout: 10000,
+        anonymous: true,
       });
-      conn.on('error', (error) => {
-        console.warn('[SOOP VOD INFO] 수신 연결 오류', error);
-        conn.close();
-        externalConnections.delete(conn);
-        if (externalPeer === peer) updateConnectionStatus();
-      });
-    });
-    peer.on('disconnected', () => {
-      if (externalPeer !== peer) return;
-      clearTimeout(registrationTimer);
-      registrationTimer = null;
-      retryExternalConnection('서버 연결 끊김 · 재연결 중');
-    });
-    peer.on('error', (error) => {
-      if (externalPeer !== peer) return;
-      console.warn('[SOOP VOD INFO] 외부 연결 오류', error);
-      retryExternalConnection(
-        error.type === 'unavailable-id'
-          ? '연결코드 등록 실패 · 같은 코드로 재시도 중'
-          : '연결 오류 · 재연결 중',
+      turnRequest = request;
+      const [{ joinRoom }, response] = await Promise.all([
+        trysteroPromise,
+        request,
+      ]);
+      if (generation !== connectionGeneration) return;
+      turnRequest = null;
+      if (response.status < 200 || response.status >= 300)
+        throw new Error('TURN 발급 요청 실패');
+      if (!isIceServers(response.response?.iceServers))
+        throw new Error('TURN 서버 응답 형식 오류');
+      const room = joinRoom(
+        { appId, rtcConfig: { iceServers: response.response.iceServers } },
+        externalRoomId,
+        {
+          onJoinError: ({ error }) => {
+            if (externalRoom !== room) return;
+            console.warn('[SOOP VOD INFO] 외부 연결 오류', error);
+            retryExternalConnection('연결 오류 · 재연결 중');
+          },
+        },
       );
-    });
-    peer.on('close', () => {
-      if (externalPeer !== peer) return;
-      externalPeer = null;
-      externalConnections.clear();
-      clearTimeout(registrationTimer);
-      registrationTimer = null;
-      retryExternalConnection('연결 끊김 · 재연결 중');
-    });
+      externalRoom = room;
+      playbackAction = room.makeAction('playback');
+      room.onPeerJoin = (peerId) => {
+        if (externalRoom !== room) return;
+        sendPlaybackInfo(peerId);
+        updateConnectionStatus();
+      };
+      room.onPeerLeave = () => {
+        if (externalRoom !== room) return;
+        if (Object.keys(room.getPeers()).length === 0)
+          retryExternalConnection('연결 끊김 · 재연결 중');
+        else updateConnectionStatus();
+      };
+      updateConnectionStatus();
+    } catch (error) {
+      if (generation !== connectionGeneration) return;
+      console.warn('[SOOP VOD INFO] 외부 연결 준비 실패', error);
+      retryExternalConnection('연결 준비 실패 · 재시도 중');
+    }
   }
 
   function openConnectionWindow() {
@@ -657,11 +680,11 @@
             <p>재생정보를 보내는 동안 이 창을 열어 두세요.<br>같은 VOD 페이지에서는 창을 다시 열어도 코드가 유지됩니다.</p>`;
     const codeInput = win.document.querySelector('#connection-code');
     const copyButton = win.document.querySelector('#copy-code');
-    codeInput.value = externalPeerId;
+    codeInput.value = externalRoomId;
     copyButton.addEventListener('click', async () => {
       try {
         if (win.navigator.clipboard) {
-          await win.navigator.clipboard.writeText(externalPeerId);
+          await win.navigator.clipboard.writeText(externalRoomId);
         } else {
           codeInput.select();
           if (!win.document.execCommand('copy')) throw new Error('복사 실패');
@@ -685,7 +708,7 @@
       { once: true },
     );
     sendTimer = setInterval(sendPlaybackInfo, 200);
-    startExternalConnection();
+    void startExternalConnection();
   }
 
   // ============================================================
