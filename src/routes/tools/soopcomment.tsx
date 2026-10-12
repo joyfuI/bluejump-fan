@@ -440,6 +440,7 @@ const RouteComponent = () => {
 export const Route = createFileRoute('/tools/soopcomment')({
   component: RouteComponent,
   validateSearch: createStandardSchemaV1(searchParams, { partialOutput: true }),
+  head: () => ({ meta: [{ title: 'SOOP 댓글 링크 생성기' }] }),
   headers: () => ({
     'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',
   }),

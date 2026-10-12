@@ -613,6 +613,7 @@ const RouteComponent = () => {
 export const Route = createFileRoute('/tools/topfanattendance')({
   component: RouteComponent,
   validateSearch: createStandardSchemaV1(searchParams, { partialOutput: true }),
+  head: () => ({ meta: [{ title: '열혈팬 출석체크' }] }),
   headers: () => ({
     'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',
   }),

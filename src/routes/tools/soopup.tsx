@@ -1,5 +1,5 @@
 ﻿/**
- * SOOP 댓글 실시간 업순 맥락 (관련 동작을 바꾸면 이 주석도 갱신):
+ * SOOP 댓글 실시간 업 랭킹 맥락 (관련 동작을 바꾸면 이 주석도 갱신):
  * - nuqs 쿼리의 userId/postId로 게시글을 식별할 수 있으면 순위 화면을 표시한다.
  *   userId/postId/cutline은 공유할 조회·표시 조건이고, 하이라이트 ID만 해시(#<userId>)에 둔다.
  *   설정 버튼은 이 세 쿼리를 지우고 현재 게시글 URL·커트라인을 입력칸에 남긴다. 해시는 유지한다.
@@ -799,7 +799,7 @@ const RouteComponent = () => {
             <div className="mb-3 flex items-center gap-2 text-slate-200">
               <MessageCircle className="h-4 w-4 text-sky-400" />
               <h1 className="text-base font-semibold sm:text-lg">
-                SOOP 댓글 실시간 업순
+                SOOP 댓글 실시간 업 랭킹
               </h1>
             </div>
 
@@ -991,6 +991,7 @@ const RouteComponent = () => {
 export const Route = createFileRoute('/tools/soopup')({
   component: RouteComponent,
   validateSearch: createStandardSchemaV1(searchParams, { partialOutput: true }),
+  head: () => ({ meta: [{ title: 'SOOP 댓글 실시간 업 랭킹' }] }),
   headers: () => ({
     'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',
   }),

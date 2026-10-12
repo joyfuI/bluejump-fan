@@ -479,6 +479,7 @@ const RouteComponent = () => {
 
 export const Route = createFileRoute('/tools/soopthumbnail/haroha')({
   component: RouteComponent,
+  head: () => ({ meta: [{ title: '다시보기 썸네일 생성기' }] }),
   headers: () => ({
     'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',
   }),

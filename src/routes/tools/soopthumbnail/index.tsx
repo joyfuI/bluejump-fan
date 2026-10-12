@@ -1985,4 +1985,5 @@ export const Route = createFileRoute('/tools/soopthumbnail/')({
     });
   },
   component: () => null,
+  head: () => ({ meta: [{ title: '다시보기 썸네일 생성기' }] }),
 });
