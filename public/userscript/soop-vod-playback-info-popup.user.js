@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         SOOP VOD 재생정보 팝업
 // @namespace    https://blog.joyfui.com/
-// @version      5
+// @version      6
 // @author       joyfuI
 // @description  SOOP VOD 제목, 재생시간, 진행률을 별도 창에 표시하는 버튼을 추가합니다.
 // @homepageURL  https://bluejump-fan.vercel.app/tools/soop-vod-playback-info-popup
 // @downloadURL  https://gist.github.com/joyfuI/5898be2770fb1eac003f9abb164b7a08/raw/soop-vod-playback-info-popup.user.js
 // @updateURL    https://gist.github.com/joyfuI/5898be2770fb1eac003f9abb164b7a08/raw/soop-vod-playback-info-popup.user.js
 // @match        https://vod.sooplive.com/player/*
+// @noframes
 // @run-at       document-end
 // @require      https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js
 // @grant        unsafeWindow
@@ -297,7 +298,7 @@
                         "Liberation Mono",
                         monospace;
 
-                    font-size: 15px;
+                    font-size: 17px;
                     font-weight: 600;
 
                     font-variant-numeric:

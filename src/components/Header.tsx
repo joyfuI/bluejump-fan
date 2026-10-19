@@ -167,7 +167,7 @@ const items = [
                 target="_blank"
                 to="/tools/soop-vod-playback-info-popup"
               >
-                SOOP VOD 재생정보 팝업
+                OTT 재생정보 팝업
                 <ExternalLink className="ml-1" size={16} />
               </Link>
             ),

@@ -1,7 +1,8 @@
 /**
  * SOOP 재생정보 팝업 맥락 (동작을 바꾸면 이 주석도 갱신):
- * - public/userscript/soop-vod-playback-info-popup.user.js는 SOOP에서 별도로 설치·실행된다.
- *   npm 모듈을 공유하지 않으므로 송수신 메시지와 표시 디자인은 두 파일을 함께 맞춘다.
+ * - public/userscript/의 soop-vod-playback-info-popup.user.js와
+ *   netflix-playback-info-popup.user.js는 각 서비스에서 별도로 설치·실행된다.
+ *   npm 모듈을 공유하지 않으므로 송수신 메시지와 표시 디자인은 세 파일을 함께 맞춘다.
  * - 송신 관리 창을 닫으면 송신도 종료하지만, 같은 VOD 문서에서는 연결코드를 유지한다.
  *   관리 창을 다시 열면 기존 OBS URL로 재연결되며, VOD 새로고침 후에는 URL을 갱신해야 한다.
  *   수신기가 모두 나가도 관리 창이 열려 있으면 송신 Peer를 유지하며 연결 대기한다.
@@ -265,7 +266,7 @@ const PlaybackInfoReceiver = ({ peerId }: { peerId: string }) => {
             {info?.title ?? '제목 불러오는 중...'}
           </div>
           <div
-            className="shrink-0 whitespace-nowrap text-[15px] font-semibold text-[#dddddd] tabular-nums"
+            className="shrink-0 whitespace-nowrap text-[17px] font-semibold text-[#dddddd] tabular-nums"
             data-playback="time"
             style={{
               fontFamily:
@@ -425,9 +426,10 @@ const ConnectionForm = () => {
   return (
     <main className="min-h-screen bg-zinc-950 px-4 py-8 text-zinc-100">
       <section className="mx-auto w-full max-w-2xl rounded-xl border border-zinc-800 bg-zinc-900 p-5">
-        <h1 className="text-xl font-semibold">SOOP VOD 재생정보 팝업</h1>
+        <h1 className="text-xl font-semibold">OTT 재생정보 팝업</h1>
         <p className="mt-2 text-sm text-zinc-400">
-          SOOP VOD에서 외부연결 팝업을 열고, 표시된 연결코드를 입력하세요.
+          SOOP VOD 또는 Netflix에서 외부연결 팝업을 열고, 표시된 연결코드를
+          입력하세요.
         </p>
         <a
           className="mt-4 inline-flex rounded-lg border border-zinc-600 px-3 py-2 text-sm hover:bg-zinc-800"
@@ -435,7 +437,15 @@ const ConnectionForm = () => {
           rel="noreferrer"
           target="_blank"
         >
-          유저 스크립트 설치
+          SOOP 유저 스크립트 설치
+        </a>
+        <a
+          className="mt-4 ml-2 inline-flex rounded-lg border border-zinc-600 px-3 py-2 text-sm hover:bg-zinc-800"
+          href="https://gist.github.com/joyfuI/5898be2770fb1eac003f9abb164b7a08/raw/netflix-playback-info-popup.user.js"
+          rel="noreferrer"
+          target="_blank"
+        >
+          Netflix 유저 스크립트 설치
         </a>
         <p className="mt-2 text-xs text-zinc-400">
           <a
@@ -494,8 +504,8 @@ const ConnectionForm = () => {
           OBS 권장 크기: 너비 680px · 높이 110px
         </p>
         <p className="mt-2 text-xs leading-relaxed text-zinc-400">
-          재생정보를 보내는 동안 SOOP의 외부연결 팝업을 열어 두세요. VOD
-          페이지를 새로고침하면 새 연결코드로 OBS URL을 갱신해야 합니다.
+          재생정보를 보내는 동안 외부연결 팝업을 열어 두세요. 페이지를
+          새로고침하면 새 연결코드로 OBS URL을 갱신해야 합니다.
         </p>
         <p className="mt-3 min-h-5 text-sm text-sky-300" role="status">
           {message}
@@ -526,7 +536,7 @@ const RouteComponent = () => {
 export const Route = createFileRoute('/tools/soop-vod-playback-info-popup')({
   component: RouteComponent,
   validateSearch: createStandardSchemaV1(searchParams, { partialOutput: true }),
-  head: () => ({ meta: [{ title: 'SOOP VOD 재생정보 팝업' }] }),
+  head: () => ({ meta: [{ title: 'OTT 재생정보 팝업' }] }),
   headers: () => ({
     'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',
   }),
