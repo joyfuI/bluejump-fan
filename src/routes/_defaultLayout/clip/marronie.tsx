@@ -12,14 +12,13 @@ const RouteComponent = () => {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useClipQuery(
     '로니',
     [
-      '페퍼로니',
-      '페페로니',
+      /페[퍼페]로니/g,
       '마카로니',
       '짜짜로니',
       '빠빠로니',
       '콜로니',
       '트로니카',
-      '크로니클',
+      /[크클]로니클/g,
       '싱크로니시티',
       '실로니카',
       /[(/-]\s*마로니에/g,
