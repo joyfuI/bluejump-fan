@@ -130,4 +130,5 @@ export const CLIPPERS: readonly string[] = [
   'UCv_jCOKX5IeIi7TpE1t-yaQ', // 마로니사랑단
   'UCpcgX-Ug4wqkAk2Or31IZ1Q', // 누렁빛깔누눙지
   'UCCy2VQYOYlTRWwZWkTHvnEA', // 주식자브종누렁이
+  'UCLmVZw9iXzwxhnEblduO9qg', // 블루점프 보관소
 ];
