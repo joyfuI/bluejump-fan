@@ -16,15 +16,15 @@
     "@ant-design/cssinjs": "^2.1.2",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-devtools": "^0.10.13",
-    "@tanstack/react-query": "^5.104.4",
-    "@tanstack/react-query-devtools": "^5.104.4",
+    "@tanstack/react-query": "^5.104.5",
+    "@tanstack/react-query-devtools": "^5.104.5",
     "@tanstack/react-router": "^1.170.45",
     "@tanstack/react-router-devtools": "^1.167.2",
     "@tanstack/react-router-ssr-query": "^1.167.3",
     "@tanstack/react-start": "^1.169.3",
-    "antd": "^6.6.6",
+    "antd": "^6.6.7",
     "dayjs": "^1.11.23",
-    "lucide-react": "^1.59.0",
+    "lucide-react": "^1.61.0",
     "nitro": "3.0.260903-beta",
     "nuqs": "^2.10.2",
     "papaparse": "^5.7.0",
@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@babel/core": "^8.0.7",
-    "@biomejs/biome": "2.5.15",
+    "@biomejs/biome": "2.6.2",
     "@rolldown/plugin-babel": "^0.2.4",
     "@tanstack/devtools-vite": "^0.8.5",
     "@types/babel__core": "^7.20.5",
@@ -48,7 +48,7 @@
     "@vitejs/plugin-react": "^6.1.2",
     "babel-plugin-react-compiler": "^1.0.0",
     "typescript": "^7.0.2",
-    "vite": "^8.3.4"
+    "vite": "^8.3.5"
   },
-  "packageManager": "pnpm@12.14.0+sha512.c18ba6d87993d3d164cb5e8948f32b2c06ee854487e06cd8d86781342fb3e5bb4634367034711e86802baa9c37bea906ce1929ad08d70884c97d801df13389a6"
+  "packageManager": "pnpm@12.15.0+sha512.b3951d6d6ff4a9f13dc7cf56cd28d2b8eb37dbcc9c68e52e1e1191873ea9f82a017287ab50baadc5ccc494f036c67c0e47eb13608c2fa36f47711b61ea128e61"
 }
