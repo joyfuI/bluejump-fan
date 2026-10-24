@@ -3,8 +3,9 @@
  * - public/userscript/의 soop-vod-playback-info-popup.user.js와
  *   netflix-playback-info-popup.user.js는 각 서비스에서 별도로 설치·실행된다.
  *   npm 모듈을 공유하지 않으므로 송수신 메시지와 표시 디자인은 세 파일을 함께 맞춘다.
- * - 송신 관리 창을 닫으면 송신도 종료하지만, 같은 VOD 문서에서는 연결코드를 유지한다.
- *   관리 창을 다시 열면 기존 OBS URL로 재연결되며, VOD 새로고침 후에는 URL을 갱신해야 한다.
+ * - 송신 관리 창을 닫으면 송신도 종료하지만, 같은 탭에서는 sessionStorage로 연결코드를 유지한다.
+ *   새로고침 후 관리 창을 다시 열면 기존 OBS URL로 재연결된다.
+ *   재발급은 저장된 코드를 삭제하고 원본 페이지를 새로고침하며, 이후 OBS URL을 갱신해야 한다.
  *   수신기가 모두 나가도 관리 창이 열려 있으면 송신 Peer를 유지하며 연결 대기한다.
  * - PeerJS 1.5.5 공개 서버에 송신자의 연결코드를 peerId로 등록한다.
  *   수신자는 이 ID로 직접 연결하므로 수신자끼리 연결되지 않는다.
@@ -347,7 +348,7 @@ const ConnectionForm = () => {
             win.close();
             return;
           }
-          win.document.title = 'SOOP VOD 재생정보';
+          win.document.title = 'OTT 재생정보';
           for (const node of document.querySelectorAll(
             'style, link[rel="stylesheet"]',
           )) {
@@ -504,8 +505,9 @@ const ConnectionForm = () => {
           OBS 권장 크기: 너비 680px · 높이 110px
         </p>
         <p className="mt-2 text-xs leading-relaxed text-zinc-400">
-          재생정보를 보내는 동안 외부연결 팝업을 열어 두세요. 페이지를
-          새로고침하면 새 연결코드로 OBS URL을 갱신해야 합니다.
+          재생정보를 보내는 동안 외부연결 팝업을 열어 두세요. 같은 탭에서는
+          새로고침해도 연결코드가 유지됩니다. 재발급 버튼은 원본 페이지를
+          새로고침하며, 이후 새 연결코드로 OBS URL을 갱신해야 합니다.
         </p>
         <p className="mt-3 min-h-5 text-sm text-sky-300" role="status">
           {message}

@@ -16,6 +16,7 @@ function createPlayer() {
   const state = { videos: [] };
   const pageWindow = {
     location: { pathname: '/browse' },
+    sessionStorage: { getItem: () => null, setItem() {} },
     addEventListener() {},
   };
   const context = {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SOOP VOD 재생정보 팝업
 // @namespace    https://blog.joyfui.com/
-// @version      6
+// @version      7
 // @author       joyfuI
 // @description  SOOP VOD 제목, 재생시간, 진행률을 별도 창에 표시하는 버튼을 추가합니다.
 // @homepageURL  https://bluejump-fan.vercel.app/tools/soop-vod-playback-info-popup
@@ -25,8 +25,16 @@
   let infoWindow = null;
   let updateTimer = null;
 
-  // 관리 창은 닫혀도 같은 VOD 문서에서는 OBS URL을 계속 재사용한다.
-  const externalPeerId = crypto.randomUUID();
+  // 같은 탭에서는 새로고침해도 OBS URL을 계속 재사용한다.
+  const externalPeerIdKey = 'soop-vod-playback-info-popup:peer-id';
+  let externalPeerId = crypto.randomUUID();
+  try {
+    externalPeerId =
+      pageWindow.sessionStorage.getItem(externalPeerIdKey) || externalPeerId;
+    pageWindow.sessionStorage.setItem(externalPeerIdKey, externalPeerId);
+  } catch (error) {
+    console.warn('[SOOP VOD INFO] 연결코드 저장 실패 · 메모리에서 유지', error);
+  }
   const turnApi = 'https://soop-chat-api.joyfui.workers.dev/turn';
   let connectionWindow = null;
   let externalPeer = null;
@@ -684,7 +692,7 @@
         console.warn('[SOOP VOD INFO] 외부 연결 오류', error);
         retryExternalConnection(
           error.type === 'unavailable-id'
-            ? '연결코드 등록 실패 · 재시도 중'
+            ? '연결코드 사용 중 · 다른 탭을 닫거나 재발급하세요'
             : '연결 오류 · 재연결 중',
         );
       });
@@ -739,9 +747,10 @@
             <div class="code-row">
                 <input id="connection-code" readonly>
                 <button id="copy-code" type="button" disabled>복사</button>
+                <button id="regenerate-code" type="button">재발급</button>
             </div>
             <div id="connection-status" role="status">연결 준비 중...</div>
-            <p>재생정보를 보내는 동안 이 창을 열어 두세요.<br>같은 VOD 페이지에서는 창을 다시 열어도 코드가 유지됩니다.</p>`;
+            <p>재생정보를 보내는 동안 이 창을 열어 두세요.<br>새로고침해도 연결코드는 유지됩니다.<br>재발급하면 원본 페이지가 새로고침되며 OBS URL 갱신이 필요합니다.</p>`;
     const codeInput = win.document.querySelector('#connection-code');
     const copyButton = win.document.querySelector('#copy-code');
     codeInput.value = externalPeerId;
@@ -762,6 +771,20 @@
         }
       }
     });
+    win.document
+      .querySelector('#regenerate-code')
+      .addEventListener('click', () => {
+        try {
+          pageWindow.sessionStorage.removeItem(externalPeerIdKey);
+        } catch (error) {
+          console.warn('[SOOP VOD INFO] 연결코드 재발급 실패', error);
+          win.alert(
+            '연결코드를 재발급하지 못했습니다. 브라우저의 저장소 설정을 확인해주세요.',
+          );
+          return;
+        }
+        pageWindow.location.reload();
+      });
     win.addEventListener(
       'pagehide',
       () => {
