@@ -20,6 +20,7 @@ const RouteComponent = () => {
       '도리도끼',
       /히든\s?도끼/g,
       /도끼\s?살인마/g,
+      '도끼질',
     ],
     ['yangdoki'],
   );
