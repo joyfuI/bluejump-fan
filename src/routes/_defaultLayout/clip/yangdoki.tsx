@@ -25,6 +25,7 @@ const RouteComponent = () => {
       '도끼질',
       '도끼 증발',
       '도끼실종사건',
+      '도끼뚜쩍병',
     ],
     ['yangdoki'],
   );
