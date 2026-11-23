@@ -1,8 +1,8 @@
 ﻿/**
  * SOOP 댓글 실시간 업 랭킹 맥락 (관련 동작을 바꾸면 이 주석도 갱신):
- * - nuqs 쿼리의 userId/postId로 게시글을 식별할 수 있으면 순위 화면을 표시한다.
- *   userId/postId/cutline은 공유할 조회·표시 조건이고, 하이라이트 ID만 해시(#<userId>)에 둔다.
- *   설정 버튼은 이 세 쿼리를 지우고 현재 게시글 URL·커트라인을 입력칸에 남긴다. 해시는 유지한다.
+ * - URL 쿼리의 userId/postId로 게시글을 식별할 수 있으면 순위 화면을 표시한다.
+ *   userId/postId/cutline/autoRefresh는 공유할 조회·표시 조건이고, 하이라이트 ID는 해시(#<userId>)에 둔다.
+ *   설정 버튼은 이 쿼리와 해시를 주소에서 지우고 현재 값을 입력칸에 남긴다.
  * - 게시글 입력은 sooplive.com/sooplive.co.kr(www 유무 모두)를 허용하며,
  *   표시·공유 URL은 https://www.sooplive.com/station/{userId}/post/{postId}로 통일한다.
  * - 조회 중 댓글 추가로 페이지 경계가 바뀌는 문제를 완화하려고 1페이지 → 나머지 병렬 조회
@@ -18,11 +18,12 @@
  *   구분하지 않으며 해당 ID의 모든 댓글을 강조하되 스크롤은 가장 상위 댓글을 중앙으로 따라간다.
  * - 업 수 배지는 SOOP의 댓글 이동 앵커를 붙인 원본 링크를 새 탭으로 연다:
  *   https://www.sooplive.com/station/{userId}/post/{postId}#comment_noti{pCommentNo}
- * - 10초 간격으로 재조회하도록 설정한다. 개발 모드의 순위 변동 버튼은 API 대신 조회 캐시를 바꾼다.
+ * - 자동 갱신은 기본으로 켜져 있고 10초 간격으로 재조회한다. 끄면 주기 재조회, 탭 복귀 및 연결 복구 시 재조회를 멈춘다.
+ *   개발 모드의 순위 변동 버튼은 API 대신 조회 캐시를 바꾼다.
  */
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useLocation } from '@tanstack/react-router';
 import {
   AlertCircle,
   Cog,
@@ -36,9 +37,9 @@ import {
 } from 'lucide-react';
 import {
   createStandardSchemaV1,
+  parseAsBoolean,
   parseAsInteger,
   parseAsString,
-  useQueryState,
 } from 'nuqs';
 import {
   type ChangeEvent,
@@ -76,10 +77,15 @@ type SoopupQueryData = {
 const REFRESH_INTERVAL_MS = 10_000;
 const FLIP_DURATION_MS = 700;
 const searchParams = {
+  autoRefresh: parseAsBoolean.withDefault(true),
   userId: parseAsString,
   postId: parseAsInteger,
   cutline: parseAsInteger,
 };
+const clearSoopupSearch = (search: Record<string, unknown>) =>
+  Object.fromEntries(
+    Object.entries(search).filter(([key]) => !Object.hasOwn(searchParams, key)),
+  );
 const SUPPORTED_SOOP_HOSTS = new Set([
   'www.sooplive.com',
   'sooplive.com',
@@ -123,17 +129,12 @@ const buildSoopPostUrl = (target: SoopTarget) =>
 const buildSoopCommentUrl = (target: SoopTarget, commentKey: number) =>
   `${buildSoopPostUrl(target)}#comment_noti${commentKey}`;
 
-const parseHighlightFromHash = (hash: string) => {
-  const raw = hash.startsWith('#') ? hash.slice(1) : hash;
-  if (!raw) {
-    return '';
-  }
-
-  return decodeURIComponent(raw).trim();
+const parseHighlightFromHref = (href: string) => {
+  const hashIndex = href.indexOf('#');
+  return hashIndex === -1
+    ? ''
+    : decodeURIComponent(href.slice(hashIndex + 1)).trim();
 };
-
-const buildHighlightHash = (userId: string) =>
-  `#${encodeURIComponent(userId.trim())}`;
 
 const parseCutlineInput = (raw: string) => {
   const trimmed = raw.trim();
@@ -409,6 +410,11 @@ const RankedCommentListItem = ({
 
 const RouteComponent = () => {
   const queryClient = useQueryClient();
+  const navigate = Route.useNavigate();
+  const { autoRefresh = true, cutline, postId, userId } = Route.useSearch();
+  const highlightUserId = useLocation({
+    select: ({ href }) => parseHighlightFromHref(href),
+  });
   const inputId = useId();
   const highlightInputId = useId();
   const cutlineInputId = `${highlightInputId}-cutline`;
@@ -422,22 +428,11 @@ const RouteComponent = () => {
   const highlightFollowRafRef = useRef<number | null>(null);
 
   const [inputUrl, setInputUrl] = useState('');
-  const [highlightInput, setHighlightInput] = useState('');
+  const [highlightDraft, setHighlightDraft] = useState<string>();
   const [cutlineInput, setCutlineInput] = useState('');
-  const [highlightUserId, setHighlightUserId] = useState('');
-
-  const [queryUserId, setQueryUserId] = useQueryState(
-    'userId',
-    searchParams.userId,
-  );
-  const [queryPostId, setQueryPostId] = useQueryState(
-    'postId',
-    searchParams.postId,
-  );
-  const [queryCutline, setQueryCutline] = useQueryState(
-    'cutline',
-    searchParams.cutline,
-  );
+  const [autoRefreshDraft, setAutoRefreshDraft] = useState<boolean>();
+  const highlightInput = highlightDraft ?? highlightUserId;
+  const autoRefreshInput = autoRefreshDraft ?? autoRefresh;
 
   const handleInputUrlChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -455,20 +450,27 @@ const RouteComponent = () => {
 
   const handleHighlightInputChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
-      setHighlightInput(event.target.value);
+      setHighlightDraft(event.target.value);
+    },
+    [],
+  );
+
+  const handleAutoRefreshChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      setAutoRefreshDraft(event.target.checked);
     },
     [],
   );
 
   const parsedTarget = useMemo(() => {
-    if (!queryUserId || !queryPostId) {
+    if (!userId || !postId) {
       return null;
     }
-    if (!Number.isSafeInteger(queryPostId)) {
+    if (!Number.isSafeInteger(postId)) {
       return null;
     }
-    return { userId: queryUserId, postId: queryPostId };
-  }, [queryPostId, queryUserId]);
+    return { userId, postId };
+  }, [postId, userId]);
 
   const parsedInputTarget = useMemo(
     () => parseSoopPostUrl(inputUrl),
@@ -482,34 +484,13 @@ const RouteComponent = () => {
     () => parseCutlineInput(cutlineInput),
     [cutlineInput],
   );
-  const effectiveCutline =
-    queryCutline && queryCutline >= 1 ? queryCutline : undefined;
+  const effectiveCutline = cutline && cutline >= 1 ? cutline : undefined;
 
   useEffect(() => {
     if (submittedUrl && !inputUrl) {
       setInputUrl(submittedUrl);
     }
   }, [inputUrl, submittedUrl]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    const syncFromHash = () => {
-      const parsed = parseHighlightFromHash(window.location.hash);
-      setHighlightUserId(parsed);
-      if (!parsedTarget) {
-        setHighlightInput(parsed);
-      }
-    };
-
-    syncFromHash();
-    window.addEventListener('hashchange', syncFromHash);
-    return () => {
-      window.removeEventListener('hashchange', syncFromHash);
-    };
-  }, [parsedTarget]);
 
   const query = useQuery({
     queryKey: ['soop-up-comments', parsedTarget?.userId, parsedTarget?.postId],
@@ -520,7 +501,9 @@ const RouteComponent = () => {
       return fetchAllComments(parsedTarget);
     },
     enabled: Boolean(parsedTarget),
-    refetchInterval: REFRESH_INTERVAL_MS,
+    refetchInterval: autoRefresh ? REFRESH_INTERVAL_MS : false,
+    refetchOnReconnect: autoRefresh,
+    refetchOnWindowFocus: autoRefresh,
     staleTime: REFRESH_INTERVAL_MS,
     retry: 1,
   });
@@ -730,27 +713,19 @@ const RouteComponent = () => {
       return;
     }
 
-    await Promise.all([
-      setQueryUserId(parsed.userId),
-      setQueryPostId(parsed.postId),
-      setQueryCutline(parsedCutlineInput ?? null),
-    ]);
-
-    if (typeof window !== 'undefined') {
-      const nextHighlight = highlightInput.trim();
-      if (nextHighlight) {
-        window.location.hash = buildHighlightHash(nextHighlight);
-      } else {
-        window.history.replaceState(
-          null,
-          '',
-          `${window.location.pathname}${window.location.search}`,
-        );
-      }
-      setHighlightUserId(nextHighlight);
-    }
-
     setInputUrl(buildSoopPostUrl(parsed));
+    await navigate({
+      hash: encodeURIComponent(highlightInput.trim()),
+      replace: true,
+      resetScroll: false,
+      search: (previous) => ({
+        ...clearSoopupSearch(previous),
+        ...parsed,
+        ...(parsedCutlineInput ? { cutline: parsedCutlineInput } : {}),
+        ...(autoRefreshInput ? {} : { autoRefresh: false }),
+      }),
+      to: '.',
+    });
   };
 
   const handleOpenSettings = async () => {
@@ -758,11 +733,15 @@ const RouteComponent = () => {
       setInputUrl(submittedUrl);
     }
     setCutlineInput(effectiveCutline ? String(effectiveCutline) : '');
-    await Promise.all([
-      setQueryUserId(null),
-      setQueryPostId(null),
-      setQueryCutline(null),
-    ]);
+    setHighlightDraft(highlightUserId);
+    setAutoRefreshDraft(autoRefresh);
+    await navigate({
+      hash: '',
+      replace: true,
+      resetScroll: false,
+      search: clearSoopupSearch,
+      to: '.',
+    });
   };
 
   const handleSimulateRankChange = () => {
@@ -849,6 +828,16 @@ const RouteComponent = () => {
                 />
               </div>
 
+              <label className="flex w-fit cursor-pointer items-center gap-2 px-1 py-2 text-sm text-slate-200">
+                <input
+                  checked={autoRefreshInput}
+                  className="h-4 w-4 accent-sky-500"
+                  onChange={handleAutoRefreshChange}
+                  type="checkbox"
+                />
+                10초마다 자동 갱신
+              </label>
+
               <button
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-sky-500 px-4 text-sm font-semibold text-slate-950 transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
                 disabled={!hasValidInput || !hasValidCutline}
@@ -883,7 +872,7 @@ const RouteComponent = () => {
                     <RefreshCw
                       className={`h-3.5 w-3.5 ${query.isFetching ? 'animate-spin' : ''}`}
                     />
-                    10초마다 자동 갱신
+                    {autoRefresh ? '10초마다 자동 갱신' : '자동 갱신 꺼짐'}
                   </span>
                   <a
                     className="inline-flex items-center gap-1 text-sky-300 hover:text-sky-200"
