@@ -14,8 +14,9 @@
  *   동점 댓글의 순위는 같고 다음 순위는 건너뛴다(예: 1,2,2,4).
  * - cutline은 행 개수가 아닌 순위 기준이다. 동점자는 함께 통과하고 통과/탈락 경계에 선을 표시한다.
  *   빨간 배지는 실제 마지막 통과 순위 전체에 적용한다(위 예에서 cutline=3이면 2위 배지들).
- * - 업 수는 숫자 애니메이션, 순위 이동은 FLIP을 사용한다. 하이라이트는 ID의 대소문자를
- *   구분하지 않으며 해당 ID의 모든 댓글을 강조하되 스크롤은 가장 상위 댓글을 중앙으로 따라간다.
+ * - 업 수는 숫자 애니메이션, 순위 이동은 하이라이트 지정 여부와 관계없이 FLIP을 사용한다.
+ *   하이라이트는 ID의 대소문자를 구분하지 않으며 해당 ID의 모든 댓글을 강조하되
+ *   스크롤은 가장 상위 댓글을 중앙으로 따라간다.
  * - 업 수 배지는 SOOP의 댓글 이동 앵커를 붙인 원본 링크를 새 탭으로 연다:
  *   https://www.sooplive.com/station/{userId}/post/{postId}#comment_noti{pCommentNo}
  * - 자동 갱신은 기본으로 켜져 있고 10초 간격으로 재조회한다. 끄면 주기 재조회, 탭 복귀 및 연결 복구 시 재조회를 멈춘다.
@@ -624,6 +625,9 @@ const RouteComponent = () => {
         element.style.transform = 'translateY(0)';
       });
     }
+
+    // Firefox가 전환을 시작하기 전에 FLIP의 시작 위치를 계산하게 한다.
+    void document.body.offsetTop;
 
     prevRectsRef.current = nextRects;
   }, [query.data?.comments]);
