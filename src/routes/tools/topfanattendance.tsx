@@ -9,9 +9,10 @@
  *   서버는 사이트 Origin을 CORS로 허용하고 재연결마다 최신 접속 정보를 제공해야 한다.
  * - 참고: https://github.com/joyfuI/soop-chat-webtool/tree/main/apps/gamepinball-helper
  *   라이브러리: https://github.com/joyfuI/soop-chat (soop-chat/browser 사용).
- * - 유효한 userId 쿼리가 있으면 자동 시작한다. 중지/취소는 쿼리를 지우고 입력 화면으로 돌아간다.
- * - 열혈팬 목록은 시작 시 SOOP API에서 직접 한 번 조회한다. ID 정규화·중복 제거 후
- *   API 순서대로 최대 20명을 표시하며 재연결 중에는 목록을 다시 조회하지 않는다.
+ * - 유효한 userId 쿼리가 있으면 자동 시작한다. 중지/취소는 userId를 지우고 입력 화면으로 돌아간다.
+ * - tab 쿼리로 표시할 목록을 선택한다. 기본은 누적이며 탭을 바꿔도 채팅 연결은 유지한다.
+ * - 누적·이번 달 목록은 시작 시 SOOP API에서 각 한 번 조회한다. ID 정규화·중복 제거 후
+ *   각 목록에서 API 순서대로 최대 20명을 표시한다. 출석은 탭에 관계없이 두 목록에 반영한다.
  * - 매칭 ID는 끝의 (숫자)를 제거하고 소문자로 바꾼다. 원본 접속 ID는 별도로 추적하여
  *   같은 계정의 여러 접속 중 하나만 퇴장해도 나머지 접속의 시청 상태를 유지한다.
  * - 시청 상태는 chatUser/채팅으로 관측한 접속 기준이며 전체 시청자 명단을 보장하지 않는다.
@@ -34,9 +35,16 @@ import {
   Play,
   Square,
 } from 'lucide-react';
-import { createStandardSchemaV1, parseAsString, useQueryState } from 'nuqs';
+import {
+  createParser,
+  createStandardSchemaV1,
+  parseAsString,
+  useQueryState,
+} from 'nuqs';
 import {
   type ChangeEvent,
+  type KeyboardEvent,
+  type MouseEvent,
   type SubmitEvent,
   type SyntheticEvent,
   useEffect,
@@ -55,8 +63,16 @@ import {
 
 import fetchJson from '@/utils/fetchJson';
 
+const FAN_TABS = ['cumulative', 'monthly'] as const;
+type FanTab = (typeof FAN_TABS)[number];
+const FAN_TAB_LABELS: Record<FanTab, string> = {
+  cumulative: '누적',
+  monthly: '월간',
+};
+
 type TopFan = { userId: string; userNick: string; profileImage: string };
 type Fan = TopFan & {
+  tab: FanTab;
   watching: boolean;
   attended: boolean;
   message: { text: string; sequence: number } | null;
@@ -94,7 +110,15 @@ const PHASE_LABEL: Record<Phase, string> = {
   ended: '연결 종료',
 };
 
-const searchParams = { userId: parseAsString };
+const searchParams = {
+  userId: parseAsString,
+  tab: createParser<FanTab>({
+    parse: (value) => (value === 'monthly' ? 'monthly' : 'cumulative'),
+    serialize: String,
+  })
+    .withDefault('cumulative')
+    .withOptions({ clearOnDefault: false }),
+};
 const normalizeUserId = (userId: string) =>
   userId.replace(/\(\d+\)$/, '').toLowerCase();
 const isValidStreamerId = (value: string) => /^[a-z0-9_]+$/i.test(value);
@@ -124,11 +148,16 @@ const getChannelUrl = () => {
   throw new Error('VITE_SOOP_CHAT_API_URL에 올바른 서버 주소를 설정해 주세요.');
 };
 
-const getTopFans = async (streamerId: string, signal: AbortSignal) => {
+const getTopFans = async (
+  streamerId: string,
+  tab: FanTab,
+  signal: AbortSignal,
+) => {
+  const endpoint = tab === 'monthly' ? 'monthly' : 'detail';
   let data: unknown;
   try {
     data = await fetchJson<unknown>(
-      `https://api-channel.sooplive.com/v1.1/channel/${encodeURIComponent(streamerId)}/topfans/detail`,
+      `https://api-channel.sooplive.com/v1.1/channel/${encodeURIComponent(streamerId)}/topfans/${endpoint}`,
       { signal, cache: 'no-store', credentials: 'omit' },
     );
   } catch {
@@ -136,10 +165,15 @@ const getTopFans = async (streamerId: string, signal: AbortSignal) => {
       '열혈팬 목록을 가져오지 못했습니다. 스트리머 아이디를 확인하고 다시 시도해 주세요.',
     );
   }
-  if (!Array.isArray(data))
+  const monthly =
+    tab === 'monthly' && data && typeof data === 'object'
+      ? (data as { statYm?: unknown; topfans?: unknown })
+      : null;
+  const entries = tab === 'monthly' ? monthly?.topfans : data;
+  if (!Array.isArray(entries))
     throw new Error('열혈팬 목록의 응답이 올바르지 않습니다.');
   const fans = new Map<string, Fan>();
-  for (const entry of data) {
+  for (const entry of entries) {
     const fan = entry as Partial<TopFan> | null;
     if (
       !fan ||
@@ -155,13 +189,19 @@ const getTopFans = async (streamerId: string, signal: AbortSignal) => {
         userId,
         userNick: fan.userNick || fan.userId,
         profileImage: normalizeProfileImage(fan.profileImage),
+        tab,
         watching: false,
         attended: false,
         message: null,
       });
     }
   }
-  return [...fans.values()].slice(0, 20);
+  const statYm = monthly?.statYm;
+  const monthLabel =
+    typeof statYm === 'string' && /^\d{4}(0[1-9]|1[0-2])$/.test(statYm)
+      ? `${statYm.slice(0, 4)}년 ${Number(statYm.slice(4))}월`
+      : null;
+  return { fans: [...fans.values()].slice(0, 20), monthLabel };
 };
 
 const errorMessage = (error: unknown) => {
@@ -237,9 +277,14 @@ const FanRow = ({ fan }: { fan: Fan }) => {
 
 const RouteComponent = () => {
   const [userId, setUserId] = useQueryState('userId', searchParams.userId);
+  const [tab, setTab] = useQueryState('tab', searchParams.tab);
   const [input, setInput] = useState(userId ?? '');
   const [retry, setRetry] = useState(0);
-  const [fans, setFans] = useState<Fan[]>([]);
+  const [allFans, setFans] = useState<Fan[]>([]);
+  const [lists, setLists] = useState<{
+    failed: Record<FanTab, boolean>;
+    monthLabel: string | null;
+  } | null>(null);
   const [phase, setPhase] = useState<Phase>('idle');
   const [notice, setNotice] = useState<string | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
@@ -249,6 +294,7 @@ const RouteComponent = () => {
   useEffect(() => {
     const streamerId = userId?.trim().toLowerCase();
     setFans([]);
+    setLists(null);
     setNotice(null);
     setPhase('idle');
     if (!streamerId) return;
@@ -293,10 +339,27 @@ const RouteComponent = () => {
       try {
         const channelUrl = getChannelUrl();
         setPhase('loading');
-        const initialFans = await getTopFans(streamerId, controller.signal);
+        const [cumulative, monthly] = await Promise.allSettled([
+          getTopFans(streamerId, 'cumulative', controller.signal),
+          getTopFans(streamerId, 'monthly', controller.signal),
+        ]);
         if (!active) return;
+        if (cumulative.status === 'rejected' && monthly.status === 'rejected')
+          throw cumulative.reason;
+        const initialFans = [
+          ...(cumulative.status === 'fulfilled' ? cumulative.value.fans : []),
+          ...(monthly.status === 'fulfilled' ? monthly.value.fans : []),
+        ];
         const fanIds = new Set(initialFans.map((fan) => fan.userId));
         setFans(initialFans);
+        setLists({
+          failed: {
+            cumulative: cumulative.status === 'rejected',
+            monthly: monthly.status === 'rejected',
+          },
+          monthLabel:
+            monthly.status === 'fulfilled' ? monthly.value.monthLabel : null,
+        });
         setPhase('connecting');
         chat = new SoopChat({
           streamerId,
@@ -444,8 +507,32 @@ const RouteComponent = () => {
     setNotice(null);
     void setUserId(null);
   };
+  const handleTabClick = (event: MouseEvent<HTMLButtonElement>) => {
+    void setTab(searchParams.tab.parse(event.currentTarget.value));
+  };
+  const handleTabKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    let nextTab: FanTab;
+    switch (event.key) {
+      case 'ArrowLeft':
+      case 'ArrowRight':
+        nextTab = tab === 'cumulative' ? 'monthly' : 'cumulative';
+        break;
+      case 'Home':
+        nextTab = 'cumulative';
+        break;
+      case 'End':
+        nextTab = 'monthly';
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    document.getElementById(`${inputId}-tab-${nextTab}`)?.focus();
+    void setTab(nextTab);
+  };
   const showingList = !['idle', 'loading'].includes(phase);
   const pending = phase === 'loading' || phase === 'connecting';
+  const fans = allFans.filter((fan) => fan.tab === tab);
   const completed = fans.filter((fan) => fan.attended).length;
   const split = Math.ceil(fans.length / 2);
 
@@ -518,7 +605,7 @@ const RouteComponent = () => {
         </section>
       ) : (
         <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6">
-          <header className="flex items-center justify-between gap-4 border-b border-slate-800 py-4">
+          <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 border-b border-slate-800 py-4 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
             <div className="min-w-0">
               <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
                 열혈팬 출석체크
@@ -545,9 +632,32 @@ const RouteComponent = () => {
                 </span>
               </p>
             </div>
-            <div className="flex shrink-0 items-center gap-4">
+            <div
+              aria-label="열혈팬 목록"
+              className="col-span-2 row-start-2 inline-flex justify-self-center rounded-lg border border-slate-800 bg-slate-900 p-1 sm:col-span-1 sm:col-start-2 sm:row-start-1"
+              onKeyDown={handleTabKeyDown}
+              role="tablist"
+            >
+              {FAN_TABS.map((fanTab) => (
+                <button
+                  aria-controls={`${inputId}-panel-${fanTab}`}
+                  aria-selected={tab === fanTab}
+                  className={`h-9 rounded-md px-5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-400 ${tab === fanTab ? 'bg-sky-400 text-slate-950' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'}`}
+                  id={`${inputId}-tab-${fanTab}`}
+                  key={fanTab}
+                  onClick={handleTabClick}
+                  role="tab"
+                  tabIndex={tab === fanTab ? 0 : -1}
+                  type="button"
+                  value={fanTab}
+                >
+                  {FAN_TAB_LABELS[fanTab]}
+                </button>
+              ))}
+            </div>
+            <div className="col-start-2 row-start-1 flex items-center gap-3 justify-self-end sm:col-start-3 sm:gap-4">
               <p aria-live="polite" className="text-sm text-slate-400">
-                <span className="hidden sm:inline">출석 </span>
+                <span className="sr-only sm:not-sr-only">출석 </span>
                 <strong className="text-lg font-bold tabular-nums text-emerald-400">
                   {completed}
                 </strong>
@@ -569,41 +679,72 @@ const RouteComponent = () => {
               {notice}
             </p>
           ) : null}
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-3 text-xs text-slate-400">
-            {Object.values(STATUS).map((status) => (
-              <span
-                className="inline-flex items-center gap-1.5"
-                key={status.label}
-              >
-                <status.icon
-                  aria-hidden
-                  className={`h-3.5 w-3.5 ${status.color}`}
-                />
-                {status.label}
-              </span>
-            ))}
-          </div>
-          {fans.length ? (
-            <div className="isolate grid gap-x-8 pb-4 lg:grid-cols-2">
-              {[fans.slice(0, split), fans.slice(split)].map(
-                (column, index) => (
-                  <ol
-                    aria-label={`열혈팬 ${index + 1}열`}
-                    className="space-y-1.5"
-                    key={index === 0 ? 'first' : 'second'}
-                  >
-                    {column.map((fan) => (
-                      <FanRow fan={fan} key={fan.userId} />
+          {FAN_TABS.map((fanTab) => (
+            <section
+              aria-labelledby={`${inputId}-tab-${fanTab}`}
+              hidden={tab !== fanTab}
+              id={`${inputId}-panel-${fanTab}`}
+              key={fanTab}
+              role="tabpanel"
+              // biome-ignore lint/a11y/noNoninteractiveTabindex: 목록에 별도의 포커스 대상이 없어 탭 패널에 진입할 수 있게 한다.
+              tabIndex={0}
+            >
+              {tab !== fanTab ? null : (
+                <>
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2 py-3 text-xs text-slate-400">
+                    {Object.values(STATUS).map((status) => (
+                      <span
+                        className="inline-flex items-center gap-1.5"
+                        key={status.label}
+                      >
+                        <status.icon
+                          aria-hidden
+                          className={`h-3.5 w-3.5 ${status.color}`}
+                        />
+                        {status.label}
+                      </span>
                     ))}
-                  </ol>
-                ),
+                    {fanTab === 'monthly' && lists?.monthLabel ? (
+                      <span className="ml-auto whitespace-nowrap">
+                        {lists.monthLabel}
+                      </span>
+                    ) : null}
+                  </div>
+                  {lists?.failed[fanTab] ? (
+                    <p
+                      className="py-16 text-center text-sm text-amber-200"
+                      role="status"
+                    >
+                      {FAN_TAB_LABELS[fanTab]} 열혈팬 목록을 가져오지
+                      못했습니다.
+                    </p>
+                  ) : fans.length ? (
+                    <div className="isolate grid gap-x-8 pb-4 lg:grid-cols-2">
+                      {[fans.slice(0, split), fans.slice(split)].map(
+                        (column, index) => (
+                          <ol
+                            aria-label={`열혈팬 ${index + 1}열`}
+                            className="space-y-1.5"
+                            key={index === 0 ? 'first' : 'second'}
+                          >
+                            {column.map((fan) => (
+                              <FanRow fan={fan} key={fan.userId} />
+                            ))}
+                          </ol>
+                        ),
+                      )}
+                    </div>
+                  ) : (
+                    <p className="py-16 text-center text-sm text-slate-400">
+                      {fanTab === 'monthly'
+                        ? '이번 달 열혈팬이 없습니다.'
+                        : '등록된 열혈팬이 없습니다.'}
+                    </p>
+                  )}
+                </>
               )}
-            </div>
-          ) : (
-            <p className="py-16 text-center text-sm text-slate-400">
-              등록된 열혈팬이 없습니다.
-            </p>
-          )}
+            </section>
+          ))}
         </div>
       )}
     </main>
