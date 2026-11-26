@@ -61,7 +61,7 @@ const RouteComponent = () => {
               <span
                 className={`${options?.small ? 'text-xs' : 'text-base'} rounded`}
                 style={{
-                  backgroundColor: `color-mix(in srgb, ${item.color}, white 20%)`,
+                  backgroundColor: `color-mix(in srgb, ${item.color} 22%, white)`,
                 }}
               >{`${item.eventTime} | ${item.nick} | ${item.title}`}</span>
             }

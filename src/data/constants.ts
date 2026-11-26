@@ -22,7 +22,7 @@ export const MEMBERS = [
       name: '대월향의 1평 사장실',
       menus: [{ id: 37, name: '대월향의 이모저모' }],
     },
-    color: '#dcf8ff',
+    color: '#2973f4',
   },
   {
     id: 'dlsn9911',
@@ -37,7 +37,7 @@ export const MEMBERS = [
         { id: 85, name: '팬심후기' },
       ],
     },
-    color: '#f7cbcb',
+    color: '#f7394f',
   },
   {
     id: '9mogu9',
@@ -52,7 +52,7 @@ export const MEMBERS = [
         { id: 30, name: '팬심 후기' },
       ],
     },
-    color: '#fce5cd',
+    color: '#f5a623',
   },
   {
     id: 'haroha',
@@ -68,7 +68,7 @@ export const MEMBERS = [
         { id: 31, name: '창고대방출' },
       ],
     },
-    color: '#fff2cc',
+    color: '#ffcb0f',
   },
   {
     id: 'kgoyangyeeee',
@@ -84,7 +84,7 @@ export const MEMBERS = [
         { id: 24, name: '카톡' },
       ],
     },
-    color: '#d7f0cd',
+    color: '#4caf50',
   },
   {
     id: 'marronie',
@@ -96,7 +96,7 @@ export const MEMBERS = [
       name: '마로니 공원',
       menus: [{ id: 17, name: '마로니 일상' }],
     },
-    color: '#d1f0cc',
+    color: '#9cc63b',
   },
   {
     id: 'yangdoki',
@@ -113,7 +113,7 @@ export const MEMBERS = [
         { id: 73, name: '비밀방' },
       ],
     },
-    color: '#c8f4d3',
+    color: '#20b2a6',
   },
 ] as const satisfies readonly Member[];
 
