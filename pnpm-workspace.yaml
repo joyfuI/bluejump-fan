@@ -3,12 +3,12 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - soop-chat
 permissions:
-  '@tanstack/devtools-vite':
+  "@tanstack/devtools-vite":
     skills: true
-  '@tanstack/react-router':
-    skills: [react-router, router-query]
-  '@tanstack/react-start':
-    skills: [react-start]
+  "@tanstack/react-router":
+    skills: [ react-router, router-query ]
+  "@tanstack/react-start":
+    skills: [ react-start ]
 skills:
   dirs:
     - .agents/skills
