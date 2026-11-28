@@ -131,4 +131,5 @@ export const CLIPPERS: readonly string[] = [
   'UCpcgX-Ug4wqkAk2Or31IZ1Q', // 누렁빛깔누눙지
   'UCCy2VQYOYlTRWwZWkTHvnEA', // 주식자브종누렁이
   'UCLmVZw9iXzwxhnEblduO9qg', // 블루점프 보관소
+  'UCTnng36mUwoUS2tkSk292GA', // 금말이
 ];
